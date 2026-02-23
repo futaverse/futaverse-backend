@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .email-container { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eeeeee; border-radius: 12px; overflow: hidden; }
+        .banner { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 20px; text-align: center; }
+        .mode-badge { display: inline-block; background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; font-size: 0.9em; margin-bottom: 10px; }
+        .content { padding: 35px; color: #2d3748; line-height: 1.7; }
+        .transition-box { display: flex; align-items: center; justify-content: center; margin: 25px 0; background: #f7fafc; padding: 20px; border-radius: 10px; border: 1px dashed #cbd5e0; }
+        .mode-text { font-weight: bold; font-size: 1.1em; color: #4a5568; }
+        .arrow { margin: 0 15px; color: #a0aec0; font-size: 1.5em; }
+        .info-card { background-color: #ebf4ff; border-left: 5px solid #3182ce; padding: 20px; margin: 25px 0; border-radius: 6px; }
+        .btn { display: block; width: 200px; margin: 30px auto 0; padding: 15px; background-color: #4c51bf; color: #ffffff !important; text-decoration: none; border-radius: 8px; text-align: center; font-weight: bold; }
+        .footer { background: #f7fafc; padding: 20px; text-align: center; font-size: 12px; color: #718096; }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="banner">
+            <div class="mode-badge">Important Update</div>
+            <h1>Change in Event Format</h1>
+        </div>
+        <div class="content">
+            <p>Hi there,</p>
+            <p>The host of <strong>{{ event_title }}</strong> has changed the format of the event. Please review the updated logistics below to ensure you don't miss out!</p>
+            
+            <div class="transition-box">
+                <span class="mode-text">{{ old_mode }}</span>
+                <span class="arrow">➔</span>
+                <span class="mode-text" style="color: #4c51bf;">{{ new_mode }}</span>
+            </div>
+
+            <div class="info-card">
+                <h3 style="margin-top: 0; color: #2b6cb0;">What this means for you:</h3>
+                {% if new_mode == 'physical' %}
+                    <p>This event is now <strong>In-Person</strong>. We can't wait to see you at the venue!</p>
+                    <p>📍 <strong>Location:</strong> {{ venue }}</p>
+                {% elif new_mode == 'virtual' %}
+                    <p>This event is now <strong>Online</strong>. You can join us from anywhere using the link below.</p>
+                    <p>💻 <strong>Platform:</strong> {{ platform }}</p>
+                {% elif new_mode == 'hybrid' %}
+                    <p>This event is now <strong>Hybrid</strong>. You can choose to join us in person or online!</p>
+                    <p>📍 <strong>Location:</strong> {{ venue }}</p>
+                    <p>💻 <strong>Join Online:</strong> {{ platform }}</p>
+                {% endif %}
+            </div>
+
+            <p>Your tickets remain valid for this event. No further action is required on your part.</p>
+            
+            <a href="{{ event_url }}" class="btn">View Full Details</a>
+        </div>
+        <div class="footer">
+            <p>FutaVerse - Connecting the Alumni & Student Community</p>
+            <p>&copy; 2026 FutaVerse. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

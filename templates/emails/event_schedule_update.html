@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .email-container { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; }
+        .header { background-color: #1a73e8; color: white; padding: 20px; text-align: center; }
+        .content { padding: 30px; line-height: 1.6; color: #333; }
+        .event-card { background-color: #f8f9fa; border-left: 4px solid #1a73e8; padding: 20px; margin: 20px 0; border-radius: 4px; }
+        .change-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .change-table td { padding: 10px; border-bottom: 1px solid #eee; }
+        .label { font-weight: bold; color: #666; width: 30%; }
+        .old-value { text-decoration: line-through; color: #999; font-size: 0.9em; }
+        .new-value { color: #1a73e8; font-weight: bold; }
+        .btn { display: inline-block; padding: 12px 25px; background-color: #1a73e8; color: white !important; text-decoration: none; border-radius: 4px; font-weight: bold; margin-top: 20px; }
+        .footer { background-color: #f1f3f4; text-align: center; padding: 15px; font-size: 0.8em; color: #777; }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>Schedule Updated</h1>
+        </div>
+        <div class="content">
+            <p>Hi there,</p>
+            <p>The organizer of <strong>{{ event_title }}</strong> has just updated the event schedule. Please take a moment to update your calendar.</p>
+            
+            <div class="event-card">
+                <table class="change-table">
+                    <tr>
+                        <td class="label">Date</td>
+                        <td>
+                            <span class="old-value">{{ old_date }}</span><br>
+                            <span class="new-value">{{ new_date }}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label">Time</td>
+                        <td>
+                            <span class="old-value">{{ old_time }}</span><br>
+                            <span class="new-value">{{ new_time }}</span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <p>If you have already added this to your Google Calendar, it should update automatically. Otherwise, you can view the latest details below:</p>
+            
+            <center>
+                <a href="{{ event_url }}" class="btn">View Event on FutaVerse</a>
+            </center>
+        </div>
+        <div class="footer">
+            <p>You received this because you registered for this event on FutaVerse.</p>
+            <p>&copy; 2026 FutaVerse. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
