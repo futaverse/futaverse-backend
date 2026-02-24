@@ -74,18 +74,16 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',
-        'USER': os.environ['DB_USER'],
-        'PASSWORD': os.environ['DB_PASSWORD'],
-        'HOST': 'aws-1-eu-west-1.pooler.supabase.com',
-        'PORT': '6543',
+        'USER': os.environ.get('DB_USER'),  
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
+        'HOST': os.environ.get('DB_HOST'), 
+        'PORT': os.environ.get('DB_PORT', '6543'),
         'OPTIONS': {
-            'sslmode': 'verify-full',
-            'sslrootcert': os.path.join(BASE_DIR, 'root.crt'),
+            'sslmode': 'require', 
             'connect_timeout': 30,
         }
     }
 }
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {
