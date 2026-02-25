@@ -6,15 +6,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 
 DEBUG = True
 
-ALLOWED_HOSTS = ["futaverse-backend.onrender.com", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["futaverse-backend.onrender.com", "futaverse-backend-xfcs.onrender.com", "localhost", "127.0.0.1"]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -81,10 +79,14 @@ DATABASES = {
         'OPTIONS': {
             'sslmode': 'require', 
             'connect_timeout': 30,
-        }
+        },
+        'CONN_MAX_AGE': 600
     }
 }
-
+if os.environ.get("ENVIRONMENT") == "development":
+    DATABASES['default']['OPTIONS']['sslmode'] = 'verify-full'
+    DATABASES['default']['OPTIONS']['sslrootcert'] = os.path.join(BASE_DIR, 'root.crt')
+    
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
