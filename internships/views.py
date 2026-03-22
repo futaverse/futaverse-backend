@@ -313,6 +313,7 @@ class ListInternshipEngagementsView(generics.ListAPIView):
 class RetrieveInternshipEngagementView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticatedAlumnus | IsAuthenticatedStudent]
     serializer_class = InternshipEngagementSerializer
+    lookup_field = 'sqid'
     
     def get_queryset(self):
         user = self.request.user
