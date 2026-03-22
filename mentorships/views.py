@@ -32,6 +32,7 @@ class RetrieveUpdateDestroyMentorshipView(generics.RetrieveUpdateDestroyAPIView)
     serializer_class = MentorshipSerializer
     permission_classes = [IsAuthenticatedAlumnus]
     http_method_names = ['get', 'patch', 'delete']
+    lookup_field = 'sqid'
     
     def get_queryset(self):
         user = self.request.user
@@ -46,6 +47,7 @@ class ToggleMentorshipActiveView(generics.UpdateAPIView):
     queryset = Mentorship.objects.all()
     serializer_class = MentorshipStatusSerializer
     http_method_names = ['patch']
+    lookup_field = 'sqid'
     
     def perform_update(self, serializer):
         mentorship = self.get_object()
@@ -76,6 +78,7 @@ class ListMentorshipOfferView(generics.ListAPIView):
 class RetrieveMentorshipOfferView(generics.RetrieveAPIView):
     serializer_class = MentorshipOfferSerializer
     permission_classes = [IsAuthenticatedAlumnus | IsAuthenticatedStudent]
+    lookup_field = 'sqid'
     
     def get_queryset(self):
         user = self.request.user
@@ -178,6 +181,7 @@ class ListMentorshipApplicationsView(generics.ListAPIView):
 class RetrieveMentorshipApplicationView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticatedAlumnus | IsAuthenticatedStudent]
     serializer_class = MentorshipApplicationSerializer
+    lookup_field = 'sqid'
     
     def get_queryset(self):
         user = self.request.user
@@ -273,6 +277,7 @@ class ListMentorshipEngagementsView(generics.ListAPIView):
 class RetrieveMentorshipEngagementView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticatedAlumnus | IsAuthenticatedStudent]
     serializer_class = MentorshipEngagementSerializer
+    lookup_field = 'sqid'
     
     def get_queryset(self):
         user = self.request.user

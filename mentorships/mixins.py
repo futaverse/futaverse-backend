@@ -10,7 +10,7 @@ class OfferValidationMixin:
         if not offer_id:
             raise ValidationError({"detail": "Offer ID is required."})
         
-        offer = get_object_or_404(MentorshipOffer.objects.all().select_related("mentorship", "student", "mentorship__alumnus"), pk=offer_id)
+        offer = get_object_or_404(MentorshipOffer.objects.all().select_related("mentorship", "student", "mentorship__alumnus"), sqid=offer_id)
         
         if offer.status != MentorshipStatus.PENDING:
             raise ValidationError({"detail": f"Offer has already been {offer.status}."})
@@ -27,7 +27,7 @@ class ApplicationValidationMixin:
         if not application_id:
             raise ValidationError({"detail": "application ID is required."})
         
-        application = get_object_or_404(MentorshipApplication.objects.all().select_related("mentorship", "student", "mentorship__alumnus"), pk=application_id)
+        application = get_object_or_404(MentorshipApplication.objects.all().select_related("mentorship", "student", "mentorship__alumnus"), sqid=application_id)
         
         if not application.mentorship.is_active:
             raise ValidationError({"detail": "Mentorship is not active."})
