@@ -18,9 +18,9 @@ urlpatterns = [
     path('/applications', ListInternshipApplicationsView.as_view(), name='list-create-internship-applications'),
     path('/applications/<int:pk>', RetrieveInternshipApplicationView.as_view(), name='retrieve-internship-application'),
     path('/upload-resume', UploadApplicationResumeView.as_view(), name='upload-application-resume'),
-    path('/applications/<int:application_id>/accept', AcceptInternshipApplicationView.as_view(), name='accept-internship-application'),
-    path('/applications/<int:application_id>/reject', RejectInternshipApplicationView.as_view(), name='reject-internship-application'),
-    path('/applications/<int:application_id>/withdraw', WithdrawInternshipApplicationView.as_view(), name='withdraw-internship-application'),
+    path('/applications/<str:application_id>/accept', AcceptInternshipApplicationView.as_view(), name='accept-internship-application'),
+    path('/applications/<str:application_id>/reject', RejectInternshipApplicationView.as_view(), name='reject-internship-application'),
+    path('/applications/<str:application_id>/withdraw', WithdrawInternshipApplicationView.as_view(), name='withdraw-internship-application'),
     
     path('/engagements', ListInternshipEngagementsView.as_view(), name='list-internship-engagements'),
     path('/engagements/<int:pk>', RetrieveInternshipEngagementView.as_view(), name='retrieve-internship-engagement'),
