@@ -35,6 +35,7 @@ class RetrieveUpdateDestroyMentorshipView(generics.RetrieveUpdateDestroyAPIView)
     serializer_class = InternshipSerializer
     http_method_names = ['patch', 'get', 'delete']
     permission_classes = [IsAuthenticatedAlumnus | IsAuthenticatedStudent]
+    lookup_field = 'sqid'
     
     def get_queryset(self):
         user = self.request.user
@@ -49,6 +50,7 @@ class ToggleInternshipActiveView(generics.UpdateAPIView):
     serializer_class = InternshipStatusSerializer
     http_method_names = ['patch']
     permission_classes = [IsAuthenticatedAlumnus]
+    lookup_field = 'sqid'
     
     def perform_update(self, serializer):
         internship = self.get_object()
@@ -82,6 +84,7 @@ class ListInternshipOfferView(generics.ListAPIView):
 class RetrieveInternshipOfferView(generics.RetrieveAPIView):
     serializer_class = InternshipOfferSerializer
     permission_classes = [IsAuthenticatedAlumnus | IsAuthenticatedStudent]
+    lookup_field = 'sqid'
     
     def get_queryset(self):
         user = self.request.user
@@ -192,12 +195,13 @@ class ListInternshipApplicationsView(generics.ListAPIView):
 class RetrieveInternshipApplicationView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticatedAlumnus | IsAuthenticatedStudent]
     serializer_class = InternshipApplicationSerializer
+    lookup_field = 'sqid'
     
     def get_queryset(self):
         user = self.request.user
         
         if user.role == User.Role.ALUMNI:
-            return InternshipApplication.objects.filter(internship__alumnus=user.alumni_profile).select_related('internship', 'student', 'Internship__alumnus')
+            return InternshipApplication.objects.filter(internship__alumnus=user.alumni_profile).select_related('internship', 'student', 'internship__alumnus')
         
         elif user.role == User.Role.STUDENT:
             return InternshipApplication.objects.filter(student=user.student_profile).select_related('internship', 'student')

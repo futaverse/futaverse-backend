@@ -10,10 +10,10 @@ class OfferValidationMixin:
         if not offer_id:
             raise ValidationError({"detail": "Offer ID is required."})
         
-        offer = get_object_or_404(InternshipOffer.objects.all().select_related("internship", "student", "internship__alumnus"), pk=offer_id)
+        offer = get_object_or_404(InternshipOffer.objects.all().select_related("internship", "student", "internship__alumnus"), sqid=offer_id)
         
         if offer.status != InternshipStatus.PENDING:
-            raise ValidationError({"detail": f"Offer has already been {offer.status}."})
+            raise ValidationError({"detail": f"Offer has already been {offer.status.lower()}."})
     
         if not offer.internship.is_active:
                 raise ValidationError({"detail": "internship is not active."})
@@ -27,12 +27,12 @@ class ApplicationValidationMixin:
         if not application_id:
             raise ValidationError({"detail": "application ID is required."})
         
-        application = get_object_or_404(InternshipApplication.objects.all().select_related("internship", "student", "internship__alumnus"), pk=application_id)
+        application = get_object_or_404(InternshipApplication.objects.all().select_related("internship", "student", "internship__alumnus"), sqid=application_id)
         
         if not application.internship.is_active:
             raise ValidationError({"detail": "internship is not active."})
         
         if application.status != InternshipStatus.PENDING:
-            raise ValidationError({"detail": f"Application has already been {application.status}."})
+            raise ValidationError({"detail": f"Application has already been {application.status.lower()}."})
     
         return application
