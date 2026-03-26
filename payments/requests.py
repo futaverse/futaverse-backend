@@ -17,17 +17,6 @@ def send_paystack_request(method, url, payload=None):
         response = requests.request(method, f'{base_url}{url}', json=payload, headers=headers)
         return response
     
-# def create_customer(payload):
-#     response = send_paystack_request("POST", "customer", payload)
-#     response_data = response.json()
-    
-#     print(response_data)
-    
-#     if response.ok and response_data.get("status"):
-#         return response_data["data"]["customer_code"]
-    
-#     raise Exception(response_data.get("message", "Failed to create Paystack customer"))
-
 def initialize_transaction(payload): # amount in kobo, email, customer_code, reference
     response = send_paystack_request("POST", "transaction/initialize", payload)
     response_data = response.json()
@@ -38,3 +27,14 @@ def initialize_transaction(payload): # amount in kobo, email, customer_code, ref
         return response_data["data"]["authorization_url"]
     
     raise Exception(response_data.get("message", "Failed to initialize Paystack transaction"))
+
+def list_banks():
+    response = send_paystack_request("GET", "bank")
+    response_data = response.json()
+    
+    print(response_data)
+    
+    if response.ok and response_data.get("status"):
+        return response_data["data"]
+    
+    raise Exception(response_data.get("message", "Failed to list Paystack banks"))

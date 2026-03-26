@@ -10,12 +10,6 @@ class VirtualMeetingSerializer(serializers.ModelSerializer):
         fields = ['sqid', 'platform', 'join_url', 'room_name']
         read_only_fields = ['sqid', 'created_at']
         
-# class VirtualMeetingDetailsSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = VirtualMeeting
-#         exclude = ['is_deleted', 'deleted_at', 'id']
-#         read_only_fields = ['sqid', 'created_at', 'updated_at']
-
 class CreateTicketSerializer(serializers.ModelSerializer):
     event = serializers.SlugRelatedField(queryset=Event.objects.all(), slug_field='sqid')
     sales_price = serializers.ReadOnlyField()

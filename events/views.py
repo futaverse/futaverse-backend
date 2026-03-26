@@ -137,6 +137,7 @@ class UpdateEventView(generics.UpdateAPIView):
         lock_key = f"info_update_{instance.sqid}"
         if cache.get(lock_key):
             return Response({"detail": "Request already in progress."}, status=409)
+        
         cache.set(lock_key, True, timeout=5) 
         
         old_data = {

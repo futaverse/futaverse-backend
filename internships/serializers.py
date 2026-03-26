@@ -11,10 +11,11 @@ from futaverse.serializers import StrictFieldsMixin
 
 class InternshipSerializer(serializers.ModelSerializer):
     skills_required = serializers.ListField(child=serializers.CharField(), required=False)
+    alumnus = serializers.CharField(source="alumnus.sqid", read_only=True)
     
     class Meta:
         model = Internship
-        exclude = ['is_active', 'deleted_at', 'is_deleted']
+        exclude = ['is_active', 'deleted_at', 'is_deleted', 'id']
         read_only_fields = ['sqid', 'created_at', 'updated_at', 'alumnus', 'is_active']
         
 class InternshipStatusSerializer(serializers.ModelSerializer):
