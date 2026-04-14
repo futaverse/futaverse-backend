@@ -29,12 +29,46 @@ def initialize_transaction(payload): # amount in kobo, email, customer_code, ref
     raise Exception(response_data.get("message", "Failed to initialize Paystack transaction"))
 
 def list_banks():
-    response = send_paystack_request("GET", "bank")
+    path = f"bank?country=nigeria"
+    response = send_paystack_request("GET", path)
     response_data = response.json()
     
-    print(response_data)
-    
     if response.ok and response_data.get("status"):
-        return response_data["data"]
+        banks = response_data["data"]
+        filtered_banks = [
+            {"name": bank["name"], "code": bank["code"]}
+            for bank in banks
+            if bank["active"] and bank["supports_transfer"] and bank["country"] == "Nigeria"
+        ]
+        return filtered_banks
     
     raise Exception(response_data.get("message", "Failed to list Paystack banks"))
+
+def create_paystack_subaccount(user, account_data): # bank_code, account_number
+    payload = {
+        "business_name": f"{user.get_full_name()} - FUTAVerse",
+        "settlement_bank": account_data['bank_code'],
+        "account_number": account_data['account_number'],
+        "percentage_charge": 4.5, 
+        "primary_contact_email": user.email
+    }
+    
+    response = send_paystack_request("POST", "subaccount", data=payload)
+    response_data = response.json()
+    
+    if response.ok and response_data.get("status"):
+        return response_data["data"]["subaccount_code"]
+    
+    raise Exception(response_data.get("message", "Failed to create Paystack subaccount"))
+
+def resolve_bank_account(account_number, bank_code):
+    path = f"bank/resolve?account_number={account_number}&bank_code={bank_code}"
+    
+    response = send_paystack_request("GET", path)
+    response_data = response.json()
+    
+    if response.ok and response_data.get("status"):
+        print(response_data['data'])
+        return response_data['data']['account_name']
+    
+    raise Exception(response_data.get("message", "Could not verify account details."))

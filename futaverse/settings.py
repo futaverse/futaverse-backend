@@ -2,6 +2,7 @@ import os
 from datetime import timedelta
 from pathlib import Path
 from dotenv import load_dotenv
+import ssl
 
 load_dotenv()
 
@@ -184,3 +185,24 @@ SUPABASE_URL = os.environ.get('SUPABASE_URL')
 SUPABASE_BUCKET_NAME = os.environ.get('SUPABASE_BUCKET_NAME', 'futaverse-bucket')
 
 APPEND_SLASH=False 
+
+REDIS_URL = os.environ.get("REDIS_URL", "redis://127.0.0.1:6379/1")
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": REDIS_URL,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "CONNECTION_POOL_KWARGS": {"max_connections": 10},
+        }
+    }
+}
+
+if REDIS_URL.startswith("rediss://"):
+    CACHES["default"]["OPTIONS"]["REDIS_CLIENT_KWARGS"] = {
+        "ssl_cert_reqs": ssl.CERT_NONE
+    }
+    
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
