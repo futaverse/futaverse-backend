@@ -92,7 +92,7 @@ class CreateTicketPurchaseView(generics.CreateAPIView):
     
     @transaction.atomic
     def perform_create(self, serializer):
-        #TODO: Handle when action is not performed by user
+        # TODO: Handle when action is not performed by user
         
         user = self.request.user
         validated_data = serializer.validated_data
@@ -206,6 +206,7 @@ class UpdateEventModeView(generics.UpdateAPIView):
         lock_key = f"mode_update_{instance.sqid}"
         if cache.get(lock_key):
             return Response({"detail": "Request already in progress."}, status=409)
+        
         cache.set(lock_key, True, timeout=10) 
         
         old_mode = instance.mode

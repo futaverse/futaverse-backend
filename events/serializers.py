@@ -27,6 +27,10 @@ class TicketSerializer(serializers.ModelSerializer):
         model = Ticket
         exclude = ['is_deleted', 'deleted_at', 'id']
         read_only_fields = ['sqid', 'created_at', 'updated_at', 'quantity_sold', 'sales_price']
+        
+class FreeTicketSchemaSerializer(serializers.Serializer):
+    required = serializers.BooleanField()
+    quantity = serializers.IntegerField(min_value=1, required=False, default=0)
 
 class EventSerializer(serializers.ModelSerializer):
     tickets = TicketSerializer(many=True, required=False)
@@ -34,6 +38,7 @@ class EventSerializer(serializers.ModelSerializer):
     redirect_after_auth = serializers.URLField(required=False, write_only=True)
     
     virtual_meeting = VirtualMeetingSerializer(required=False, read_only=True)
+    free_ticket = FreeTicketSchemaSerializer(write_only=True, required=False)
     
     class Meta:
         model = Event
@@ -45,19 +50,31 @@ class EventSerializer(serializers.ModelSerializer):
         
         mode = validated_data.get("mode")
         platform = validated_data.get("platform")
+        free_ticket_data = validated_data.get("free_ticket")
+        paid_tickets_data = validated_data.get("tickets", [])
+        
+        if (not free_ticket_data or not free_ticket_data.get("required")) and len(paid_tickets_data) == 0:
+            raise serializers.ValidationError({"detail": "At least one ticket (free or paid) is required for events"})
         
         if (mode == Event.Mode.PHYSICAL or mode == Event.Mode.HYBRID) and not platform:
             raise serializers.ValidationError({"platform": "Platform is required for events with virtual or hybrid modes"})
+        
+        if len(paid_tickets_data) > 0:
+            account_details = self.context['request'].user.account_details
+            if not account_details or not account_details.is_active or not account_details.subaccount_code:
+                raise serializers.ValidationError({"detail": "Your account is not set up to receive payments. Please add your bank details to create paid tickets so you can receive payments."})
         
         return validated_data
         
     def create(self, validated_data):
         tickets_data = validated_data.pop("tickets", None)
+        free_ticket_data = validated_data.pop("free_ticket", None)
+        
         event = super().create(validated_data)
         
-        if not tickets_data:
-            Ticket.objects.create(event=event, name="Free", description="Standard", price=0, type=Ticket.Type.DEFAULT)
-          
+        if free_ticket_data and free_ticket_data.get("required"):
+            Ticket.objects.create(event=event, name="Free", description="Standard", price=0, type=Ticket.Type.DEFAULT, quantity=free_ticket_data.get("quantity"))
+        
         if tickets_data:    
             for ticket_data in tickets_data:
                 Ticket.objects.create(event=event, **ticket_data)

@@ -12,7 +12,7 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 
 DEBUG = True
 
-ALLOWED_HOSTS = ["futaverse-backend.onrender.com", "futaverse-backend-xfcs.onrender.com", "localhost", "127.0.0.1", "0.0.0.0"]
+ALLOWED_HOSTS = ["futaverse-backend.onrender.com", "futaverse-backend-xfcs.onrender.com", "localhost", "127.0.0.1", "0.0.0.0", "futaverse-backend-3.onrender.com"]
 
 INSTALLED_APPS = [
     'django.contrib.admin',

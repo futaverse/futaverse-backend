@@ -81,6 +81,9 @@ class LoginView(TokenObtainPairView, PublicGenericAPIView):
             response.data["data"]["sqid"] = sqid
             
         return response
+    
+# @extend_schema(tags=['Auth'])
+# class RetrieveUserDetailsView
 
 @extend_schema(tags=['Auth'])
 class TokenRefreshView(TokenRefreshView):

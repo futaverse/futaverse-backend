@@ -23,8 +23,15 @@ GOOGLE_SCOPES = [
     "https://www.googleapis.com/auth/calendar"
 ]
 
+environment = os.getenv("ENVIRONMENT", "development")
+
+# if environment == "production":
 google_redirect_uri = os.getenv("GOOGLE_REDIRECT_URI")
 google_auth_uri = os.getenv("GOOGLE_AUTH_URI")
+    
+# else:
+#     google_redirect_uri = os.getenv("GOOGLE_LOCAL_REDIRECT_URI")
+#     google_auth_uri = os.getenv("GOOGLE_LOCAL_AUTH_URI")
 
 def build_google_auth_url(user_id, redirect_after_auth=None):
     return f"{google_auth_uri}?user_id={user_id}&redirect_after_auth={redirect_after_auth}"
