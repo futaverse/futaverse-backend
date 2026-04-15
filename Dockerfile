@@ -25,4 +25,5 @@ COPY . /app/
 EXPOSE 8000
 
 # Default command to run the server
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-8000} futaverse.wsgi:application"]
