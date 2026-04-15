@@ -44,16 +44,16 @@ def list_banks():
     
     raise Exception(response_data.get("message", "Failed to list Paystack banks"))
 
-def create_paystack_subaccount(user, account_data): # bank_code, account_number
+def create_paystack_subaccount(user_data, account_data): # bank_code, account_number
     payload = {
-        "business_name": f"{user.get_full_name()} - FUTAVerse",
         "settlement_bank": account_data['bank_code'],
         "account_number": account_data['account_number'],
-        "percentage_charge": 4.5, 
-        "primary_contact_email": user.email
+        "percentage_charge": 95.5, # We take 4.5% fee
+        "business_name": user_data["business_name"],
+        "primary_contact_email": user_data["primary_contact_email"]
     }
     
-    response = send_paystack_request("POST", "subaccount", data=payload)
+    response = send_paystack_request("POST", "subaccount", payload)
     response_data = response.json()
     
     if response.ok and response_data.get("status"):

@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from drf_spectacular.utils import extend_schema
 
 from .models import Subaccount
-from .serializers import ResolveBankAccountSerializer
+from .serializers import ResolveBankAccountSerializer, CreateSubaccountSerializer
 from .requests import resolve_bank_account, create_paystack_subaccount, list_banks
 
 @extend_schema(tags=["Payments"], summary="List Paystack Banks and their bank codes")
@@ -55,7 +55,7 @@ class ResolveAccountView(APIView):
                 "bank_code": bank_code,
                 "account_name": account_name
             }
-            cache.set(cache_key, cache_data, timeout=600) # 10 minutes
+            cache.set(cache_key, cache_data, timeout=3600) # 1 hour
 
             return Response({"account_name": account_name}, status=status.HTTP_200_OK)
             
@@ -65,6 +65,7 @@ class ResolveAccountView(APIView):
 @extend_schema(tags=["Payments"], summary="Create Paystack subaccount for user after successful account resolution")
 class CreateSubaccountView(APIView):
     permission_classes = [IsAuthenticated]
+    # serializer_class = CreateSubaccountSerializer
 
     def post(self, request):
         user = request.user
@@ -83,7 +84,12 @@ class CreateSubaccountView(APIView):
 
         try:
             with transaction.atomic():
-                subaccount_code = create_paystack_subaccount(user, pending_data)
+                user_data = {
+                    "business_name": f"{user.get_full_name()} - YuniVerse",
+                    "primary_contact_email": user.email
+                }
+                
+                subaccount_code = create_paystack_subaccount(user_data, pending_data)
 
                 Subaccount.objects.create(
                     user=user,
@@ -99,4 +105,4 @@ class CreateSubaccountView(APIView):
             return Response({"message": "Subaccount created successfully!"}, status=status.HTTP_201_CREATED)
             
         except Exception as e:
-            return Response({"error": f"Creation failed: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"error": f"Subaccount creation failed: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
