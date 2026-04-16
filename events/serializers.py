@@ -26,7 +26,7 @@ class TicketSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ticket
         exclude = ['is_deleted', 'deleted_at', 'id']
-        read_only_fields = ['sqid', 'created_at', 'updated_at', 'quantity_sold', 'sales_price']
+        read_only_fields = ['sqid', 'created_at', 'updated_at', 'quantity_sold', 'sales_price', 'type']
         
 class FreeTicketSchemaSerializer(serializers.Serializer):
     required = serializers.BooleanField()
@@ -56,11 +56,13 @@ class EventSerializer(serializers.ModelSerializer):
         if (not free_ticket_data or not free_ticket_data.get("required")) and len(paid_tickets_data) == 0:
             raise serializers.ValidationError({"detail": "At least one ticket (free or paid) is required for events"})
         
-        if (mode == Event.Mode.PHYSICAL or mode == Event.Mode.HYBRID) and not platform:
+        if (mode == Event.Mode.VIRTUAL or mode == Event.Mode.HYBRID) and not platform:
             raise serializers.ValidationError({"platform": "Platform is required for events with virtual or hybrid modes"})
         
         if len(paid_tickets_data) > 0:
-            account_details = self.context['request'].user.account_details
+            user = self.context["request"].user
+            account_details = getattr(user, "account_details", None)
+            
             if not account_details or not account_details.is_active or not account_details.subaccount_code:
                 raise serializers.ValidationError({"detail": "Your account is not set up to receive payments. Please add your bank details to create paid tickets so you can receive payments."})
         
@@ -77,7 +79,7 @@ class EventSerializer(serializers.ModelSerializer):
         
         if tickets_data:    
             for ticket_data in tickets_data:
-                Ticket.objects.create(event=event, **ticket_data)
+                Ticket.objects.create(event=event, **ticket_data, type=Ticket.Type.CUSTOM)
         
         return event
     

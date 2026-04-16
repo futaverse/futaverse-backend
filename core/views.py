@@ -23,6 +23,7 @@ def set_refresh_cookie(response):
     refresh = data.get("refresh")
     access = data.get("access")
 
+    print("Setting refresh token cookie")
     response.set_cookie(
         key="refresh_token",
         value=refresh,
