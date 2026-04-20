@@ -259,7 +259,7 @@ class AcceptInternshipApplicationView(ApplicationValidationMixin, APIView):
         
         application.accept()
         internship.decrement_remaining_slots()
-        return Response({"detail": "Application accepted successfully.", "engagement_id": engagement.id},status=status.HTTP_201_CREATED)
+        return Response({"detail": "Application accepted successfully.", "engagement_id": engagement.sqid},status=status.HTTP_201_CREATED)
     
 @extend_schema(tags=['Internship Applications'], summary='Reject an internship application (alumnus)')
 class RejectInternshipApplicationView(ApplicationValidationMixin, APIView):

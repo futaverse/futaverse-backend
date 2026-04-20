@@ -87,7 +87,7 @@ class LoginView(TokenObtainPairView, PublicGenericAPIView):
 # class RetrieveUserDetailsView
 
 @extend_schema(tags=['Auth'])
-class TokenRefreshView(TokenRefreshView):
+class CustomTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get("refresh_token")
         

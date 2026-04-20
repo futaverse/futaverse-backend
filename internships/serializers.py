@@ -91,9 +91,13 @@ class ApplicationResumeSerializer(serializers.ModelSerializer):
         read_only_fields = ['sqid', 'uploaded_at', 'application', 'student']
         
 class InternshipEngagementSerializer(serializers.ModelSerializer):
+    internship = serializers.CharField(source="internship.sqid", read_only=True)
+    student = StudentInfoSerializer(read_only=True)
+    alumnus = serializers.CharField(source="alumnus.sqid", read_only=True)
+    
     class Meta:
         model = InternshipEngagement
-        exclude = ['deleted_at', 'is_deleted']
+        exclude = ['deleted_at', 'is_deleted', 'id']
         read_only_fields = ['sqid', 'created_at', 'updated_at']
         
         

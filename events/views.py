@@ -9,6 +9,8 @@ from rest_framework.permissions import IsAuthenticated
 
 from drf_spectacular.utils import extend_schema
 
+from payments.models import Subaccount
+
 from .serializers import EventSerializer, CreateTicketSerializer, TicketPurchaseSerializer, UpdateEventSerializer, ListEventSerializer, UpdateEventModeSerializer, ListTicketPurchaseSerializer
 from .models import Event, VirtualMeeting, Ticket, TicketPurchase
 from .services import EventService, GoogleCalendarService, get_user_credentials, GoogleAuthRequired
@@ -116,11 +118,21 @@ class CreateTicketPurchaseView(generics.CreateAPIView):
             return None
             
         else:
-            authorization_url = initialize_transaction({
+            organizer_subaccount = Subaccount.objects.filter(user=event.creator).first()
+            
+            if not organizer_subaccount: # TODO: Add logging here to track how often this happens and for which users/events so we can proactively reach out to those users to set up their accounts. This should be a rare occurrence since we check for account setup when creating paid tickets, but we should handle it gracefully just in case.
+                print(f"Subaccount not found for user {event.creator.email}")
+                raise Exception("Something went wrong, please try again later. If the problem persists, contact support.")
+            
+            payload = {
                 "amount": int(ticket.sales_price * 100), 
                 "email": user.email,
-                "reference": str(ticket_uid)
-            })
+                "reference": str(ticket_uid),
+                "subaccount": organizer_subaccount.subaccount_code,
+                "bearer": "subaccount"
+            }
+            
+            authorization_url = initialize_transaction(payload)
             
             return authorization_url
 
