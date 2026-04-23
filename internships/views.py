@@ -169,6 +169,7 @@ class CreateInternshipApplication(generics.CreateAPIView):
         student = self.request.user.student_profile
         
         application = serializer.save(student=student)
+        
         if resume:
             resume.application = application
             resume.save(update_fields=['application'])
@@ -183,11 +184,12 @@ class ListInternshipApplicationsView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         
+        # Only applications that have not been accepted or rejected
         if user.role == User.Role.ALUMNI:
-            return InternshipApplication.objects.filter(internship__alumnus=user.alumni_profile).select_related('internship', 'student', 'resume').order_by('-created_at')
+            return InternshipApplication.objects.filter(internship__alumnus=user.alumni_profile, staus=InternshipApplication.Status.PENDING).select_related('internship', 'student', 'resume').order_by('-created_at')
         
         elif user.role == User.Role.STUDENT:
-            return InternshipApplication.objects.filter(student=user.student_profile).select_related('internship', 'resume', 'student').order_by('-created_at')
+            return InternshipApplication.objects.filter(student=user.student_profile, staus=InternshipApplication.Status.PENDING).select_related('internship', 'resume', 'student').order_by('-created_at')
         
         return InternshipApplication.objects.none()
     
