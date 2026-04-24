@@ -67,10 +67,10 @@ class ListMentorshipOfferView(generics.ListAPIView):
         user = self.request.user
         
         if user.role == User.Role.ALUMNI:
-            return MentorshipOffer.objects.filter(mentorship__alumnus=user.alumni_profile).select_related('mentorship', 'student').order_by('-created_at')
+            return MentorshipOffer.objects.filter(mentorship__alumnus=user.alumni_profile, status=MentorshipStatus.PENDING).select_related('mentorship', 'student').order_by('-created_at')
         
         elif user.role == User.Role.STUDENT:
-            return MentorshipOffer.objects.filter(student=user.student_profile).select_related('mentorship', 'student').order_by('-created_at')
+            return MentorshipOffer.objects.filter(student=user.student_profile, status=MentorshipStatus.PENDING).select_related('mentorship', 'student').order_by('-created_at')
         
         return MentorshipOffer.objects.none()
         

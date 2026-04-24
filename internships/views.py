@@ -73,10 +73,10 @@ class ListInternshipOfferView(generics.ListAPIView):
         print(user)
         
         if user.role == User.Role.ALUMNI:
-            return InternshipOffer.objects.filter(internship__alumnus=user.alumni_profile).select_related('internship', 'student').order_by('-created_at')
+            return InternshipOffer.objects.filter(internship__alumnus=user.alumni_profile, status=InternshipStatus.PENDING).select_related('internship', 'student',).order_by('-created_at')
         
         elif user.role == User.Role.STUDENT:
-            return InternshipOffer.objects.filter(student=user.student_profile).select_related('internship', 'student').order_by('-created_at')
+            return InternshipOffer.objects.filter(student=user.student_profile, status=InternshipStatus.PENDING).select_related('internship', 'student').order_by('-created_at')
         
         return InternshipOffer.objects.none()
     
