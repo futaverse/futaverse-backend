@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 
 from drf_spectacular.utils import extend_schema
 
-from .models import Internship, InternshipApplication, InternshipOffer, ApplicationResume, InternshipEngagement
+from .models import Internship, InternshipApplication, InternshipOffer, ApplicationResume, InternshipEngagement, InternshipStatus
 from .serializers import InternshipSerializer, InternshipStatusSerializer, InternshipOfferSerializer, InternshipApplicationSerializer, ApplicationResumeSerializer, InternshipEngagementSerializer
 from .mixins import OfferValidationMixin, ApplicationValidationMixin
 
@@ -159,7 +159,7 @@ class WithdrawInternshipOfferView(OfferValidationMixin, APIView):
         return Response({"detail": "Offer withdrawn successfully."},status=status.HTTP_200_OK)
     
 @extend_schema(tags=['Internship Applications'], summary='Apply for an internship (student)')
-class CreateInternshipApplication(generics.CreateAPIView):
+class CreateInternshipApplicationView(generics.CreateAPIView):
     serializer_class = InternshipApplicationSerializer
     permission_classes = [IsAuthenticatedStudent]
     
@@ -186,10 +186,10 @@ class ListInternshipApplicationsView(generics.ListAPIView):
         
         # Only applications that have not been accepted or rejected
         if user.role == User.Role.ALUMNI:
-            return InternshipApplication.objects.filter(internship__alumnus=user.alumni_profile, staus=InternshipApplication.Status.PENDING).select_related('internship', 'student', 'resume').order_by('-created_at')
+            return InternshipApplication.objects.filter(internship__alumnus=user.alumni_profile, status=InternshipStatus.PENDING).select_related('internship', 'student', 'resume').order_by('-created_at')
         
         elif user.role == User.Role.STUDENT:
-            return InternshipApplication.objects.filter(student=user.student_profile, staus=InternshipApplication.Status.PENDING).select_related('internship', 'resume', 'student').order_by('-created_at')
+            return InternshipApplication.objects.filter(student=user.student_profile, status=InternshipStatus.PENDING).select_related('internship', 'resume', 'student').order_by('-created_at')
         
         return InternshipApplication.objects.none()
     
