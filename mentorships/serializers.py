@@ -55,7 +55,7 @@ class MentorshipApplicationSerializer(serializers.ModelSerializer):
     alumnus_info  = AlumniInfoSerializer(read_only=True, source='mentorship.alumnus')
     class Meta:
         model = MentorshipApplication
-        exclude = ['deleted_at', 'is_deleted', 'id']
+        exclude = ['deleted_at', 'is_deleted', 'id', 'student']
         read_only_fields = ['sqid', 'created_at', 'status', 'responded_at', 'student_info', 'alumnus_info']
         
 class MentorshipEngagementSerializer(serializers.ModelSerializer):
