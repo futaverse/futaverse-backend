@@ -61,8 +61,8 @@ class InternshipApplicationSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = InternshipApplication
-        fields = ['sqid', 'cover_letter', 'resume', 'internship', 'internship_info', 'student_info', 'alumnus_info', 'status', 'created_at', 'updated_at']
-        read_only_fields = ['sqid', 'created_at', 'updated_at', 'status', 'created_at','deleted_at', 'is_deleted']
+        fields = ['sqid', 'cover_letter', 'resume', 'internship', 'internship_info', 'student_info', 'alumnus_info', 'status', 'created_at']
+        read_only_fields = ['sqid', 'created_at', 'status', 'created_at','deleted_at', 'is_deleted']
         
     def validate(self, attrs):
         validated_data = super().validate(attrs)
