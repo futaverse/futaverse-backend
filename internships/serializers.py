@@ -105,9 +105,13 @@ class ManageInternshipOfferSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         request = self.context["request"]
+        offer_id = attrs["offer_id"]
+
+        if not offer_id:
+            raise serializers.ValidationError("Offer id is required.")
 
         offer = get_object_or_404(InternshipOffer.objects.select_related("internship", "student", "internship__alumnus"),
-            sqid=attrs["offer_id"])
+            sqid=offer_id)
 
         if offer.student != request.user.student_profile:
             raise serializers.ValidationError("You are not authorized to accept this internship offer.")
@@ -124,7 +128,33 @@ class ManageInternshipOfferSerializer(serializers.Serializer):
         attrs["offer"] = offer
         return attrs
         
-        
+class ManageInternshipApplicationSerializer(serializers.Serializer):
+    application_id = serializers.CharField()
+
+    def validate(self, attrs):
+        request = self.context["request"]
+        application_id = attrs["application_id"]
+
+        if not application_id:
+            raise serializers.ValidationError("Application ID is required.")
+
+        application = get_object_or_404(InternshipApplication.objects.select_related("internship", "student", "internship__alumnus"),
+            sqid=application_id)
+
+        if application.student != request.user.student_profile:
+            raise serializers.ValidationError("You are not authorized to perform this action.")
+
+        if application.status != InternshipStatus.PENDING:
+            raise serializers.ValidationError(f"Application has already been {application.status.lower()}.")
+
+        if not application.internship.is_active:
+            raise serializers.ValidationError("Internship is not active.")
+
+        if InternshipEngagement.objects.filter(internship=application.internship, student=application.student).exists():
+            raise serializers.ValidationError("You are already engaged in this internship.")
+
+        attrs["application"] = application
+        return attrs
    
 
 

@@ -1,9 +1,11 @@
+from django.shortcuts import get_object_or_404
+
 from rest_framework import serializers
 
 from core.serializers import StudentInfoSerializer, AlumniInfoSerializer
-from core.models import StudentProfile, AlumniProfile
+from core.models import StudentProfile
 
-from .models import Mentorship, MentorshipOffer, MentorshipApplication, MentorshipRequest, MentorshipEngagement
+from .models import Mentorship, MentorshipOffer, MentorshipApplication, MentorshipEngagement, MentorshipStatus
 
 from futaverse.serializers import StrictFieldsMixin
 
@@ -64,3 +66,59 @@ class MentorshipEngagementSerializer(serializers.ModelSerializer):
         model = MentorshipEngagement
         exclude = ['deleted_at', 'is_deleted', 'id', 'mentorship', 'student', 'alumnus']
         read_only_fields = ['sqid', 'created_at']
+        
+class ManageMentorshipOfferSerializer(serializers.Serializer):
+    offer_id = serializers.CharField()
+
+    def validate(self, attrs):
+        request = self.context["request"]
+        offer_id = attrs["offer_id"]
+
+        if not offer_id:
+            raise serializers.ValidationError("Offer id is required.")
+
+        offer = get_object_or_404(MentorshipOffer.objects.select_related("mentorship", "student", "mentorship__alumnus"),
+            sqid=offer_id)
+
+        if offer.student != request.user.student_profile:
+            raise serializers.ValidationError("You are not authorized perform this action.")
+
+        if offer.status != MentorshipStatus.PENDING:
+            raise serializers.ValidationError(f"Offer has already been {offer.status.lower()}.")
+
+        if not offer.mentorship.is_active:
+            raise serializers.ValidationError("mentorship is not active.")
+
+        if MentorshipEngagement.objects.filter(mentorship=offer.mentorship, student=offer.student).exists():
+            raise serializers.ValidationError("You are already engaged in this mentorship.")
+
+        attrs["offer"] = offer
+        return attrs
+        
+class ManagementorshipApplicationSerializer(serializers.Serializer):
+    application_id = serializers.CharField()
+
+    def validate(self, attrs):
+        request = self.context["request"]
+        application_id = attrs["application_id"]
+
+        if not application_id:
+            raise serializers.ValidationError("Application ID is required.")
+
+        application = get_object_or_404(MentorshipApplication.objects.select_related("mentorship", "student", "mentorship__alumnus"),
+            sqid=application_id)
+
+        if application.student != request.user.student_profile:
+            raise serializers.ValidationError("You are not authorized to accept this mentorship application.")
+
+        if application.status != MentorshipStatus.PENDING:
+            raise serializers.ValidationError(f"Application has already been {application.status.lower()}.")
+
+        if not application.mentorship.is_active:
+            raise serializers.ValidationError("mentorship is not active.")
+
+        if MentorshipEngagement.objects.filter(mentorship=application.mentorship, student=application.student).exists():
+            raise serializers.ValidationError("You are already engaged in this mentorship.")
+
+        attrs["application"] = application
+        return attrs

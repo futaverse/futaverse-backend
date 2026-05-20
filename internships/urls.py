@@ -1,6 +1,10 @@
 from django.urls import path
 
-from .views import ListCreateInternshipView, ToggleInternshipActiveView, CreateInternshipOfferView, ListInternshipOfferView, ListInternshipApplicationsView, CreateInternshipApplicationView, UploadApplicationResumeView, AcceptInternshipApplicationView, RejectInternshipApplicationView, AcceptInternshipOfferView, RejectInternshipOfferView, RetrieveUpdateDestroyInternshipView, RetrieveInternshipOfferView, RetrieveInternshipApplicationView, RetrieveInternshipEngagementView, WithdrawInternshipApplicationView, WithdrawInternshipOfferView, ListInternshipEngagementsView
+from .views.applications import ListInternshipApplicationsView, CreateInternshipApplicationView, UploadApplicationResumeView, AcceptInternshipApplicationView, RejectInternshipApplicationView, WithdrawInternshipApplicationView, RetrieveInternshipApplicationView
+
+from .views.offers import ListInternshipOfferView, CreateInternshipOfferView, AcceptInternshipOfferView, RejectInternshipOfferView, WithdrawInternshipOfferView, RetrieveInternshipOfferView
+
+from .views.internships import ListCreateInternshipView, ToggleInternshipActiveView, RetrieveInternshipEngagementView, ListInternshipEngagementsView, RetrieveUpdateDestroyInternshipView
 
 urlpatterns = [
     path('/application', CreateInternshipApplicationView.as_view(), name='create-internship-application'),
