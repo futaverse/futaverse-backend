@@ -1,12 +1,12 @@
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 
-from rest_framework import generics, status
+from rest_framework import generics, status, viewsets
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.views import APIView
 
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_view
 
 from .models import Internship, InternshipApplication, InternshipOffer, ApplicationResume, InternshipEngagement, InternshipStatus
 from .serializers import InternshipSerializer, InternshipStatusSerializer, InternshipOfferSerializer, InternshipApplicationSerializer, ApplicationResumeSerializer, InternshipEngagementSerializer
@@ -17,7 +17,11 @@ from core.models import User
 from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
 from futaverse.utils.supabase import upload_file_to_supabase
 
-@extend_schema(tags=['Internships'], summary="List (GET) and create (POST) internships (alumnus)")
+@extend_schema_view(
+    list=extend_schema(summary="List internships (alumnus)"),
+    create=extend_schema(summary="Create an internship (alumnus)"),
+)
+@extend_schema(tags=['Internships'])
 class ListCreateInternshipView(generics.ListCreateAPIView):
     serializer_class = InternshipSerializer
     permission_classes = [IsAuthenticatedAlumnus]
@@ -30,11 +34,16 @@ class ListCreateInternshipView(generics.ListCreateAPIView):
         alumnus = self.request.user.alumni_profile
         serializer.save(alumnus=alumnus)
 
-@extend_schema(tags=['Internships'], summary='Retrieve (GET), update (PATCH) and delete (DELETE) an internship by id (alumnus)') 
-class RetrieveUpdateDestroyMentorshipView(generics.RetrieveUpdateDestroyAPIView):
+@extend_schema_view(
+    retrieve=extend_schema(summary="Get an internship by id (alumnus)"),
+    update=extend_schema(summary="Update an internship by id (alumnus)"),
+    destroy=extend_schema(summary="Delete an internship by id (alumnus)"),
+)
+@extend_schema(tags=['Internships']) 
+class RetrieveUpdateDestroyInternshipView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = InternshipSerializer
     http_method_names = ['patch', 'get', 'delete']
-    permission_classes = [IsAuthenticatedAlumnus | IsAuthenticatedStudent]
+    permission_classes = [IsAuthenticatedAlumnus]
     lookup_field = 'sqid'
     
     def get_queryset(self):
@@ -63,7 +72,7 @@ class CreateInternshipOfferView(generics.CreateAPIView):
     
     # TODO: Send notification to student when an offer is created 
     
-@extend_schema(tags=['Internship Offers'], summary='List internship offers (alumnus and student)')
+@extend_schema(tags=['Internship Offers'], summary='List internship offers (alumnus, student)')
 class ListInternshipOfferView(generics.ListAPIView):
     serializer_class = InternshipOfferSerializer
     permission_classes = [IsAuthenticatedAlumnus | IsAuthenticatedStudent]

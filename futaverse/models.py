@@ -7,7 +7,7 @@ class ActiveManager(models.Manager):
         return super().get_queryset().filter(is_deleted=False)
 
 class BaseModel(models.Model):
-    sqid = SqidsField(real_field_name="id", min_length=7, alphabet="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
+    sqid = SqidsField(real_field_name="id", min_length=7, alphabet="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890", db_index=True)
     
     is_deleted = models.BooleanField(default=False)
     deleted_at = models.DateTimeField(null=True, blank=True)

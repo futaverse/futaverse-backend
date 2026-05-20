@@ -1,11 +1,11 @@
+from django.shortcuts import get_object_or_404
+
 from rest_framework import serializers
 
-from alumnus.serializers import AlumniInfoSerializer
+from .models import Internship, InternshipApplication, InternshipOffer, InternshipEngagement, ApplicationResume, InternshipStatus
 
-from .models import Internship, InternshipApplication, InternshipOffer, InternshipEngagement, ApplicationResume
-from students.models import StudentProfile
-from students.serializers import StudentProfileSerializer, StudentInfoSerializer
-from alumnus.models import AlumniProfile
+from core.models import StudentProfile, AlumniProfile
+from core.serializers import StudentProfileSerializer, StudentInfoSerializer, AlumniInfoSerializer
 
 from futaverse.serializers import StrictFieldsMixin
 
@@ -99,6 +99,30 @@ class InternshipEngagementSerializer(serializers.ModelSerializer):
         model = InternshipEngagement
         exclude = ['deleted_at', 'is_deleted', 'id']
         read_only_fields = ['sqid', 'created_at', 'updated_at']
+        
+class ManageInternshipOfferSerializer(serializers.Serializer):
+    offer_id = serializers.CharField()
+
+    def validate(self, attrs):
+        request = self.context["request"]
+
+        offer = get_object_or_404(InternshipOffer.objects.select_related("internship", "student", "internship__alumnus"),
+            sqid=attrs["offer_id"])
+
+        if offer.student != request.user.student_profile:
+            raise serializers.ValidationError("You are not authorized to accept this internship offer.")
+
+        if offer.status != InternshipStatus.PENDING:
+            raise serializers.ValidationError(f"Offer has already been {offer.status.lower()}.")
+
+        if not offer.internship.is_active:
+            raise serializers.ValidationError("Internship is not active.")
+
+        if InternshipEngagement.objects.filter(internship=offer.internship, student=offer.student).exists():
+            raise serializers.ValidationError("You are already engaged in this internship.")
+
+        attrs["offer"] = offer
+        return attrs
         
         
    

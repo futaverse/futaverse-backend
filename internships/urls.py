@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import ListCreateInternshipView, ToggleInternshipActiveView, CreateInternshipOfferView, ListInternshipOfferView, ListInternshipApplicationsView, CreateInternshipApplicationView, UploadApplicationResumeView, AcceptInternshipApplicationView, RejectInternshipApplicationView, AcceptInternshipOfferView, RejectInternshipOfferView, RetrieveUpdateDestroyMentorshipView, RetrieveInternshipOfferView, RetrieveInternshipApplicationView, RetrieveInternshipEngagementView, WithdrawInternshipApplicationView, WithdrawInternshipOfferView, ListInternshipEngagementsView
+from .views import ListCreateInternshipView, ToggleInternshipActiveView, CreateInternshipOfferView, ListInternshipOfferView, ListInternshipApplicationsView, CreateInternshipApplicationView, UploadApplicationResumeView, AcceptInternshipApplicationView, RejectInternshipApplicationView, AcceptInternshipOfferView, RejectInternshipOfferView, RetrieveUpdateDestroyInternshipView, RetrieveInternshipOfferView, RetrieveInternshipApplicationView, RetrieveInternshipEngagementView, WithdrawInternshipApplicationView, WithdrawInternshipOfferView, ListInternshipEngagementsView
 
 urlpatterns = [
     path('/application', CreateInternshipApplicationView.as_view(), name='create-internship-application'),
@@ -23,7 +23,7 @@ urlpatterns = [
     path('/engagements/<slug:sqid>', RetrieveInternshipEngagementView.as_view(), name='retrieve-internship-engagement'),
     
     path('', ListCreateInternshipView.as_view(), name='list-create-internships'),
-    path('/<slug:sqid>', RetrieveUpdateDestroyMentorshipView.as_view(), name='retrieve-update-destroy-internships'),
+    path('/<slug:sqid>', RetrieveUpdateDestroyInternshipView.as_view(), name='retrieve-update-destroy-internships'),
     path('/<slug:sqid>/toggle-active', ToggleInternshipActiveView.as_view(), name='toggle-internship-active'),
 ]
     

@@ -1,8 +1,5 @@
 from django.urls import path
-from .views import VerifySignupOTPView, LoginView, CustomTokenRefreshView, ForgotPasswordView, VerifyForgotPasswordOTPView, ResetPasswordView
-from alumnus.views import CreateAlumnusView
-from students.views import CreateStudentView
-
+from .views import VerifySignupOTPView, LoginView, CustomTokenRefreshView, ForgotPasswordView, VerifyForgotPasswordOTPView, ResetPasswordView, CreateStudentView, CreateAlumnusView
 
 urlpatterns = [
     path('/signup/alumnus', CreateAlumnusView.as_view(), name='create-alumnus'),

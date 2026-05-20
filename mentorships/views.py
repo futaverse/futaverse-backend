@@ -1,11 +1,11 @@
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 
-from rest_framework import filters, generics, status
+from rest_framework import generics, status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_view
 
 from .models import Mentorship, MentorshipOffer, MentorshipEngagement, MentorshipApplication, MentorshipStatus
 from .serializers import MentorshipSerializer, MentorshipOfferSerializer, MentorshipApplicationSerializer, MentorshipStatusSerializer, MentorshipEngagementSerializer
@@ -14,7 +14,11 @@ from core.models import User
 
 from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
 
-@extend_schema(tags=['Mentorships'], summary='List (GET) and create (POST) mentorships (alumnus)')
+@extend_schema_view(
+    list=extend_schema(summary="List mentorships (alumnus)"),
+    create=extend_schema(summary="Create an mentorship (alumnus)"),
+)
+@extend_schema(tags=['Mentorships'])
 class ListCreateMentorshipView(generics.ListCreateAPIView):
     serializer_class = MentorshipSerializer
     permission_classes = [IsAuthenticatedAlumnus]
@@ -27,6 +31,11 @@ class ListCreateMentorshipView(generics.ListCreateAPIView):
         alumnus = self.request.user.alumni_profile
         serializer.save(alumnus=alumnus)
 
+@extend_schema_view(
+    retrieve=extend_schema(summary="Get an mentorship by id (alumnus)"),
+    update=extend_schema(summary="Update an mentorship by id (alumnus)"),
+    destroy=extend_schema(summary="Delete an mentorship by id (alumnus)"),
+)
 @extend_schema(tags=['Mentorships'], summary='Retrieve (GET), update (PATCH) and delete (DELETE) a mentorship by id (alumnus)')
 class RetrieveUpdateDestroyMentorshipView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MentorshipSerializer
@@ -52,13 +61,15 @@ class ToggleMentorshipActiveView(generics.UpdateAPIView):
     def perform_update(self, serializer):
         mentorship = self.get_object()
         mentorship.toggle_active()
-    
+        
 @extend_schema(tags=['Mentorship Offers'], summary='Create a mentorship offer (alumnus)')
 class CreateMentorshipOfferView(generics.CreateAPIView):
     serializer_class = MentorshipOfferSerializer
     permission_classes = [IsAuthenticatedAlumnus]
     
-@extend_schema(tags=['Mentorship Offers'], summary='List mentorship offers (alumnus and student)')
+    # TODO: Send notification to student when an offer is created 
+    
+@extend_schema(tags=['Mentorship Offers'], summary='List mentorship offers (alumnus, student)')
 class ListMentorshipOfferView(generics.ListAPIView):
     serializer_class = MentorshipOfferSerializer
     permission_classes = [IsAuthenticatedAlumnus | IsAuthenticatedStudent]
@@ -92,7 +103,7 @@ class RetrieveMentorshipOfferView(generics.RetrieveAPIView):
         return MentorshipOffer.objects.none()
         
 @extend_schema(tags=['Mentorship Offers'], summary='Accept a mentorship offer (student)')
-class AcceptOfferView(OfferValidationMixin, APIView):
+class AcceptMentorshipOfferView(OfferValidationMixin, APIView):
     permission_classes = [IsAuthenticatedStudent]
     serializer_class = None
     

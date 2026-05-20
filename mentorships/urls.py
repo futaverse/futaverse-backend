@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import ListCreateMentorshipView, RetrieveUpdateDestroyMentorshipView, CreateMentorshipOfferView, ListMentorshipOfferView, RetrieveMentorshipOfferView, AcceptOfferView, RejectOfferView, WithdrawOfferView, CreateMentorshipApplicationView, ListMentorshipApplicationsView, RetrieveMentorshipApplicationView, AcceptApplicationView, RejectApplicationView, WithdrawApplicationView, ToggleMentorshipActiveView, ListMentorshipEngagementsView, RetrieveMentorshipEngagementView
+from .views import ListCreateMentorshipView, RetrieveUpdateDestroyMentorshipView, CreateMentorshipOfferView, ListMentorshipOfferView, RetrieveMentorshipOfferView, AcceptMentorshipOfferView, RejectOfferView, WithdrawOfferView, CreateMentorshipApplicationView, ListMentorshipApplicationsView, RetrieveMentorshipApplicationView, AcceptApplicationView, RejectApplicationView, WithdrawApplicationView, ToggleMentorshipActiveView, ListMentorshipEngagementsView, RetrieveMentorshipEngagementView
 
 urlpatterns = [
     path('/offer', CreateMentorshipOfferView.as_view(), name='create-mentorship-offers'),
@@ -10,7 +10,7 @@ urlpatterns = [
     path('/engagements', ListMentorshipEngagementsView.as_view(), name='list-mentorship-engagements'),
     
     path('/offers/<slug:sqid>', RetrieveMentorshipOfferView.as_view(), name='retrieve-mentorship-offers'),
-    path('/offers/<slug:offer_id>/accept', AcceptOfferView.as_view(), name='accept-mentorship-offer'),
+    path('/offers/<slug:offer_id>/accept', AcceptMentorshipOfferView.as_view(), name='accept-mentorship-offer'),
     path('/offers/<slug:offer_id>/reject', RejectOfferView.as_view(), name='reject-mentorship-offer'),
     path('/offers/<slug:offer_id>/withdraw', WithdrawOfferView.as_view(), name='withdraw-mentorship-offer'),
     

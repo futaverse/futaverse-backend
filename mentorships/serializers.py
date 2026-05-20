@@ -1,11 +1,9 @@
 from rest_framework import serializers
 
-from alumnus.serializers import AlumniInfoSerializer
-from students.serializers import StudentInfoSerializer
+from core.serializers import StudentInfoSerializer, AlumniInfoSerializer
+from core.models import StudentProfile, AlumniProfile
 
 from .models import Mentorship, MentorshipOffer, MentorshipApplication, MentorshipRequest, MentorshipEngagement
-from students.models import StudentProfile
-from alumnus.models import AlumniProfile
 
 from futaverse.serializers import StrictFieldsMixin
 

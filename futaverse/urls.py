@@ -4,6 +4,8 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, Spec
 from core.views import UploadUserProfileImageView
 from .utils.google.views import google_auth_start, google_auth_callback
 
+from core.views import UploadResumeView
+
 urlpatterns = [
     path('', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/redoc', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
@@ -16,7 +18,8 @@ urlpatterns = [
     path('api/auth', include('core.urls')),
     path('api/internships', include('internships.urls')),
     path('api/mentorships', include('mentorships.urls')),
-    path('api/students', include('students.urls')),
     path('api/events/', include('events.urls')),
     path('api/payments', include('payments.urls')),
+    
+    path('student/resume', UploadResumeView.as_view(), name='upload-resume'),
 ]

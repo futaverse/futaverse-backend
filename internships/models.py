@@ -1,6 +1,5 @@
 from django.db import models
-from alumnus.models import AlumniProfile
-from students.models import StudentProfile
+from core.models import StudentProfile, AlumniProfile
 from futaverse.models import BaseModel
 from django.utils import timezone
 

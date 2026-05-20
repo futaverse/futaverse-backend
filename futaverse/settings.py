@@ -28,8 +28,6 @@ INSTALLED_APPS = [
     "corsheaders",
     
     'core',
-    'alumnus',
-    'students',
     'internships',
     'mentorships',
     'events',
