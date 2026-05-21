@@ -1,8 +1,40 @@
-from rest_framework import serializers
+from django.contrib.auth import authenticate
+
+from rest_framework import serializers, exceptions
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
 from .models import UserProfileImage, User, OTP, StudentProfile, StudentResume, AlumniProfile
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        email = attrs.get("email")
+        password = attrs.get("password")
+        
+        user = authenticate(
+            request=self.context.get("request"),
+            username=email,
+            password=password
+        )
+
+        if not user:
+            existing_user = User.objects.filter(email=email).first()
+
+            if existing_user:
+                raise exceptions.AuthenticationFailed(
+                    detail="Incorrect password.",
+                    code="incorrect_password"
+                )
+
+            raise exceptions.AuthenticationFailed(
+                detail="No account found with this email.",
+                code="user_not_found"
+            )
+
+        return super().validate(attrs)
 
 class UserProfileImageSerializer(serializers.ModelSerializer):
     url: str = serializers.SerializerMethodField(read_only=True)
+    
     class Meta:
         model = UserProfileImage
         fields = ['sqid', 'image', 'url']
@@ -101,7 +133,7 @@ class CreateStudentSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        exclude = ['is_active', 'is_staff', 'role', 'last_login', 'id']
+        fields = ['email', 'password', 'profile']
         read_only_fields = ['sqid', 'created_at', 'updated_at']
         
     def create(self, validated_data):
@@ -130,30 +162,22 @@ class AlumniProfileSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = AlumniProfile
-        exclude = ['user']
+        exclude = ['user', 'id', 'is_deleted', 'deleted_at']
         
 
 class AlumniInfoSerializer(serializers.ModelSerializer):
-    # profile_img = serializers.SerializerMethodField()
-    
     class Meta:
         model = AlumniProfile
         fields = ['sqid', 'firstname', 'lastname', 'middlename', 'gender', 'phone_num']
         read_only_fields = ['sqid']
         
-    # def get_profile_img(self, obj):
-    #     if obj.user.profile_img:
-    #         return obj.user.profile_img.sqid
-    #     return None 
-    
 class CreateAlumnusSerializer(serializers.ModelSerializer):
     profile = AlumniProfileSerializer(required=True, source='alumni_profile')
     password = serializers.CharField(write_only=True, required=True, min_length=8)
     
     class Meta:
         model = User
-        # fields = '__all__'
-        exclude = ['is_active', 'is_staff', 'role', 'last_login']
+        fields = ['email', 'password', 'profile']
         read_only_fields = ['sqid', 'created_at', 'updated_at']
         
     def create(self, validated_data):

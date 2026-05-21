@@ -37,8 +37,11 @@ class MentorshipOfferSerializer(serializers.ModelSerializer):
         if not mentorship.is_active:
             raise serializers.ValidationError("This mentorship is inactive. You cannot send new offers.")
         
-        if MentorshipOffer.objects.filter(mentorship=mentorship, student=student).exists():
+        if MentorshipOffer.objects.filter(mentorship=mentorship, student=student, status=MentorshipStatus.PENDING).exists():
             raise serializers.ValidationError({"detail": "You have already offered this mentorship to this student."})
+        
+        if MentorshipEngagement.objects.filter(mentorship=mentorship, student=student, status=MentorshipEngagement.EngagementStatus.ACTIVE).exists():
+            raise serializers.ValidationError({"detail": "You are already engaged in this mentorship."})
         
         return  validated_data
     
@@ -81,16 +84,16 @@ class ManageMentorshipOfferSerializer(serializers.Serializer):
             sqid=offer_id)
 
         if offer.student != request.user.student_profile:
-            raise serializers.ValidationError("You are not authorized perform this action.")
+            raise serializers.ValidationError({"detail": "You are not authorized perform this action."})
 
         if offer.status != MentorshipStatus.PENDING:
-            raise serializers.ValidationError(f"Offer has already been {offer.status.lower()}.")
+            raise serializers.ValidationError({"detail": f"This offer has already been {offer.status.lower()}."})
 
         if not offer.mentorship.is_active:
-            raise serializers.ValidationError("mentorship is not active.")
+            raise serializers.ValidationError({"detail": "This mentorship is not active."})
 
-        if MentorshipEngagement.objects.filter(mentorship=offer.mentorship, student=offer.student).exists():
-            raise serializers.ValidationError("You are already engaged in this mentorship.")
+        if MentorshipEngagement.objects.filter(mentorship=offer.mentorship, student=offer.student, status=MentorshipEngagement.EngagementStatus.ACTIVE).exists():
+            raise serializers.ValidationError({"detail": "This student is already engaged in this mentorship."})
 
         attrs["offer"] = offer
         return attrs
@@ -109,16 +112,16 @@ class ManagementorshipApplicationSerializer(serializers.Serializer):
             sqid=application_id)
 
         if application.student != request.user.student_profile:
-            raise serializers.ValidationError("You are not authorized to accept this mentorship application.")
+            raise serializers.ValidationError({"detail": "You are not authorized to accept this mentorship application."})
 
         if application.status != MentorshipStatus.PENDING:
-            raise serializers.ValidationError(f"Application has already been {application.status.lower()}.")
+            raise serializers.ValidationError({"detail": f"Application has already been {application.status.lower()}."})
 
         if not application.mentorship.is_active:
-            raise serializers.ValidationError("mentorship is not active.")
+            raise serializers.ValidationError({"detail": "This mentorship is not active."})
 
         if MentorshipEngagement.objects.filter(mentorship=application.mentorship, student=application.student).exists():
-            raise serializers.ValidationError("You are already engaged in this mentorship.")
+            raise serializers.ValidationError({"detail": "You are already engaged in this mentorship."})
 
         attrs["application"] = application
         return attrs

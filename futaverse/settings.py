@@ -3,6 +3,7 @@ from datetime import timedelta
 from pathlib import Path
 from dotenv import load_dotenv
 import ssl
+from urllib.parse import urlparse, parse_qsl
 
 load_dotenv()
 
@@ -66,25 +67,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'futaverse.wsgi.application'
 
+tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': os.environ.get('DB_USER'),  
-        'PASSWORD': os.environ.get('DB_PASSWORD'),
-        'HOST': os.environ.get('DB_HOST'), 
-        'PORT': os.environ.get('DB_PORT', '6543'),
-        'OPTIONS': {
-            'sslmode': 'require', 
-            'connect_timeout': 30,
-        },
-        'CONN_MAX_AGE': 600
+        'NAME': tmpPostgres.path.replace('/', ''),
+        'USER': tmpPostgres.username,
+        'PASSWORD': tmpPostgres.password,
+        'HOST': tmpPostgres.hostname,
+        'PORT': 5432,
+        'OPTIONS': dict(parse_qsl(tmpPostgres.query)),
     }
 }
-if os.environ.get("ENVIRONMENT") == "development":
-    DATABASES['default']['OPTIONS']['sslmode'] = 'verify-full'
-    DATABASES['default']['OPTIONS']['sslrootcert'] = os.path.join(BASE_DIR, 'root.crt')
-    
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -134,7 +129,7 @@ SIMPLE_JWT = {
     "SIGNING_KEY": os.environ.get("DJANGO_SECRET_KEY"),
     "ALGORITHM": "HS256",
     "TOKEN_BLACKLIST_ENABLED": True,
-    # "TOKEN_OBTAIN_SERIALIZER": "core.serializers.CustomTokenObtainPairSerializer",
+    "TOKEN_OBTAIN_SERIALIZER": "core.serializers.CustomTokenObtainPairSerializer",
 }
 
 SPECTACULAR_SETTINGS = {

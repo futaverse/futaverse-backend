@@ -48,6 +48,9 @@ class InternshipOfferSerializer(serializers.ModelSerializer):
         if InternshipOffer.objects.filter(internship=internship, student=student).exists():
             raise serializers.ValidationError({"detail": "You have already offered this internship."})
         
+        if InternshipEngagement.objects.filter(mentorship=internship, student=student, status=InternshipEngagement.EngagementStatus.ACTIVE).exists():
+            raise serializers.ValidationError({"detail": "This student is already engaged in this internship."})
+        
         return  validated_data
     
 class InternshipApplicationSerializer(serializers.ModelSerializer):
@@ -114,16 +117,16 @@ class ManageInternshipOfferSerializer(serializers.Serializer):
             sqid=offer_id)
 
         if offer.student != request.user.student_profile:
-            raise serializers.ValidationError("You are not authorized to accept this internship offer.")
+            raise serializers.ValidationError({"detail": "You are not authorized to accept this internship offer."})
 
         if offer.status != InternshipStatus.PENDING:
-            raise serializers.ValidationError(f"Offer has already been {offer.status.lower()}.")
+            raise serializers.ValidationError({"detail": f"Offer has already been {offer.status.lower()}."})
 
         if not offer.internship.is_active:
-            raise serializers.ValidationError("Internship is not active.")
+            raise serializers.ValidationError({"detail": "Internship is not active."})
 
-        if InternshipEngagement.objects.filter(internship=offer.internship, student=offer.student).exists():
-            raise serializers.ValidationError("You are already engaged in this internship.")
+        if InternshipEngagement.objects.filter(internship=offer.internship, student=offer.student, status=InternshipEngagement.EngagementStatus.ACTIVE).exists():
+            raise serializers.ValidationError({"detail": "You are already engaged in this internship."})
 
         attrs["offer"] = offer
         return attrs
@@ -142,16 +145,16 @@ class ManageInternshipApplicationSerializer(serializers.Serializer):
             sqid=application_id)
 
         if application.student != request.user.student_profile:
-            raise serializers.ValidationError("You are not authorized to perform this action.")
+            raise serializers.ValidationError({"detail": "You are not authorized to perform this action."})
 
         if application.status != InternshipStatus.PENDING:
-            raise serializers.ValidationError(f"Application has already been {application.status.lower()}.")
+            raise serializers.ValidationError({"detail": f"Application has already been {application.status.lower()}."})
 
         if not application.internship.is_active:
-            raise serializers.ValidationError("Internship is not active.")
+            raise serializers.ValidationError({"detail": "Internship is not active."})
 
         if InternshipEngagement.objects.filter(internship=application.internship, student=application.student).exists():
-            raise serializers.ValidationError("You are already engaged in this internship.")
+            raise serializers.ValidationError({"detail": "You are already engaged in this internship."})
 
         attrs["application"] = application
         return attrs

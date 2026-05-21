@@ -77,9 +77,6 @@ class InternshipApplication(BaseModel):
     
     responded_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        unique_together = ('internship', 'student')
-        
     def withdraw(self):
         self.status = InternshipStatus.WITHDRAWN
         self.save(update_fields=['status'])
@@ -106,9 +103,6 @@ class InternshipOffer(BaseModel):
     
     updated_at = models.DateTimeField(auto_now=True)
     
-    class Meta:
-        unique_together = ("internship", "student")
-        
     def withdraw(self):
         self.status = InternshipStatus.WITHDRAWN
         self.save(update_fields=['status'])
@@ -146,9 +140,6 @@ class InternshipEngagement(BaseModel):
     status = models.CharField(choices=EngagementStatus.choices, max_length=20, default=EngagementStatus.ACTIVE)
     
     updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        unique_together = ("internship", "student")
     
     @property
     def engagement(self):

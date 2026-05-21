@@ -61,9 +61,6 @@ class MentorshipApplication(BaseModel):
     
     responded_at = models.DateTimeField(null=True, blank=True)
     
-    class Meta:
-        unique_together = ('mentorship', 'student')
-        
     def withdraw(self):
         self.status = MentorshipStatus.WITHDRAWN
         self.save(update_fields=['status'])
@@ -88,9 +85,6 @@ class MentorshipOffer(BaseModel):
     status = models.CharField(choices=MentorshipStatus.choices, max_length=20, default=MentorshipStatus.PENDING)
     responded_at = models.DateTimeField(null=True, blank=True)
     
-    class Meta:
-        unique_together = ('mentorship', 'student')
-        
     def withdraw(self):
         self.status = MentorshipStatus.WITHDRAWN
         self.save(update_fields=['status'])
@@ -151,9 +145,6 @@ class MentorshipEngagement(BaseModel):
     source = models.CharField(choices=Source.choices, max_length=20)
     source_id = models.PositiveIntegerField()
     status = models.CharField(choices=EngagementStatus.choices, max_length=20, default=EngagementStatus.ACTIVE)
-    
-    class Meta:
-        unique_together = ("mentorship", "student")
     
     @property
     def engagement(self):
