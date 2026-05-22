@@ -1,3 +1,5 @@
+from urllib.parse import urlencode
+
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -23,7 +25,7 @@ GOOGLE_SCOPES = [
     "https://www.googleapis.com/auth/calendar"
 ]
 
-environment = os.getenv("ENVIRONMENT", "development")
+# environment = os.getenv("ENVIRONMENT", "development")
 
 # if environment == "production":
 google_redirect_uri = os.getenv("GOOGLE_REDIRECT_URI")
@@ -34,7 +36,10 @@ google_auth_uri = os.getenv("GOOGLE_AUTH_URI")
 #     google_auth_uri = os.getenv("GOOGLE_LOCAL_AUTH_URI")
 
 def build_google_auth_url(user_id, redirect_after_auth=None):
-    return f"{google_auth_uri}?user_id={user_id}&redirect_after_auth={redirect_after_auth}"
+    params = {"user_id": user_id}
+    if redirect_after_auth:
+        params["redirect_after_auth"] = redirect_after_auth
+    return f"{google_auth_uri}?{urlencode(params)}"
 
 def get_google_client_config():
     return {"web": 
@@ -78,7 +83,7 @@ def get_google_client_config():
 def google_auth_start(request):
     client_config = get_google_client_config()
     
-    user_id = request.query_params.get("user_id")
+    user_id = request.query_params.get("user_id", "").strip()
     user = User.objects.filter(sqid=user_id).first()
     if not user:
         return Response({"detail": "User with provided id not found."}, status=404)
