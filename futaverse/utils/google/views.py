@@ -81,32 +81,37 @@ def get_google_client_config():
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def google_auth_start(request):
-    client_config = get_google_client_config()
-    
-    user_id = request.query_params.get("user_id")
-    print("user_id", user_id)
-    user = User.objects.filter(sqid=user_id).first()
-    if not user:
-        return Response({"detail": "User with provided id not found."}, status=404)
+    try:
+        client_config = get_google_client_config()
+        
+        user_id = request.query_params.get("user_id")
+        print("user_id", user_id)
+        user = User.objects.filter(sqid=user_id).first()
+        if not user:
+            return Response({"detail": "User with provided id not found."}, status=404)
 
-    flow = Flow.from_client_config(client_config, scopes=GOOGLE_SCOPES, redirect_uri=google_redirect_uri)
-    
-    auth_url, state = flow.authorization_url(
-        access_type="offline",
-        include_granted_scopes="true",
-        prompt="consent"
-    )
-    
-    redirect_after_auth = request.query_params.get("redirect_after_auth", None)
-    
-    if redirect_after_auth in [None, "", "None", "null"]:
-        redirect_after_auth = None
+        flow = Flow.from_client_config(client_config, scopes=GOOGLE_SCOPES, redirect_uri=google_redirect_uri)
+        
+        auth_url, state = flow.authorization_url(
+            access_type="offline",
+            include_granted_scopes="true",
+            prompt="consent"
+        )
+        
+        redirect_after_auth = request.query_params.get("redirect_after_auth", None)
+        
+        if redirect_after_auth in [None, "", "None", "null"]:
+            redirect_after_auth = None
 
-    request.session["google_oauth_state"] = state
-    request.session["user_id"] = user_id
-    request.session["redirect_after_auth"] = redirect_after_auth
+        request.session["google_oauth_state"] = state
+        request.session["user_id"] = user_id
+        request.session["redirect_after_auth"] = redirect_after_auth
 
-    return redirect(auth_url)
+        return redirect(auth_url)
+    
+    except Exception as e:
+        logger.error(f"Error starting Google OAuth flow: {e}")
+        return Response({"error": "Failed to start Google OAuth flow"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @extend_schema(
     summary="Google OAuth callback",
