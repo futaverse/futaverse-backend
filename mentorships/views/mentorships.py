@@ -9,6 +9,9 @@ from core.models import User
 
 from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
 
+from feed.tasks import create_feed_event_task
+from feed.models import FeedEvent
+
 @extend_schema_view(
     list=extend_schema(summary="List mentorships (alumnus)"),
     create=extend_schema(summary="Create an mentorship (alumnus)"),
@@ -24,7 +27,22 @@ class ListCreateMentorshipView(generics.ListCreateAPIView):
     
     def perform_create(self, serializer):
         alumnus = self.request.user.alumni_profile
-        serializer.save(alumnus=alumnus)
+        mentorship = serializer.save(alumnus=alumnus)
+        
+        create_feed_event_task.delay(
+            event_type=FeedEvent.EventType.MENTORSHIP_CREATED,
+            related_object_id=mentorship.id,
+            related_model='mentorship', 
+            audience=FeedEvent.Audience.STUDENT, 
+            data={
+                'title': mentorship.title,
+                'alumni': mentorship.alumnus.full_name,  
+                'category': mentorship.category,
+                'available_slots': mentorship.available_slots,
+                'remaining_slots': mentorship.remaining_slots,
+                'created_at': mentorship.created_at.isoformat(),
+            }
+        )
 
 @extend_schema_view(
     retrieve=extend_schema(summary="Get an mentorship by id (alumnus)"),

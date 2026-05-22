@@ -6,6 +6,7 @@ from internships.models import Internship, InternshipEngagement
 from internships.serializers import InternshipSerializer, InternshipStatusSerializer, InternshipEngagementSerializer
 from core.models import User
 from feed.tasks import create_feed_event_task
+from feed.models import FeedEvent
 
 from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
 
@@ -27,12 +28,20 @@ class ListCreateInternshipView(generics.ListCreateAPIView):
         internship = serializer.save(alumnus=alumnus)
         
         create_feed_event_task.delay(
-            event_type='internship_posted',
+            event_type=FeedEvent.EventType.INTERNSHIP_CREATED,
             related_object_id=internship.id,
-            related_model='internships.Internship',   # your app_label.ModelName
-            payload={
+            related_model='internship',  
+            audience=FeedEvent.Audience.STUDENT,
+            data={
                 'title':   internship.title,
-                'company': internship.company,         # whatever fields you need to render the card
+                'alumni': internship.alumnus.full_name,  
+                'work_mode': internship.work_mode,
+                'engagement_type': internship.engagement_type,
+                'stipend': str(internship.stipend),
+                'is_paid': internship.is_paid,
+                'available_slots': internship.available_slots,
+                'remaining_slots': internship.remaining_slots,
+                'created_at': internship.created_at.isoformat(),
             }
         )
 

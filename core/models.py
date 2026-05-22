@@ -35,16 +35,15 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser):
     class Role(models.TextChoices):
-        ALUMNI = 'Alumni', 'alumni'
-        STUDENT = 'Student', 'student'
-        STAFF = 'Staff', 'staff'
+        ALUMNI = 'alumni', 'Alumni'
+        STUDENT = 'student', 'Student'
+        STAFF = 'staff', 'Staff'
         ADMIN = 'admin', 'Admin'
         
     PROFILE_RELATIONS = {
         Role.ALUMNI: "alumni_profile",
         Role.STUDENT: "student_profile",
     }
-    
         
     sqid = SqidsField(real_field_name="id", min_length=7)
     email = models.EmailField(unique=True, blank=True, null=True)
@@ -140,10 +139,10 @@ class StudentProfile(BaseModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="student_profile")
     
     class Gender(models.TextChoices):
-        MALE = 'male', 'Male'
-        FEMALE = 'female', 'Female'
-        OTHER = 'other', 'Other'
-        UNKNOWN = 'unknown', 'Unknown'
+        MALE = 'Male', 'male'
+        FEMALE = 'Female', 'female'
+        OTHER = 'Other', 'other'
+        UNKNOWN = 'Unknown', 'unknown'
         
     phone_num = models.CharField()
     gender = models.CharField(choices=Gender.choices)
@@ -226,10 +225,10 @@ class StudentResume(BaseModel):
     
 class AlumniProfile(BaseModel):
     class Gender(models.TextChoices):
-        MALE = 'male', 'Male'
-        FEMALE = 'female', 'Female'
-        OTHER = 'other', 'Other'
-        UNKNOWN = 'unknown', 'Unknown'
+        MALE = 'Male', 'male'
+        FEMALE = 'Female', 'female'
+        OTHER = 'Other', 'other'
+        UNKNOWN = 'Unknown', 'unknown'
         
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="alumni_profile")
     
@@ -286,8 +285,8 @@ class AlumniProfile(BaseModel):
         if self.industry:
             attributes.append(models.Q(targets__target_type='industry', targets__target_value=self.industry))
             
-        if self.company_type:
-            attributes.append(models.Q(targets__target_type='company_type', targets__target_value=self.company_type))
+        # if self.company_type:
+        #     attributes.append(models.Q(targets__target_type='company_type', targets__target_value=self.company_type))
 
         if not attributes:
             return None

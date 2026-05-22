@@ -12,4 +12,4 @@ class FeedEventSerializer(serializers.ModelSerializer):
 
     class Meta:
         model  = FeedEvent
-        fields = ['sqid', 'event_type', 'payload', 'score', 'created_at']
+        fields = ['sqid', 'event_type', 'data', 'score', 'created_at']

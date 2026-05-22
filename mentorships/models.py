@@ -51,6 +51,11 @@ class Mentorship(BaseModel):
     def toggle_active(self):
         self.is_active = not self.is_active
         self.save(update_fields=['is_active'])
+        
+    @property
+    def feed_targets(self):
+        targets = []
+        return targets
     
 class MentorshipApplication(BaseModel):
     mentorship = models.ForeignKey(Mentorship, on_delete=models.CASCADE, related_name='applications')

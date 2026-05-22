@@ -20,6 +20,7 @@ urlpatterns = [
     path('api/mentorships', include('mentorships.urls')),
     path('api/events/', include('events.urls')),
     path('api/payments', include('payments.urls')),
+    path('api/feed', include('feed.urls')),
     
     path('student/resume', UploadResumeView.as_view(), name='upload-resume'),
 ]

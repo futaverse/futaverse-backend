@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'mentorships',
     'events',
     'payments',
+    'feed',
 ]
 
 AUTH_USER_MODEL = "core.User"

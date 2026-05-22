@@ -78,7 +78,7 @@ class LoginView(TokenObtainPairView, PublicGenericAPIView):
             
             user = User.objects.get(email=request.data.get("email"))
             role = user.role
-            sqid = user.profile().sqid
+            sqid = user.profile.sqid
             print(user, role)
             
             response.data["data"]["role"] = role

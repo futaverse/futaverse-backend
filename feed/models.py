@@ -1,9 +1,7 @@
 from django.db import models
 
-from futaverse.models import BaseModel, User
-
-# Create your models here.
-
+from futaverse.models import BaseModel
+from core.models import User
 
 class FeedEvent(BaseModel):
     class EventType(models.TextChoices):
@@ -13,7 +11,7 @@ class FeedEvent(BaseModel):
         
     class Audience(models.TextChoices):
         PUBLIC = "public", "Public"
-        STUDENTS = "students", "Students"
+        STUDENT = "student", "Student"
         ALUMNI = "alumni", "Alumni"
 
     event_type = models.CharField(max_length=50, choices=EventType.choices)

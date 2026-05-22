@@ -22,32 +22,47 @@ from .tasks import record_impressions_task
 #     data = json.loads(base64.urlsafe_b64decode(cursor))
 #     return datetime.fromisoformat(data['ts']), data['id']
 
-class FeedView(generics.GenericAPIView):
+class FeedView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     pagination_class = FeedCursorPagination
     serializer_class = FeedEventSerializer
     
     def get_queryset(self):
-        profile = self.request.user.profile
+        user = self.request.user
+        profile = user.profile
         
-        match_filter = profile.feed_match_filter()
-        queryset = FeedEvent.objects.filter(is_active=True).exclude(
+        print(user.role)
+        match_filter = profile.feed_match_filter
+        queryset = FeedEvent.objects.filter(is_active=True, audience__in=[user.role, FeedEvent.Audience.PUBLIC]).exclude(
             impressions__user=self.request.user
         )
-
-        # Ranking based on number of matched filters
+        
+        # Ranking based on number   of matched filters
         if match_filter:
             queryset = queryset.annotate(score=Count('targets', filter=match_filter))
         else:
             queryset = queryset.annotate(score=Value(0, output_field=IntegerField()))  # score=0 for everyone
 
         return queryset.order_by('-score', '-created_at')
+        
+    # def list(self, request, *args, **kwargs):
+    #     response = super().list(request, *args, **kwargs)
+        
+    #     print(response.data)
 
+    #     ids = [item['sqid'] for item in response.data['results']]
+    #     if ids:
+    #         record_impressions_task.delay(request.user.id, ids)
+
+    #     return response
+    
     def list(self, request, *args, **kwargs):
-        response = super().list(request, *args, **kwargs)
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
 
-        ids = [item['id'] for item in response.data['results']]
+        ids = [event.id for event in page] 
         if ids:
             record_impressions_task.delay(request.user.id, ids)
 
-        return response
+        serializer = self.get_serializer(page, many=True)
+        return self.get_paginated_response(serializer.data)

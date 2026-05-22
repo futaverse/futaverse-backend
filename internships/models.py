@@ -68,6 +68,15 @@ class Internship(BaseModel):
     def __str__(self):
         return f"{self.title} (internship)"
     
+    @property
+    def feed_targets(self):
+        targets = []
+        for skill in self.skills_required:
+            targets.append({'target_type': 'skill', 'target_value': skill})
+        if self.industry:
+            targets.append({'target_type': 'industry', 'target_value': self.industry})
+        return targets
+    
 class InternshipApplication(BaseModel):
     internship = models.ForeignKey(Internship, on_delete=models.CASCADE, related_name='applications')
     student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, related_name='internship_applications')
