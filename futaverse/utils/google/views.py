@@ -79,7 +79,8 @@ def google_auth_start(request):
     client_config = get_google_client_config()
     
     user_id = request.query_params.get("user_id")
-    user = User.objects.filter(sqid=user_id).first()
+    print(f"User id: {user_id}")
+    user = User.objects.get(sqid=user_id)
     if not user:
         return Response({"detail": "User with provided id not found."}, status=404)
 
