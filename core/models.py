@@ -40,6 +40,12 @@ class User(AbstractBaseUser):
         STAFF = 'Staff', 'staff'
         ADMIN = 'admin', 'Admin'
         
+    PROFILE_RELATIONS = {
+        Role.ALUMNI: "alumni_profile",
+        Role.STUDENT: "student_profile",
+    }
+    
+        
     sqid = SqidsField(real_field_name="id", min_length=7)
     email = models.EmailField(unique=True, blank=True, null=True)
     role = models.CharField(max_length=20, choices=Role.choices)
@@ -56,15 +62,17 @@ class User(AbstractBaseUser):
     
     objects = UserManager()
     
-    def get_profile(self):
-        if self.role == self.Role.ALUMNI:
-            return getattr(self, 'alumni_profile', None)
-        elif self.role == self.Role.STUDENT:
-            return getattr(self, 'student_profile', None)
-        return None
+    @property
+    def profile(self):
+        relation = self.PROFILE_RELATIONS.get(self.role)
+
+        if not relation:
+            return None
+
+        return getattr(self, relation, None)
     
     def get_full_name(self):
-        profile = self.get_profile()
+        profile = self.profile()
         if profile:
             return f"{profile.firstname} {profile.lastname}"
         return self.email
@@ -155,7 +163,7 @@ class StudentProfile(BaseModel):
     faculty = models.CharField(max_length=60)
     level = models.IntegerField(choices=LevelChoices.choices)
     cgpa = models.DecimalField(max_digits=3, decimal_places=2)
-    skills = models.JSONField(default=list)
+    skills = models.JSONField(default=list) # TODO: Make this a drop down on the frontend
     expected_grad_year = models.CharField(max_length=4)
     
     preferred_industry = models.CharField(blank=True, null=True)
@@ -176,6 +184,37 @@ class StudentProfile(BaseModel):
     
     def __str__(self):
         return f"{self.full_name} (student)"
+    
+    @property
+    def feed_match_filter(self):
+        attributes = []
+
+        for skill in self.skills: 
+            attributes.append(models.Q(targets__target_type='skill', targets__target_value=skill))
+
+        if self.department:
+            attributes.append(models.Q(targets__target_type='department', targets__target_value=self.department))
+            
+        if self.faculty:
+            attributes.append(models.Q(targets__target_type='faculty', targets__target_value=self.faculty))
+
+        if self.level:
+            attributes.append(models.Q(targets__target_type='level', targets__target_value=str(self.level)))
+            
+        if self.preferred_industry:
+            attributes.append(models.Q(targets__target_type='industry', targets__target_value=self.preferred_industry))
+            
+        if self.preferred_company_type:
+            attributes.append(models.Q(targets__target_type='company_type', targets__target_value=self.preferred_company_type))
+
+        if not attributes:
+            return None
+
+        match_filter = attributes[0]
+        for attr in attributes[1:]:
+            match_filter |= attr
+
+        return match_filter
     
 class StudentResume(BaseModel):
     student = models.OneToOneField(StudentProfile, on_delete=models.CASCADE, related_name='resume', blank=True, null=True)
@@ -213,7 +252,7 @@ class AlumniProfile(BaseModel):
     grad_year = models.CharField(max_length=4)
     
     current_job_title = models.CharField()
-    current_company = models.CharField()
+    current_company = models.CharField() # TODO: Add company type
     industry = models.CharField()
     years_of_exp = models.IntegerField()
     previous_comps = models.JSONField(default=list, blank=True, null=True)
@@ -233,3 +272,28 @@ class AlumniProfile(BaseModel):
     
     def __str__(self):
         return f"{self.full_name} (alumnus)"
+    
+    @property
+    def feed_match_filter(self):
+        attributes = []
+
+        if self.department:
+            attributes.append(models.Q(targets__target_type='department', targets__target_value=self.department))
+            
+        if self.faculty:
+            attributes.append(models.Q(targets__target_type='faculty', targets__target_value=self.faculty))
+
+        if self.industry:
+            attributes.append(models.Q(targets__target_type='industry', targets__target_value=self.industry))
+            
+        if self.company_type:
+            attributes.append(models.Q(targets__target_type='company_type', targets__target_value=self.company_type))
+
+        if not attributes:
+            return None
+
+        match_filter = attributes[0]
+        for attr in attributes[1:]:
+            match_filter |= attr
+
+        return match_filter

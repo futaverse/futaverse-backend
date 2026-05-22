@@ -5,6 +5,7 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
 from internships.models import Internship, InternshipEngagement
 from internships.serializers import InternshipSerializer, InternshipStatusSerializer, InternshipEngagementSerializer
 from core.models import User
+from feed.tasks import create_feed_event_task
 
 from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
 
@@ -23,7 +24,17 @@ class ListCreateInternshipView(generics.ListCreateAPIView):
     
     def perform_create(self, serializer):
         alumnus = self.request.user.alumni_profile
-        serializer.save(alumnus=alumnus)
+        internship = serializer.save(alumnus=alumnus)
+        
+        create_feed_event_task.delay(
+            event_type='internship_posted',
+            related_object_id=internship.id,
+            related_model='internships.Internship',   # your app_label.ModelName
+            payload={
+                'title':   internship.title,
+                'company': internship.company,         # whatever fields you need to render the card
+            }
+        )
 
 @extend_schema_view(
     retrieve=extend_schema(summary="Get an internship by id (alumnus)"),

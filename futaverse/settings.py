@@ -10,8 +10,8 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
-
-DEBUG = True
+DEVELOPMENT = os.getenv("DEVELOPMENT", False)
+DEBUG = DEVELOPMENT
 
 ALLOWED_HOSTS = ["futaverse-backend.onrender.com", "futaverse-backend-xfcs.onrender.com", "localhost", "127.0.0.1", "0.0.0.0", "futaverse-backend-3.onrender.com"]
 
@@ -199,3 +199,24 @@ if REDIS_URL.startswith("rediss://"):
     
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
+
+CELERY_BROKER_URL = os.environ.get("REDIS_URL")
+CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL")
+CELERY_RESULT_EXPIRES = 3600
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+
+if not DEVELOPMENT:
+    CELERY_BROKER_USE_SSL = {
+        "ssl_cert_reqs": ssl.CERT_NONE
+    }
+
+    CELERY_REDIS_BACKEND_USE_SSL = {
+        "ssl_cert_reqs": ssl.CERT_NONE
+    }
+    
+EVENTSTREAM_REDIS = {
+    "host": "redis",
+    "port": 6379,
+    "db": 0,
+}
