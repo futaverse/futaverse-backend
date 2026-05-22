@@ -70,11 +70,13 @@ class User(AbstractBaseUser):
 
         return getattr(self, relation, None)
     
-    def get_full_name(self):
-        profile = self.profile()
+    @property
+    def full_name(self):
+        profile = self.profile
         if profile:
             return f"{profile.firstname} {profile.lastname}"
-        return self.email
+        
+        return None
     
     def __str__(self):
         return f"{self.email} ({self.role})"

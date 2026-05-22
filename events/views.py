@@ -16,8 +16,10 @@ from .models import Event, VirtualMeeting, Ticket, TicketPurchase
 from .services import EventService, GoogleCalendarService, get_user_credentials, GoogleAuthRequired
 
 from futaverse.utils.email_service import BrevoEmailService
-# from futaverse.permissions import 
 from payments.requests import initialize_transaction
+
+from feed.tasks import create_feed_event_task
+from feed.models import FeedEvent
 
 import uuid
 import logging
@@ -69,6 +71,22 @@ class CreateEventView(generics.CreateAPIView):
                 external_calendar_event_id = google_event.get('id')
                 
             VirtualMeeting.objects.create(event=event, platform=platform, join_url=join_url, external_calendar_event_id=external_calendar_event_id, room_name=room_name)
+            
+        create_feed_event_task.delay(
+            event_type=FeedEvent.EventType.EVENT_CREATED,
+            related_object_id=event.id,
+            related_model='event',  
+            audience=FeedEvent.Audience.STUDENT,
+            data={
+                'title':   event.title,
+                'alumni': event.alumnus.full_name,  
+                'mode': event.mode,
+                'category': event.category,
+                'date': event.date.isoformat(),
+                'virtual_meeting': event.virtual_meeting.platform,
+                'created_at': event.created_at.isoformat(),
+            }
+        )
             
 @extend_schema(tags=['Events'], summary="Add ticket for an event")
 class CreateTicketView(generics.CreateAPIView):

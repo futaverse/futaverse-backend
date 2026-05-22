@@ -1,3 +1,5 @@
+from urllib.parse import urlencode
+
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -34,7 +36,10 @@ google_auth_uri = os.getenv("GOOGLE_AUTH_URI")
 #     google_auth_uri = os.getenv("GOOGLE_LOCAL_AUTH_URI")
 
 def build_google_auth_url(user_id, redirect_after_auth=None):
-    return f"{google_auth_uri}?user_id={user_id}&redirect_after_auth={redirect_after_auth}"
+    params = {"user_id": user_id}
+    if redirect_after_auth:
+        params["redirect_after_auth"] = redirect_after_auth
+    return f"{google_auth_uri}?{urlencode(params)}"
 
 def get_google_client_config():
     return {"web": 
