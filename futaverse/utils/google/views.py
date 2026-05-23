@@ -88,7 +88,7 @@ def google_auth_start(request):
         print("user_id", user_id)
         user = User.objects.filter(sqid=user_id).first()
         if not user:
-            return Response({"detail": "User with provided id not found."}, status=404)
+            return Response({"detail": "User with provided id not found."}, status=status.HTTP_404_NOT_FOUND)
 
         flow = Flow.from_client_config(client_config, scopes=GOOGLE_SCOPES, redirect_uri=google_redirect_uri)
         
@@ -126,31 +126,36 @@ def google_auth_start(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def google_auth_callback(request):
-    state = request.session.get("google_oauth_state")
-    user_id = request.session.get("user_id")
-    redirect_after_auth = request.session.get("redirect_after_auth", None)
-    
-    logger.debug(f"state: {state}, user_id: {user_id}, redirect_after_auth: {redirect_after_auth}")
-    
-    # TODO: Handle errors
+    try:
+        state = request.session.get("google_oauth_state")
+        user_id = request.session.get("user_id")
+        redirect_after_auth = request.session.get("redirect_after_auth", None)
+        
+        logger.debug(f"state: {state}, user_id: {user_id}, redirect_after_auth: {redirect_after_auth}")
+        
+        # TODO: Handle errors
 
-    client_config = get_google_client_config()
-    flow = Flow.from_client_config(client_config, scopes=GOOGLE_SCOPES, state=state, redirect_uri=google_redirect_uri)
-    flow.fetch_token(authorization_response=request.build_absolute_uri())
-    creds = flow.credentials
+        client_config = get_google_client_config()
+        flow = Flow.from_client_config(client_config, scopes=GOOGLE_SCOPES, state=state, redirect_uri=google_redirect_uri)
+        flow.fetch_token(authorization_response=request.build_absolute_uri())
+        creds = flow.credentials
 
-    User.objects.filter(sqid=user_id).update(
-        google_credentials={
-            "token": creds.token,
-            "refresh_token": creds.refresh_token,
-            "token_uri": creds.token_uri,
-            "client_id": creds.client_id,
-            "client_secret": creds.client_secret,
-            "scopes": creds.scopes,
-        }
-    )
+        User.objects.filter(sqid=user_id).update(
+            google_credentials={
+                "token": creds.token,
+                "refresh_token": creds.refresh_token,
+                "token_uri": creds.token_uri,
+                "client_id": creds.client_id,
+                "client_secret": creds.client_secret,
+                "scopes": creds.scopes,
+            }
+        )
 
-    if redirect_after_auth:
-        return redirect(redirect_after_auth)
+        if redirect_after_auth:
+            return redirect(redirect_after_auth)
+        
+        return Response({"detail": "Authorization successful, you can exit this page."}, status=status.HTTP_200_OK)
     
-    return Response({"detail": "Authorization successful, you can exit this page."}, status=status.HTTP_200_OK)
+    except Exception as e: 
+        logger.error(f"Error processing Google OAuth callback: {e}")
+        return Response({"error": "Failed to process Google authentication"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
