@@ -111,7 +111,7 @@ def google_auth_start(request):
     
     except Exception as e:
         logger.error(f"Error starting Google OAuth flow: {e}")
-        return Response({"error": "Failed to start Google OAuth flow"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({"error": "Something wwent wrong. Please try again."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @extend_schema(
     summary="Google OAuth callback",
@@ -132,6 +132,9 @@ def google_auth_callback(request):
         redirect_after_auth = request.session.get("redirect_after_auth", None)
         
         logger.debug(f"state: {state}, user_id: {user_id}, redirect_after_auth: {redirect_after_auth}")
+        
+        if not state or not user_id:
+            return Response({"detail": "Session expired or invalid."}, status=400)
         
         # TODO: Handle errors
 
@@ -158,4 +161,4 @@ def google_auth_callback(request):
     
     except Exception as e: 
         logger.error(f"Error processing Google OAuth callback: {e}")
-        return Response({"error": "Failed to process Google authentication"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({"error": "Something wwent wrong. Please try again."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

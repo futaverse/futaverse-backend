@@ -2,6 +2,7 @@ from django.db import models
 from core.models import AlumniProfile, StudentProfile
 from futaverse.models import BaseModel
 from django.utils import timezone
+from .lib import FocusArea
 
 class MentorshipStatus(models.TextChoices):
     PENDING = 'pending', 'Pending'
@@ -14,11 +15,11 @@ class Mentorship(BaseModel):
         REMOTE = 'Remote', 'Remote'
         HYBRID = 'Hybrid', 'Hybrid'
         ONSITE = 'Onsite', 'Onsite'
-        
+    
     alumnus = models.ForeignKey(AlumniProfile, on_delete=models.CASCADE, related_name='mentorships')
     title = models.CharField(max_length=255)
     description = models.TextField()
-    category = models.CharField(max_length=100, blank=True)
+    focus_areas = models.JSONField(default=list, blank=True)
     
     work_mode = models.CharField(choices=WorkMode.choices, max_length=20, default=WorkMode.REMOTE, blank=True)
     duration_weeks = models.PositiveIntegerField(null=True, blank=True)

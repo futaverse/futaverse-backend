@@ -27,13 +27,19 @@ class Internship(BaseModel):
     work_mode = models.CharField(choices=WorkMode.choices, max_length=20) 
     engagement_type = models.CharField(choices=EngagementType.choices, max_length=20)
     location = models.CharField(max_length=255)
-    industry = models.CharField(max_length=100)
     skills_required = models.JSONField(default=list, blank=True)
     duration_weeks = models.PositiveIntegerField()
     start_date = models.DateField()
     end_date = models.DateField()
     is_paid = models.BooleanField(default=False)
     stipend = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    levels = models.JSONField(default=list)
+    
+    company = models.CharField()
+    company_type = models.CharField()
+    industry = models.CharField(max_length=100)
+    company_linkedin_url = models.URLField(blank=True, null=True, max_length=200)
+    company_website_url = models.URLField(blank=True, null=True, max_length=200)
     
     available_slots = models.PositiveIntegerField(blank=True, null=True)
     remaining_slots = models.PositiveIntegerField(blank=True, null=True)
@@ -71,10 +77,16 @@ class Internship(BaseModel):
     @property
     def feed_targets(self):
         targets = []
+        
         for skill in self.skills_required:
             targets.append({'target_type': 'skill', 'target_value': skill})
+            
         if self.industry:
             targets.append({'target_type': 'industry', 'target_value': self.industry})
+            
+        if self.company_type:
+            targets.append({'target_type': 'company_type', 'target_value': self.company_type})
+            
         return targets
     
 class InternshipApplication(BaseModel):
@@ -164,6 +176,14 @@ class InternshipEngagement(BaseModel):
 
     def __str__(self):
         return f"Engagement of {self.student.full_name} in {self.internship.title}"
+    
+    @property
+    def details(self):
+        return {
+            "type": "internship",
+            "title": self.internship.title,
+            # ""
+        }
     
 class ApplicationResume(BaseModel):
     application = models.OneToOneField(InternshipApplication, on_delete=models.CASCADE, related_name='resume', blank=True, null=True)

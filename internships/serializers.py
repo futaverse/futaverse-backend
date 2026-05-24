@@ -4,13 +4,12 @@ from rest_framework import serializers
 
 from .models import Internship, InternshipApplication, InternshipOffer, InternshipEngagement, ApplicationResume, InternshipStatus
 
-from core.models import StudentProfile, AlumniProfile
-from core.serializers import StudentProfileSerializer, StudentInfoSerializer, AlumniInfoSerializer
-
-from futaverse.serializers import StrictFieldsMixin
+from core.models import StudentProfile, LevelChoices
+from core.serializers import StudentInfoSerializer, AlumniInfoSerializer
 
 class InternshipSerializer(serializers.ModelSerializer):
     skills_required = serializers.ListField(child=serializers.CharField(), required=False)
+    levels = serializers.ListField(child=serializers.ChoiceField(choices=LevelChoices.choices))
     alumnus = serializers.CharField(source="alumnus.sqid", read_only=True)
     
     class Meta:

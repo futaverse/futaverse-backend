@@ -54,12 +54,16 @@ class Event(BaseModel):
     is_published = models.BooleanField(default=False)
 
     updated_at = models.DateTimeField(auto_now=True)
-
     class Meta:
         ordering = ["-date"]
 
     def __str__(self):
         return self.title
+    
+    @property
+    def feed_targets(self):
+        targets = []
+        return targets
     
 class Ticket(BaseModel):
     class Type(models.TextChoices):

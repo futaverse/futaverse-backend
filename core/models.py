@@ -136,15 +136,15 @@ class LevelChoices(models.IntegerChoices):
     LEVEL_500 = 500, "500"
     LEVEL_600 = 600, "600"
     LEVEL_700 = 700, "700"
+    
+class Gender(models.TextChoices):
+        MALE = 'male', 'Male'
+        FEMALE = 'female', 'Female'
+        OTHER = 'other', 'Other'
+        UNKNOWN = 'unknown', 'Unknown'
 
 class StudentProfile(BaseModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="student_profile")
-    
-    class Gender(models.TextChoices):
-        MALE = 'Male', 'male'
-        FEMALE = 'Female', 'female'
-        OTHER = 'Other', 'other'
-        UNKNOWN = 'Unknown', 'unknown'
         
     phone_num = models.CharField()
     gender = models.CharField(choices=Gender.choices)
@@ -226,12 +226,6 @@ class StudentResume(BaseModel):
         return f"Resume of {self.student.full_name} uploaded at {self.uploaded_at}"
     
 class AlumniProfile(BaseModel):
-    class Gender(models.TextChoices):
-        MALE = 'Male', 'male'
-        FEMALE = 'Female', 'female'
-        OTHER = 'Other', 'other'
-        UNKNOWN = 'Unknown', 'unknown'
-        
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="alumni_profile")
     
     phone_num = models.CharField()

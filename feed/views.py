@@ -12,16 +12,6 @@ from .models import FeedEvent
 from .serializers import FeedCursorPagination, FeedEventSerializer
 from .tasks import record_impressions_task
 
-
-# def encode_cursor(created_at, event_id):
-#     data = {'ts': created_at.isoformat(), 'id': event_id}
-#     return base64.urlsafe_b64encode(json.dumps(data).encode()).decode()
-
-
-# def decode_cursor(cursor):
-#     data = json.loads(base64.urlsafe_b64decode(cursor))
-#     return datetime.fromisoformat(data['ts']), data['id']
-
 class FeedView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     pagination_class = FeedCursorPagination

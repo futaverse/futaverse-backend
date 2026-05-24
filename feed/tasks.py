@@ -4,14 +4,16 @@ from celery import shared_task
 
 from .models import FeedImpression, FeedEvent, FeedTarget
 
-from internships.models import Internship
-from mentorships.models import Mentorship
+from internships.models import Internship, InternshipEngagement
+from mentorships.models import Mentorship, MentorshipEngagement
 from events.models import Event
 
 MODELS = {
     "internship": Internship,
     "mentorship": Mentorship,
-    "event": Event
+    "event": Event,
+    "internship_engagement": InternshipEngagement,
+    "mentorship_engagement": MentorshipEngagement
 }
 
 @shared_task

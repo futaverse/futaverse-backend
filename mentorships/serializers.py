@@ -10,6 +10,7 @@ from .models import Mentorship, MentorshipOffer, MentorshipApplication, Mentorsh
 from futaverse.serializers import StrictFieldsMixin
 
 class MentorshipSerializer(StrictFieldsMixin, serializers.ModelSerializer):
+    
     class Meta:
         model = Mentorship
         exclude = ['is_active', 'deleted_at', 'is_deleted', 'id']

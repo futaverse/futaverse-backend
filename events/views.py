@@ -79,7 +79,7 @@ class CreateEventView(generics.CreateAPIView):
             audience=FeedEvent.Audience.STUDENT,
             data={
                 'title':   event.title,
-                'alumni': event.alumnus.full_name,  
+                'alumni': event.creator.full_name,  
                 'mode': event.mode,
                 'category': event.category,
                 'date': event.date.isoformat(),

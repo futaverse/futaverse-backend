@@ -9,6 +9,9 @@ class FeedEvent(BaseModel):
         MENTORSHIP_CREATED = "mentorship_created", "Mentorship created"
         EVENT_CREATED = "event_created", "Event created"
         
+        INTERNSHIP_STARTED = "internship_started", "Internship started"
+        MENTORSHIP_STARTED = "mentorship_started", "Mentorship started"
+        
     class Audience(models.TextChoices):
         PUBLIC = "public", "Public"
         STUDENT = "student", "Student"
