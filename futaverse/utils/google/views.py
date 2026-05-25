@@ -25,7 +25,7 @@ GOOGLE_SCOPES = [
     "https://www.googleapis.com/auth/calendar"
 ]
 
-environment = os.getenv("ENVIRONMENT", "development")
+# environment = os.getenv("ENVIRONMENT", "development")
 
 # if environment == "production":
 google_redirect_uri = os.getenv("GOOGLE_REDIRECT_URI")
