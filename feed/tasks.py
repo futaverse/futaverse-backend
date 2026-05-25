@@ -3,18 +3,7 @@ from django.db import transaction
 from celery import shared_task
 
 from .models import FeedImpression, FeedEvent, FeedTarget
-
-from internships.models import Internship, InternshipEngagement
-from mentorships.models import Mentorship, MentorshipEngagement
-from events.models import Event
-
-MODELS = {
-    "internship": Internship,
-    "mentorship": Mentorship,
-    "event": Event,
-    "internship_engagement": InternshipEngagement,
-    "mentorship_engagement": MentorshipEngagement
-}
+from futaverse.lib import MODELS
 
 @shared_task
 def record_impressions_task(user_id, event_ids):
@@ -32,6 +21,7 @@ def create_feed_event_task(event_type, related_object_id, related_model, data, a
     related_model is a string like 'internship'
     """
     print(f"Creating feed event: {event_type}")
+    
     model = MODELS.get(related_model)
     if not model:
         raise ValueError(f"Unknown related model: {related_model}")
@@ -41,7 +31,7 @@ def create_feed_event_task(event_type, related_object_id, related_model, data, a
     with transaction.atomic():
         event = FeedEvent.objects.create(event_type=event_type, data=data, audience=audience)
 
-        targets = related_object.feed_targets
+        targets = getattr(related_object, 'feed_targets', [])
         if targets:
             print(f"Creating {len(targets)} feed targets")
             FeedTarget.objects.bulk_create([

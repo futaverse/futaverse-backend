@@ -17,6 +17,11 @@ class InternshipSerializer(serializers.ModelSerializer):
         exclude = ['is_active', 'deleted_at', 'is_deleted', 'id']
         read_only_fields = ['sqid', 'created_at', 'updated_at', 'alumnus', 'is_active']
         
+    def create(self, validated_data):
+        available_slots = validated_data.get('available_slots', None)
+        validated_data['remaining_slots'] = available_slots
+        return super().create(validated_data)
+        
 class InternshipStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Internship

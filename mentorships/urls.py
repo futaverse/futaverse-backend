@@ -4,9 +4,7 @@ from .views.applications import ListMentorshipApplicationsView, CreateMentorship
 
 from .views.offers import ListMentorshipOfferView, CreateMentorshipOfferView, AcceptMentorshipOfferView, RejectMentorshipOfferView, WithdrawMentorshipOfferView, RetrieveMentorshipOfferView
 
-from .views.mentorships import ListCreateMentorshipView, ToggleMentorshipActiveView, RetrieveMentorshipEngagementView, ListMentorshipEngagementsView, RetrieveUpdateDestroyMentorshipView
-
-# from .views import ListCreateMentorshipView, RetrieveUpdateDestroyMentorshipView, CreateMentorshipOfferView, ListMentorshipOfferView, RetrieveMentorshipOfferView, AcceptMentorshipOfferView, RejectOfferView, WithdrawOfferView, CreateMentorshipApplicationView, ListMentorshipApplicationsView, RetrieveMentorshipApplicationView, AcceptApplicationView, RejectApplicationView, WithdrawApplicationView, ToggleMentorshipActiveView, ListMentorshipEngagementsView, RetrieveMentorshipEngagementView
+from .views.mentorships import ListCreateMentorshipView, ToggleMentorshipActiveView, RetrieveMentorshipEngagementView, ListMentorshipEngagementsView, RetrieveUpdateDestroyMentorshipView, MentorshipChoicesView
 
 urlpatterns = [
     path('/offer', CreateMentorshipOfferView.as_view(), name='create-mentorship-offers'),
@@ -14,6 +12,7 @@ urlpatterns = [
     path('/application', CreateMentorshipApplicationView.as_view(), name='create-mentorship-application'),
     path('/applications', ListMentorshipApplicationsView.as_view(), name='list-mentorship-applications'),
     path('/engagements', ListMentorshipEngagementsView.as_view(), name='list-mentorship-engagements'),
+    path('/choices', MentorshipChoicesView.as_view(), name='mentorship-choices'),
     
     path('/offers/<slug:sqid>', RetrieveMentorshipOfferView.as_view(), name='retrieve-mentorship-offers'),
     path('/offers/<slug:offer_id>/accept', AcceptMentorshipOfferView.as_view(), name='accept-mentorship-offer'),

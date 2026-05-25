@@ -64,13 +64,6 @@ class Internship(BaseModel):
             return self.remaining_slots
         return 0
     
-    def save(self, *args, **kwargs):
-        if self.available_slots is not None:
-            if self.remaining_slots is None:
-                self.remaining_slots = self.available_slots
-                
-        super().save(*args, **kwargs)
-
     def __str__(self):
         return f"{self.title} (internship)"
     
@@ -88,6 +81,8 @@ class Internship(BaseModel):
             targets.append({'target_type': 'company_type', 'target_value': self.company_type})
             
         return targets
+    
+    
     
 class InternshipApplication(BaseModel):
     internship = models.ForeignKey(Internship, on_delete=models.CASCADE, related_name='applications')
@@ -178,11 +173,11 @@ class InternshipEngagement(BaseModel):
         return f"Engagement of {self.student.full_name} in {self.internship.title}"
     
     @property
-    def details(self):
+    def post_contexrt(self):
         return {
             "type": "internship",
             "title": self.internship.title,
-            # ""
+            "company": self.internship.company,
         }
     
 class ApplicationResume(BaseModel):

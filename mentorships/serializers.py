@@ -8,13 +8,21 @@ from core.models import StudentProfile
 from .models import Mentorship, MentorshipOffer, MentorshipApplication, MentorshipEngagement, MentorshipStatus
 
 from futaverse.serializers import StrictFieldsMixin
+from mentorships.lib import FocusArea, MentorshipCategory
 
 class MentorshipSerializer(StrictFieldsMixin, serializers.ModelSerializer):
+    focus_areas = serializers.ListField(child=serializers.ChoiceField(choices=FocusArea.choices), required=False)
+    category = serializers.ChoiceField(choices=MentorshipCategory.choices)
     
     class Meta:
         model = Mentorship
         exclude = ['is_active', 'deleted_at', 'is_deleted', 'id']
         read_only_fields = ['sqid', 'created_at', 'updated_at', 'alumnus', 'remaining_slots']
+        
+    def create(self, validated_data):
+        available_slots = validated_data.get('available_slots', None)
+        validated_data['remaining_slots'] = available_slots
+        return super().create(validated_data)
         
 class MentorshipStatusSerializer(serializers.ModelSerializer):
     class Meta:

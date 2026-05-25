@@ -1,14 +1,16 @@
 
 from rest_framework import generics
+from rest_framework.response import Response
 
 from drf_spectacular.utils import extend_schema, extend_schema_view
 
 from mentorships.models import Mentorship, MentorshipEngagement
 from mentorships.serializers import MentorshipSerializer, MentorshipStatusSerializer, MentorshipEngagementSerializer
-from core.models import User
+from mentorships.lib import FocusArea, MentorshipCategory
 
 from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
 
+from core.models import User
 from feed.tasks import create_feed_event_task
 from feed.models import FeedEvent
 
@@ -107,3 +109,12 @@ class RetrieveMentorshipEngagementView(generics.RetrieveAPIView):
             return MentorshipEngagement.objects.filter(student=user.student_profile).select_related('mentorship', 'student')
         
         return MentorshipEngagement.objects.none()
+    
+class MentorshipChoicesView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticatedAlumnus | IsAuthenticatedStudent]
+
+    def get(self, request):
+        return Response({
+            'categories':  [{'value': v, 'label': l} for v, l in MentorshipCategory.choices],
+            'focus_areas': [{'value': v, 'label': l} for v, l in FocusArea.choices],
+        })

@@ -1,8 +1,3 @@
-# views.py
-
-import base64, json
-from datetime import datetime
-
 from django.db.models import Count, Value, IntegerField
 
 from rest_framework import generics

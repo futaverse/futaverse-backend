@@ -19,6 +19,7 @@ class Mentorship(BaseModel):
     alumnus = models.ForeignKey(AlumniProfile, on_delete=models.CASCADE, related_name='mentorships')
     title = models.CharField(max_length=255)
     description = models.TextField()
+    category = models.CharField(max_length=50, choices=FocusArea.choices)
     focus_areas = models.JSONField(default=list, blank=True)
     
     work_mode = models.CharField(choices=WorkMode.choices, max_length=20, default=WorkMode.REMOTE, blank=True)
@@ -34,13 +35,6 @@ class Mentorship(BaseModel):
     
     def __str__(self):
         return f"{self.title} (mentorship)"
-    
-    def save(self, *args, **kwargs):
-        if self.available_slots is not None:
-            if self.remaining_slots is None:
-                self.remaining_slots = self.available_slots
-                
-        super().save(*args, **kwargs)
     
     def decrement_remaining_slots(self):
         if self.remaining_slots > 0:
@@ -165,6 +159,15 @@ class MentorshipEngagement(BaseModel):
     @property
     def is_active(self):
         return self.status == self.EngagementStatus.ACTIVE
+    
+    @property
+    def post_context(self):
+        return {
+            "type": "mentorship",
+            "title": self.mentorship.title,
+            "focus_areas": self.mentorship.focus_areas,
+            "category": self.mentorship.category,
+        }
 
     def __str__(self):
         return f"Engagement of {self.student.full_name} in {self.mentorship.title}"
