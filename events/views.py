@@ -58,19 +58,24 @@ class CreateEventView(generics.CreateAPIView):
                             
             service = GoogleCalendarService(credentials)
             
-            if platform == VirtualMeeting.Platform.GOOGLE_MEET:
-                room_name = None
-                google_event = service.create_event(event, [user.email])
-                join_url = google_event.get('hangoutLink')
-                external_calendar_event_id = google_event.get('id')
+            try:
+                if platform == VirtualMeeting.Platform.GOOGLE_MEET:
+                    room_name = None
+                    google_event = service.create_event(event, [user.email])
+                    join_url = google_event.get('hangoutLink')
+                    external_calendar_event_id = google_event.get('id')
+                    
+                if platform == VirtualMeeting.Platform.JITSI:
+                    room_name = f"App-{uuid.uuid4().hex}"
+                    join_url = f"https://meet.jit.si/{room_name}"
+                    google_event = service.create_event(event, [user.email], manual_join_url=join_url)
+                    external_calendar_event_id = google_event.get('id')
+                    
+                VirtualMeeting.objects.create(event=event, platform=platform, join_url=join_url, external_calendar_event_id=external_calendar_event_id, room_name=room_name)
                 
-            if platform == VirtualMeeting.Platform.JITSI:
-                room_name = f"App-{uuid.uuid4().hex}"
-                join_url = f"https://meet.jit.si/{room_name}"
-                google_event = service.create_event(event, [user.email], manual_join_url=join_url)
-                external_calendar_event_id = google_event.get('id')
-                
-            VirtualMeeting.objects.create(event=event, platform=platform, join_url=join_url, external_calendar_event_id=external_calendar_event_id, room_name=room_name)
+            except Exception as e:
+                logger.error(f"Error creating virtual meeting for event {event.sqid}: {e}")
+                raise Exception("Something went wrong. Please try again. Contact support if the problem persists.")
             
         create_feed_event_task.delay(
             event_type=FeedEvent.EventType.EVENT_CREATED,

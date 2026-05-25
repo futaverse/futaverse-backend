@@ -101,7 +101,7 @@ class EventService:
             is_html=True
         )
         
-    @staticmethod
+    @staticmethod #TODO: Abstract create event
     def reconcile_mode_change(event, old_mode, new_mode, user, platform=None, venue=None):
         """
         Handles the technical side effects of changing an event mode.

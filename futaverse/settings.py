@@ -69,7 +69,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'futaverse.wsgi.application'
 
-tmpPostgres = urlparse(os.getenv("TEST_DATABASE_URL"))
+tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',

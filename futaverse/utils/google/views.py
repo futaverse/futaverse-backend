@@ -161,4 +161,4 @@ def google_auth_callback(request):
     
     except Exception as e: 
         logger.error(f"Error processing Google OAuth callback: {e}")
-        return Response({"error": "Something wwent wrong. Please try again."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({"error": "Something went wrong. Please try again."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
