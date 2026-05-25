@@ -85,7 +85,7 @@ class CreateSubaccountView(APIView):
         try:
             with transaction.atomic():
                 user_data = {
-                    "business_name": f"{user.get_full_name()} - YuniVerse",
+                    "business_name": f"{user.full_name} - YuniVerse",
                     "primary_contact_email": user.email
                 }
                 

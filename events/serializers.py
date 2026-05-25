@@ -61,7 +61,10 @@ class EventSerializer(serializers.ModelSerializer):
         
         if len(paid_tickets_data) > 0:
             user = self.context["request"].user
+            
             account_details = getattr(user, "account_details", None)
+            
+            print(account_details)
             
             if not account_details or not account_details.is_active or not account_details.subaccount_code:
                 raise serializers.ValidationError({"detail": "Your account is not set up to receive payments. Please add your bank details to create paid tickets so you can receive payments."})

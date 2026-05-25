@@ -193,7 +193,7 @@ CACHES = {
     }
 }
 
-if REDIS_URL.startswith("rediss://"):
+if not DEVELOPMENT:
     CACHES["default"]["OPTIONS"]["REDIS_CLIENT_KWARGS"] = {
         "ssl_cert_reqs": ssl.CERT_NONE
     }

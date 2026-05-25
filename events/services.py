@@ -54,7 +54,7 @@ class EventService:
     @staticmethod
     def send_ticket_email(ticket_purchase):
         event: Event = ticket_purchase.ticket.event
-        user_name = ticket_purchase.user.get_full_name() if ticket_purchase.user else ticket_purchase.email 
+        user_name = ticket_purchase.user.full_name if ticket_purchase.user else ticket_purchase.email 
         join_url = getattr(event, 'virtual_meeting', None).join_url if hasattr(event, 'virtual_meeting') else None
         start_datetime = timezone.make_aware(datetime.combine(event.date, event.start_time))
         
