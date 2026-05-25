@@ -12,7 +12,7 @@ from futaverse.lib import MODELS
 class ShareEngagementSerializer(serializers.Serializer):
     engagement_type = serializers.ChoiceField(choices=['internship_engagement', 'mentorship_engagement'], required=True)
     engagement_id = serializers.SlugField(required=True)
-    content = serializers.Charfield(required=False, allow_blank=True, max_length=500)
+    content = serializers.CharField(required=False, allow_blank=True, max_length=500)
     
     def validate(self, attrs):
         validated_data = super().validate(attrs)

@@ -109,7 +109,8 @@ class RetrieveMentorshipEngagementView(generics.RetrieveAPIView):
             return MentorshipEngagement.objects.filter(student=user.student_profile).select_related('mentorship', 'student')
         
         return MentorshipEngagement.objects.none()
-    
+
+@extend_schema(tags=['Mentorships'], summary='List mentorship categories and focus areas (alumnus and student)')
 class MentorshipChoicesView(generics.GenericAPIView):
     permission_classes = [IsAuthenticatedAlumnus | IsAuthenticatedStudent]
 

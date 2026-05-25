@@ -3,10 +3,13 @@ from django.db.models import Count, Value, IntegerField
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
+from drf_spectacular.utils import extend_schema
+
 from .models import FeedEvent
 from .serializers import FeedCursorPagination, FeedEventSerializer
 from .tasks import record_impressions_task
 
+@extend_schema(tags=['Feed'], summary='Get feed for user (student, alumnus)')
 class FeedView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     pagination_class = FeedCursorPagination
@@ -22,7 +25,7 @@ class FeedView(generics.ListAPIView):
             impressions__user=self.request.user
         )
         
-        # Ranking based on number   of matched filters
+        # Ranking based on number of matched filters
         if match_filter:
             queryset = queryset.annotate(score=Count('targets', filter=match_filter))
         else:

@@ -1,5 +1,6 @@
 from rest_framework import generics, status
-from drf_spectacular import extend_schema
+
+from drf_spectacular.utils import extend_schema
 
 from futaverse.permissions import IsAuthenticatedStudent
 
