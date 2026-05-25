@@ -21,6 +21,7 @@ urlpatterns = [
     path('api/events/', include('events.urls')),
     path('api/payments', include('payments.urls')),
     path('api/feed', include('feed.urls')),
-    
+    path('api/posts', include('posts.urls')),
+
     path('student/resume', UploadResumeView.as_view(), name='upload-resume'),
 ]

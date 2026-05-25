@@ -163,6 +163,13 @@ class ManageInternshipApplicationSerializer(serializers.Serializer):
         attrs["application"] = application
         return attrs
    
+class InternshipEngagementFeedSerializer(serializers.ModelSerializer):
+    internship_title = serializers.CharField(source='internship.title')
+    company = serializers.CharField(source='internship.alumnus.current_company')
+    alumnus_name = serializers.CharField(source='alumnus.full_name')
 
-
+    class Meta:
+        model = InternshipEngagement
+        fields = ['sqid', 'internship_title', 'company', 'alumnus_name', 'status']
+        
         

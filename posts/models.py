@@ -21,3 +21,15 @@ class Post(BaseModel):
 
     class Meta:
         ordering = ['-created_at']
+        
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    'author',
+                    'content_type',
+                    'object_id',
+                    'post_type'
+                ],
+                name='unique_engagement_share'
+            )
+        ]

@@ -5,13 +5,14 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from .models import Post
+from .lib import POST_RELATED_SERIALIZERS
 
 from futaverse.lib import MODELS
 
 class ShareEngagementSerializer(serializers.Serializer):
     engagement_type = serializers.ChoiceField(choices=['internship_engagement', 'mentorship_engagement'], required=True)
     engagement_id = serializers.SlugField(required=True)
-    content = serializers.TextField(required=False, allow_blank=True, max_length=500)
+    content = serializers.Charfield(required=False, allow_blank=True, max_length=500)
     
     def validate(self, attrs):
         validated_data = super().validate(attrs)
@@ -41,29 +42,25 @@ class ShareEngagementSerializer(serializers.Serializer):
         ).exists()
 
         if existing_post:
-            raise ValidationError(
-                "You have already shared this engagement."
-            )
+            raise ValidationError("You have already shared this engagement.")
 
         validated_data["engagement"] = engagement
 
         return validated_data
     
 class PostSerializer(serializers.ModelSerializer):
-    
     related_data = serializers.SerializerMethodField()
     
     class Meta:
         model = Post
-        fields = ['post_type', 'content', 'is_public', 'sqid', 'created_at']
+        fields = ['post_type', 'content', 'is_public', 'sqid', 'created_at', 'related_data']
         
     def get_related_data(self, obj):
         related = obj.related_object
         
-        if isinstance(related, InternshipEngagement):
-            return InternshipEngagementFeedSerializer(related).data
+        serializer_class = POST_RELATED_SERIALIZERS.get(related.__class__)
 
-        elif isinstance(related, MentorshipEngagement):
-            return MentorshipEngagementFeedSerializer(related).data
+        if not serializer_class:
+            return None
 
-        return None
+        return serializer_class(related).data

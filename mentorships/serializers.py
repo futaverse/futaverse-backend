@@ -134,3 +134,11 @@ class ManagementorshipApplicationSerializer(serializers.Serializer):
 
         attrs["application"] = application
         return attrs
+    
+class MentorshipEngagementFeedSerializer(serializers.ModelSerializer):
+    mentorship_title = serializers.CharField(source='mentorship.title')
+    mentor_name = serializers.CharField(source='alumnus.full_name')
+
+    class Meta:
+        model = MentorshipEngagement
+        fields = ['sqid', 'mentorship_title', 'mentor_name', 'status']

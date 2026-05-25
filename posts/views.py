@@ -1,13 +1,12 @@
-from django.shortcuts import get_object_or_404
-
 from rest_framework import generics, status
+from drf_spectacular import extend_schema
 
-from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
-from futaverse.lib import MODELS
+from futaverse.permissions import IsAuthenticatedStudent
 
 from .serializers import ShareEngagementSerializer, PostSerializer
 from .services import share_engagement
 
+@extend_schema(tags=['Posts'], summary="Share an internship or mentorship engagement as a post (student)")
 class ShareEngagementView(generics.GenericAPIView):
     permission_classes = [IsAuthenticatedStudent]
     serializer_class = ShareEngagementSerializer
@@ -20,7 +19,6 @@ class ShareEngagementView(generics.GenericAPIView):
         
         content = validated_data.get('content')
         engagement = validated_data['engagement']
-        
 
         post = share_engagement(
             user=request.user,
