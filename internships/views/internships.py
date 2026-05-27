@@ -1,3 +1,5 @@
+from django_q.tasks import async_task
+
 from rest_framework import generics
 
 from drf_spectacular.utils import extend_schema, extend_schema_view
@@ -27,7 +29,7 @@ class ListCreateInternshipView(generics.ListCreateAPIView):
         alumnus = self.request.user.alumni_profile
         internship = serializer.save(alumnus=alumnus)
         
-        create_feed_event_task.delay(
+        async_task(create_feed_event_task, 
             event_type=FeedEvent.EventType.INTERNSHIP_CREATED,
             related_object_id=internship.id,
             related_model='internship',  

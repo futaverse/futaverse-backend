@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema
 
 from internships.models import InternshipOffer, InternshipEngagement, InternshipStatus
-from internships.serializers import InternshipOfferSerializer, ManageInternshipOfferSerializer
+from internships.serializers import InternshipOfferSerializer, ManageInternshipOfferSerializer, InternshipEngagementSerializer
 from core.models import User
 
 from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
@@ -82,7 +82,7 @@ class AcceptInternshipOfferView(APIView):
         
         offer.accept()
         internship.decrement_remaining_slots()
-        return Response({"detail": "Offer accepted successfully.", "engagement_id": engagement.id},status=status.HTTP_201_CREATED)
+        return Response({"detail": "Offer accepted successfully.", "engagement": InternshipEngagementSerializer(engagement).data},status=status.HTTP_201_CREATED)
     
 @extend_schema(tags=['Internship Offers'], summary='Reject an internship offer (student)')
 class RejectInternshipOfferView(APIView):

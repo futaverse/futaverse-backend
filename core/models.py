@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils import timezone
 from datetime import timedelta
 from django_sqids import SqidsField
@@ -13,8 +13,8 @@ def default_expiry():
     return timezone.now() + timedelta(minutes=10)
 
 class UserManager(BaseUserManager):
-    def create(self, **extra_fields):
-        email = extra_fields.get("email")
+    def create_user(self, **extra_fields):
+        email = extra_fields.pop("email")
         password = extra_fields.pop("password", None)
         
         email = self.normalize_email(email)
@@ -30,10 +30,14 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault("role", User.Role.ADMIN)
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
+        extra_fields.setdefault("is_active", True)
+        
+        extra_fields["password"] = password
+        extra_fields["email"] = email
 
-        return self.create_user(email, password, **extra_fields)
+        return self.create_user(**extra_fields)
 
-class User(AbstractBaseUser):
+class User(AbstractBaseUser, PermissionsMixin):
     class Role(models.TextChoices):
         ALUMNI = 'alumni', 'Alumni'
         STUDENT = 'student', 'Student'

@@ -5,22 +5,21 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from .models import Post
-from .lib import POST_RELATED_SERIALIZERS
+from .lib import POST_PLUGINS
 
 from futaverse.lib import MODELS
 
 class ShareEngagementSerializer(serializers.Serializer):
     engagement_type = serializers.ChoiceField(choices=['internship_engagement', 'mentorship_engagement'], required=True)
-    engagement_id = serializers.SlugField(required=True)
+    engagement = serializers.SlugField(required=True)
     content = serializers.CharField(required=False, allow_blank=True, max_length=500)
     
     def validate(self, attrs):
+        user = self.context['request'].user
         validated_data = super().validate(attrs)
 
         engagement_type = validated_data['engagement_type']
-        engagement_id = validated_data['engagement_id']
-
-        user = self.context['request'].user
+        engagement_id = validated_data['engagement']
 
         engagement_model = MODELS.get(engagement_type)
 
@@ -42,7 +41,7 @@ class ShareEngagementSerializer(serializers.Serializer):
         ).exists()
 
         if existing_post:
-            raise ValidationError("You have already shared this engagement.")
+            raise ValidationError({"detail": "You have already shared this engagement."})
 
         validated_data["engagement"] = engagement
 
@@ -50,7 +49,6 @@ class ShareEngagementSerializer(serializers.Serializer):
     
 class PostSerializer(serializers.ModelSerializer):
     related_data = serializers.SerializerMethodField()
-    
     class Meta:
         model = Post
         fields = ['post_type', 'content', 'is_public', 'sqid', 'created_at', 'related_data']
@@ -58,9 +56,11 @@ class PostSerializer(serializers.ModelSerializer):
     def get_related_data(self, obj):
         related = obj.related_object
         
-        serializer_class = POST_RELATED_SERIALIZERS.get(related.__class__)
+        plugin = POST_PLUGINS.get(related.__class__)
 
-        if not serializer_class:
+        if not plugin:
             return None
+
+        serializer_class = plugin["serializer"]
 
         return serializer_class(related).data

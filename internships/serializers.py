@@ -52,7 +52,7 @@ class InternshipOfferSerializer(serializers.ModelSerializer):
         if InternshipOffer.objects.filter(internship=internship, student=student).exists():
             raise serializers.ValidationError({"detail": "You have already offered this internship."})
         
-        if InternshipEngagement.objects.filter(mentorship=internship, student=student, status=InternshipEngagement.EngagementStatus.ACTIVE).exists():
+        if InternshipEngagement.objects.filter(internship=internship, student=student, status=InternshipEngagement.EngagementStatus.ACTIVE).exists():
             raise serializers.ValidationError({"detail": "This student is already engaged in this internship."})
         
         return  validated_data
@@ -104,7 +104,7 @@ class InternshipEngagementSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = InternshipEngagement
-        exclude = ['deleted_at', 'is_deleted', 'id']
+        exclude = ['deleted_at', 'is_deleted', 'id', 'internship', 'student', 'alumnus']
         read_only_fields = ['sqid', 'created_at', 'updated_at']
         
 class ManageInternshipOfferSerializer(serializers.Serializer):
@@ -165,7 +165,7 @@ class ManageInternshipApplicationSerializer(serializers.Serializer):
    
 class InternshipEngagementFeedSerializer(serializers.ModelSerializer):
     internship_title = serializers.CharField(source='internship.title')
-    company = serializers.CharField(source='internship.alumnus.current_company')
+    company = serializers.CharField(source='internship.company')
     alumnus_name = serializers.CharField(source='alumnus.full_name')
 
     class Meta:

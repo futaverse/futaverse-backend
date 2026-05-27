@@ -146,6 +146,7 @@ class UpdateEventModeSerializer(serializers.ModelSerializer):
     mode = serializers.ChoiceField(choices=Event.Mode, required=True)
     venue = serializers.CharField(required=False)
     platform = serializers.ChoiceField(choices=VirtualMeeting.Platform, required=False)
+    # TODO: Add redirect after auth
     
     class Meta:
         model = Event
@@ -158,6 +159,7 @@ class UpdateEventModeSerializer(serializers.ModelSerializer):
         mode = validated_data.get('mode', self.instance.mode if self.instance else None)
         venue = validated_data.get('venue', self.instance.venue if self.instance else None)
         
+        # TODO: Check this out
         platform = validated_data.get('platform')
         if hasattr(self.instance, 'virtual_meeting'):
             platform = validated_data.get('platform', self.instance.virtual_meeting.platform if self.instance else None)

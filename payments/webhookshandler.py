@@ -25,12 +25,14 @@ def handle_charge_success(data):
             ticket = ticket_purchase.ticket
             event = ticket.event
             
+            event_service = EventService(event)
+            
             Ticket.objects.filter(id=ticket.id).update(quantity_sold=F('quantity_sold') + 1)
         
         if event.mode in [Event.Mode.VIRTUAL, Event.Mode.HYBRID]:
-            EventService.sync_to_calendar(event)
+            event_service.sync_to_calendar()
         
-        EventService.send_ticket_email(ticket_purchase)
+        event_service.send_ticket_email(ticket_purchase)
                 
     except TicketPurchase.DoesNotExist:
         logger.error(f"Purchase not found for reference: {reference}")

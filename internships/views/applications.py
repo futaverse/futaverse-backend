@@ -8,14 +8,11 @@ from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema
 
 from internships.models import InternshipApplication, ApplicationResume, InternshipEngagement, InternshipStatus
-from internships.serializers import InternshipApplicationSerializer, ApplicationResumeSerializer, ManageInternshipApplicationSerializer
+from internships.serializers import InternshipApplicationSerializer, ApplicationResumeSerializer, ManageInternshipApplicationSerializer, InternshipEngagementSerializer
 from core.models import User
 
 from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
 from futaverse.utils.supabase import upload_file_to_supabase
-
-from feed.tasks import create_feed_event_task
-from feed.models import FeedEvent
 
 @extend_schema(tags=['Internship Applications'], summary='Apply for an internship (student)')
 class CreateInternshipApplicationView(generics.CreateAPIView):
@@ -121,25 +118,7 @@ class AcceptInternshipApplicationView(APIView):
         application.accept()
         internship.decrement_remaining_slots()
         
-        # create_feed_event_task.delay(
-        #     event_type=FeedEvent.EventType.INTERNSHIP_CREATED,
-        #     related_object_id=engagement.id,
-        #     related_model='internship_engagement',  
-        #     audience=FeedEvent.Audience.STUDENT,
-        #     data={
-        #         'title':   internship.title,
-        #         'alumni': internship.alumnus.full_name,  
-        #         'work_mode': internship.work_mode,
-        #         'engagement_type': internship.engagement_type,
-        #         'stipend': str(internship.stipend),
-        #         'is_paid': internship.is_paid,
-        #         'available_slots': internship.available_slots,
-        #         'remaining_slots': internship.remaining_slots,
-        #         'created_at': internship.created_at.isoformat(),
-        #     }
-        # )
-        
-        return Response({"detail": "Application accepted successfully.", "engagement_id": engagement.sqid},status=status.HTTP_201_CREATED)
+        return Response({"detail": "Application accepted successfully.", "engagement": InternshipEngagementSerializer(engagement).data},status=status.HTTP_201_CREATED)
     
 @extend_schema(tags=['Internship Applications'], summary='Reject an internship application (alumnus)')
 class RejectInternshipApplicationView(APIView):

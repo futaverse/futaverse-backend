@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema
 
 from mentorships.models import MentorshipOffer, MentorshipEngagement, MentorshipStatus
-from mentorships.serializers import MentorshipOfferSerializer, ManageMentorshipOfferSerializer
+from mentorships.serializers import MentorshipEngagementSerializer, MentorshipOfferSerializer, ManageMentorshipOfferSerializer
 from mentorships.mixins import OfferValidationMixin
 from core.models import User
 
@@ -82,7 +82,7 @@ class AcceptMentorshipOfferView(OfferValidationMixin, APIView):
         
         offer.accept()
         mentorship.decrement_remaining_slots()
-        return Response({"detail": "Offer accepted successfully.", "engagement_id": engagement.id},status=status.HTTP_201_CREATED)
+        return Response({"detail": "Offer accepted successfully.", "engagement": MentorshipEngagementSerializer(engagement).data},status=status.HTTP_201_CREATED)
     
 @extend_schema(tags=['Mentorship Offers'], summary='Reject a mentorship offer (student)')
 class RejectMentorshipOfferView(OfferValidationMixin, APIView):

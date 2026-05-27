@@ -8,6 +8,7 @@ from drf_spectacular.utils import extend_schema
 from .models import FeedEvent
 from .serializers import FeedCursorPagination, FeedEventSerializer
 from .tasks import record_impressions_task
+from django_q.tasks import async_task
 
 @extend_schema(tags=['Feed'], summary='Get feed for user (student, alumnus)')
 class FeedView(generics.ListAPIView):
@@ -50,7 +51,7 @@ class FeedView(generics.ListAPIView):
 
         ids = [event.id for event in page] 
         if ids:
-            record_impressions_task.delay(request.user.id, ids)
+            async_task(record_impressions_task, request.user.id, ids)
 
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)

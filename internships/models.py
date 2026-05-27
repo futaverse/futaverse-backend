@@ -173,7 +173,7 @@ class InternshipEngagement(BaseModel):
         return f"Engagement of {self.student.full_name} in {self.internship.title}"
     
     @property
-    def post_contexrt(self):
+    def post_context(self):
         return {
             "type": "internship",
             "title": self.internship.title,

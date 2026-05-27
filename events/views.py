@@ -1,6 +1,7 @@
 from django.db import transaction
 from django.db.models import F
 from django.core.cache import cache
+from django_q.tasks import async_task
 
 from rest_framework import generics, status
 from rest_framework.exceptions import PermissionDenied
@@ -42,42 +43,13 @@ class CreateEventView(generics.CreateAPIView):
         redirect_after_auth = validated_data.pop("redirect_after_auth", None)
         platform = validated_data.pop("platform", None)
         
-        event: Event = serializer.save(creator=user, **validated_data)
+        event = serializer.save(creator=user, **validated_data)
         
         if mode in [Event.Mode.VIRTUAL, Event.Mode.HYBRID]:
-            try:
-                credentials = get_user_credentials(user, redirect_after_auth)
-                print(credentials)
-                
-            except GoogleAuthRequired as e:
-                raise PermissionDenied({
-                    "detail": "Authenticate with Google",
-                    "error": "AUTH_REQUIRED",
-                    "auth_url": e.auth_url
-                })
-                            
-            service = GoogleCalendarService(credentials)
+            event_service = EventService(event)
+            event_service.create_virtual_event(user, platform, attendee_emails=[user.email], redirect_after_auth=redirect_after_auth)
             
-            try:
-                if platform == VirtualMeeting.Platform.GOOGLE_MEET:
-                    room_name = None
-                    google_event = service.create_event(event, [user.email])
-                    join_url = google_event.get('hangoutLink')
-                    external_calendar_event_id = google_event.get('id')
-                    
-                if platform == VirtualMeeting.Platform.JITSI:
-                    room_name = f"App-{uuid.uuid4().hex}"
-                    join_url = f"https://meet.jit.si/{room_name}"
-                    google_event = service.create_event(event, [user.email], manual_join_url=join_url)
-                    external_calendar_event_id = google_event.get('id')
-                    
-                VirtualMeeting.objects.create(event=event, platform=platform, join_url=join_url, external_calendar_event_id=external_calendar_event_id, room_name=room_name)
-                
-            except Exception as e:
-                logger.error(f"Error creating virtual meeting for event {event.sqid}: {e}")
-                raise Exception("Something went wrong. Please try again. Contact support if the problem persists.")
-            
-        create_feed_event_task.delay(
+        async_task(create_feed_event_task, 
             event_type=FeedEvent.EventType.EVENT_CREATED,
             related_object_id=event.id,
             related_model='event',  
@@ -129,14 +101,16 @@ class CreateTicketPurchaseView(generics.CreateAPIView):
         is_free = ticket.sales_price == 0 or ticket.type == Ticket.Type.DEFAULT
         
         ticket_purchase = TicketPurchase.objects.create(user=user, ticket=ticket, is_paid=is_free, ticket_uid=ticket_uid, email=user.email)
+        
+        event_service = EventService(event)
              
         if is_free:
             Ticket.objects.filter(id=ticket.id).update(quantity_sold=F('quantity_sold') + 1)
             
             if event.mode in [Event.Mode.VIRTUAL, Event.Mode.HYBRID]:
-                EventService.sync_to_calendar(event)
+                event_service.sync_to_calendar()
                 
-            EventService.send_ticket_email(ticket_purchase)
+            event_service.send_ticket_email(ticket_purchase)
             
             return None
             
@@ -207,7 +181,8 @@ class UpdateEventView(generics.UpdateAPIView):
             service.update_event_details(event, validated_data, manual_join_url=event.virtual_meeting.join_url if is_jitsi else None)
         
         if time_changed:
-            EventService.send_event_update_emails(event, old_data)
+            event_service = EventService(event)
+            event_service.send_event_update_emails(old_data)
 
 @extend_schema(tags=['Events'], summary="List user's hosted events")             
 class ListEventsView(generics.ListAPIView):
@@ -237,6 +212,7 @@ class UpdateEventModeView(generics.UpdateAPIView):
     
     def perform_update(self, serializer):
         instance = self.get_object()
+        user = self.request.user
         
         lock_key = f"mode_update_{instance.sqid}"
         if cache.get(lock_key):
@@ -254,8 +230,9 @@ class UpdateEventModeView(generics.UpdateAPIView):
             event = serializer.save()
 
         if old_mode != new_mode:
-            EventService.reconcile_mode_change(event, old_mode, new_mode, self.request.user, platform=platform, venue=venue)
-            EventService.send_mode_change_email(event, old_mode, new_mode)
+            event_service = EventService(event)
+            event_service.reconcile_mode_change(new_mode, user, platform=platform, venue=venue)
+            event_service.send_mode_change_email(old_mode, new_mode)
             
 @extend_schema(tags=['Events'], summary="List user's purchased tickets")
 class ListPurchasedTicketsView(generics.ListAPIView):

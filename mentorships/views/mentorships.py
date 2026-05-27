@@ -1,3 +1,4 @@
+from django_q.tasks import async_task
 
 from rest_framework import generics
 from rest_framework.response import Response
@@ -31,7 +32,7 @@ class ListCreateMentorshipView(generics.ListCreateAPIView):
         alumnus = self.request.user.alumni_profile
         mentorship = serializer.save(alumnus=alumnus)
         
-        create_feed_event_task.delay(
+        async_task(create_feed_event_task, 
             event_type=FeedEvent.EventType.MENTORSHIP_CREATED,
             related_object_id=mentorship.id,
             related_model='mentorship', 

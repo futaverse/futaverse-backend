@@ -141,7 +141,7 @@ class CreateStudentSerializer(serializers.ModelSerializer):
         profile_img = profile_data.pop('profile_img', None)
         
         validated_data['role'] = User.Role.STUDENT
-        user = super().create(validated_data)
+        user = User.objects.create_user(**validated_data)
         StudentProfile.objects.create(user=user, **profile_data)
         
         if profile_img:
@@ -185,7 +185,7 @@ class CreateAlumnusSerializer(serializers.ModelSerializer):
         profile_img = profile_data.pop('profile_img', None)
         
         validated_data['role'] = User.Role.ALUMNI
-        user = super().create(validated_data)
+        user = User.objects.create_user(**validated_data)
         AlumniProfile.objects.create(user=user, **profile_data)
         
         if profile_img:

@@ -69,7 +69,7 @@ class LoginView(TokenObtainPairView, PublicGenericAPIView):
         
         mailer.send(
             subject="New Login Alert",
-            body = "There was a login attempt on your FutaVerse account. If this was you, you can ignore this message. \n\nIf this was not you, please contact our support team at ....................com \n\n\nFrom the FutaVerse Team",
+            body = "There was a login attempt on your FutaVerse account. If this was you, you can ignore this message. \n\nIf this was not you, please contact our support team at futaverseedu@gmail.com \n\n\nFrom the FutaVerse Team",
             recipient=request.data.get("email"),         
         )
         
@@ -124,7 +124,7 @@ class ForgotPasswordView(PublicGenericAPIView):
                         f"Enter the OTP below into the required field \n"
                         f"The OTP will expire in 10 mins\n\n"
                         f"OTP: {otp} \n\n"
-                        f"If you did not iniate this request, please contact our support team at ..............com   \n\n\n"
+                        f"If you did not iniate this request, please contact our support team at futaverseedu@gmail.com   \n\n\n"
                         f"From the Docuhealth Team"
                     ),
             recipient=serializer.email,
@@ -168,7 +168,6 @@ class ResetPasswordView(GenericAPIView):
 class CreateStudentView(generics.CreateAPIView, PublicGenericAPIView):
     serializer_class = CreateStudentSerializer
     
-    @transaction.atomic
     def post(self, request, *args, **kwargs):
         email = request.data.get('email')
         
@@ -178,6 +177,7 @@ class CreateStudentView(generics.CreateAPIView, PublicGenericAPIView):
 
         return super().post(request, *args, **kwargs)
     
+    @transaction.atomic
     def perform_create(self, serializer):
         with transaction.atomic():
             user = serializer.save()
@@ -189,7 +189,7 @@ class CreateStudentView(generics.CreateAPIView, PublicGenericAPIView):
                 f"Enter the OTP below into the required field \n"
                 f"The OTP will expire in 10 mins\n\n"
                 f"OTP: {otp}\n\n"
-                f"If you did not initiate this request, please contact .................com\n\n"
+                f"If you did not initiate this request, please contact futaverseedu@gmail.com\n\n"
                 f"From the FutaVerse Team"
             ),
             recipient=user.email,
@@ -238,7 +238,7 @@ class CreateAlumnusView(generics.CreateAPIView, PublicGenericAPIView):
                 f"Enter the OTP below into the required field \n"
                 f"The OTP will expire in 10 mins\n\n"
                 f"OTP: {otp}\n\n"
-                f"If you did not initiate this request, please contact .................com\n\n"
+                f"If you did not initiate this request, please contact futaverseedu@gmail.com\n\n"
                 f"From the FutaVerse Team"
             ),
             recipient=user.email,
