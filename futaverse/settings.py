@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'drf_spectacular',
     "corsheaders",
+    'django_q',
     
     'core',
     'internships',
@@ -221,4 +222,13 @@ EVENTSTREAM_REDIS = {
     "host": "redis",
     "port": 6379,
     "db": 0,
+}
+
+Q_CLUSTER = {
+    'name': 'futaverse',      
+    'workers': 2,             
+    'timeout': 60,            
+    'retry': 120,             
+    'orm': 'default',         
+    'poll': 5,                
 }
