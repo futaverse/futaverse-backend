@@ -102,6 +102,8 @@ class InternshipEngagementSerializer(serializers.ModelSerializer):
     student_info = StudentInfoSerializer(read_only=True, source='student')
     alumnus_info = AlumniInfoSerializer(read_only=True, source='alumnus')
     
+    engagement = serializers.CharField(read_only=True, source='engagement_ptr.sqid')
+    
     class Meta:
         model = InternshipEngagement
         exclude = ['deleted_at', 'is_deleted', 'id', 'internship', 'student', 'alumnus']

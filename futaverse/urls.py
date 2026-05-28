@@ -13,6 +13,8 @@ urlpatterns = [
     
     path('admin', admin.site.urls),
     
+    path("events/", include("django_eventstream.urls")),
+    
     path('api/auth/google', google_auth_start, name='google-auth-start'),
     path('api/auth/google/callback', google_auth_callback, name='google-auth-callback'),
     
@@ -24,6 +26,7 @@ urlpatterns = [
     path('api/payments', include('payments.urls')),
     path('api/feed', include('feed.urls')),
     path('api/posts', include('posts.urls')),
+    path('api/notifications', include('notifications.urls')),
 
     path('student/resume', UploadResumeView.as_view(), name='upload-resume'),
 ]

@@ -49,7 +49,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         Role.STUDENT: "student_profile",
     }
         
-    sqid = SqidsField(real_field_name="id", min_length=7)
+    sqid = SqidsField(real_field_name="id", min_length=7,alphabet="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890", db_index=True)
     email = models.EmailField(unique=True, blank=True, null=True)
     role = models.CharField(max_length=20, choices=Role.choices)
     
@@ -296,3 +296,4 @@ class AlumniProfile(BaseModel):
             match_filter |= attr
 
         return match_filter
+    
