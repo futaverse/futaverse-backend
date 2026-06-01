@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'payments',
     'feed',
     'posts',
+    'reviews',
 ]
 
 AUTH_USER_MODEL = "core.User"
