@@ -20,7 +20,7 @@ class BaseEngagement(BaseModel):
     class EngagementStatus(models.TextChoices):
         ACTIVE = "active", "Active"
         COMPLETED = "completed", "Completed"
-        CLOSED = "closed", "Closed"
+        ACKNOWLEDGED = "acknowledged", "Acknowledged"
         TERMINATED = "terminated", "Terminated"
         ARCHIVED = "archived", "Archived"
 
@@ -50,8 +50,8 @@ class BaseEngagement(BaseModel):
         
         return 
     
-    def mark_as_completed(self):
-        self.status = self.EngagementStatus.COMPLETED
+    def update_status(self, status):
+        self.status = status
         self.save(update_fields=['status', 'updated_at'])
         
     class Meta:

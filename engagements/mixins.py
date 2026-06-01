@@ -2,10 +2,10 @@ from django_q.tasks import async_task
 from django.db import transaction
 
 from rest_framework import generics
+from rest_framework.exceptions import ValidationError
 from futaverse.permissions import IsAuthenticatedAlumnus
 
-from notifications.tasks import send_notifications_task
-
+from .tasks import schedule_auto_ackowledgement_task
 class MarkEngagementCompletedMixin:
     permission_classes = [IsAuthenticatedAlumnus]
     serializer_class = None
@@ -14,13 +14,21 @@ class MarkEngagementCompletedMixin:
     engagement_type = None
     
     def perform_update(self, serializer):
+        engagement = self.get_object()
+        
+        if engagement.status != engagement.EngagementStatus.ACTIVE:
+            raise ValidationError("Only active engagements can be completed.")
+        
         with transaction.atomic():
-            engagement = self.get_object()
-            engagement.mark_as_completed()
+            engagement.update_status(engagement.EngagementStatus.COMPLETED)
+            
+        engagement_data = {
+            'engagement_type': self.engagement_type,
+            'sqid': engagement.sqid
+        }
 
+        # TODO: FE dev urges student to acknowledge completion. It will be auto-ackowledged in 48 hours.
         transaction.on_commit(lambda: async_task(
-            send_notifications_task,
-            user_ids=[engagement.student.user.id],
-            title=f'{self.engagement_type} Completed',
-            content=f'Your {self.engagement_type.lower()} with {engagement.alumnus.full_name} has been marked as completed.'
+            schedule_auto_ackowledgement_task,
+            engagement_data
         ))

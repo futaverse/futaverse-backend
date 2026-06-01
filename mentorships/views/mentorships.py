@@ -125,4 +125,4 @@ class MentorshipChoicesView(generics.GenericAPIView):
         
 class MarkMentorshipCompletedView(MarkEngagementCompletedMixin, generics.UpdateAPIView):
     queryset = MentorshipEngagement.objects.all()
-    engagement_type = 'Mentorship'
+    engagement_type = 'mentorship_engagement'  

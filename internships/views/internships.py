@@ -3,6 +3,8 @@ from rest_framework import generics
 from drf_spectacular.utils import extend_schema, extend_schema_view
 
 from engagements.mixins import MarkEngagementCompletedMixin
+from engagements.models import BaseEngagement
+
 from internships.models import Internship, InternshipEngagement
 from internships.serializers import InternshipSerializer, InternshipStatusSerializer, InternshipEngagementSerializer
 from core.models import User
@@ -112,6 +114,12 @@ class RetrieveInternshipEngagementView(generics.RetrieveAPIView):
     
 class MarkInternshipCompletedView(MarkEngagementCompletedMixin, generics.UpdateAPIView):
     queryset = InternshipEngagement.objects.all()
-    engagement_type = 'Internship'
+    engagement_type = 'internship_engagement'
             
-        
+class AcknowledgeInternshipCompletionView(generics.UpdateAPIView):
+    queryset = InternshipEngagement.objects.all()
+    permission_classes = [IsAuthenticatedStudent]
+    
+    def perform_update(self, serializer):
+        engagement = self.get_object()
+        engagement.update_status(BaseEngagement.EngagementStatus.CLOSED)

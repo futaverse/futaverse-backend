@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from .models import Post
-from .lib import POST_PLUGINS
+from engagements.plugins import get_engagement_plugin
 
 from futaverse.lib import MODELS
 
@@ -56,7 +56,7 @@ class PostSerializer(serializers.ModelSerializer):
     def get_related_data(self, obj):
         related = obj.related_object
         
-        plugin = POST_PLUGINS.get(related.__class__)
+        plugin = get_engagement_plugin(related.__class__)
 
         if not plugin:
             return None
