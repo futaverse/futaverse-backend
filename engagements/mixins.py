@@ -3,9 +3,10 @@ from django.db import transaction
 
 from rest_framework import generics
 from rest_framework.exceptions import ValidationError
-from futaverse.permissions import IsAuthenticatedAlumnus
+from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
 
 from .tasks import schedule_auto_ackowledgement_task
+from .models import BaseEngagement
 class MarkEngagementCompletedMixin:
     permission_classes = [IsAuthenticatedAlumnus]
     serializer_class = None
@@ -16,11 +17,11 @@ class MarkEngagementCompletedMixin:
     def perform_update(self, serializer):
         engagement = self.get_object()
         
-        if engagement.status != engagement.EngagementStatus.ACTIVE:
+        if engagement.status != BaseEngagement.EngagementStatus.ACTIVE:
             raise ValidationError("Only active engagements can be completed.")
         
         with transaction.atomic():
-            engagement.update_status(engagement.EngagementStatus.COMPLETED)
+            engagement.update_status(BaseEngagement.EngagementStatus.COMPLETED)
             
         engagement_data = {
             'engagement_type': self.engagement_type,
@@ -32,3 +33,18 @@ class MarkEngagementCompletedMixin:
             schedule_auto_ackowledgement_task,
             engagement_data
         ))
+        
+class MarkEngagementAcknowledgedMixin:
+    permission_classes = [IsAuthenticatedStudent]
+    serializer_class = None
+    http_method_names = ['patch']
+    lookup_field = 'sqid'
+    engagement_type = None
+    
+    def perform_update(self, serializer):
+        engagement = self.get_object()
+        
+        if engagement.status != BaseEngagement.EngagementStatus.COMPLETED:
+            raise ValidationError("Only completed engagements can be acknowledged.")
+        
+        engagement.update_status(BaseEngagement.EngagementStatus.ACKNOWLEDGED)

@@ -5,7 +5,7 @@ from rest_framework.response import Response
 
 from drf_spectacular.utils import extend_schema, extend_schema_view
 
-from engagements.mixins import MarkEngagementCompletedMixin
+from engagements.mixins import MarkEngagementCompletedMixin, MarkEngagementAcknowledgedMixin
 from mentorships.models import Mentorship, MentorshipEngagement
 from mentorships.serializers import MentorshipSerializer, MentorshipStatusSerializer, MentorshipEngagementSerializer
 from mentorships.lib import FocusArea, MentorshipCategory
@@ -125,4 +125,10 @@ class MentorshipChoicesView(generics.GenericAPIView):
         
 class MarkMentorshipCompletedView(MarkEngagementCompletedMixin, generics.UpdateAPIView):
     queryset = MentorshipEngagement.objects.all()
-    engagement_type = 'mentorship_engagement'  
+    engagement_type = 'mentorship_engagement'
+    serializer_class = MentorshipEngagementSerializer  
+    
+class MarkMentorshipAcknowledgedView(MarkEngagementAcknowledgedMixin, generics.UpdateAPIView):
+    queryset = MentorshipEngagement.objects.all()
+    engagement_type = 'mentorship_engagement'
+    serializer_class = MentorshipEngagementSerializer
