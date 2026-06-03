@@ -183,6 +183,9 @@ class StudentProfile(BaseModel):
     instagram_url = models.URLField(blank=True, null=True, max_length=200)
     facebook_url = models.URLField(blank=True, null=True, max_length=200)
     
+    avg_rating = models.DecimalField(max_digits=3, decimal_places=2, null=True)
+    total_reviews = models.PositiveIntegerField(default=0)
+    
     @property
     def full_name(self):
         return f"{self.firstname} {self.lastname}"
@@ -264,6 +267,9 @@ class AlumniProfile(BaseModel):
     x_url = models.URLField(blank=True, null=True, max_length=200)
     instagram_url = models.URLField(blank=True, null=True, max_length=200)
     facebook_url = models.URLField(blank=True, null=True, max_length=200)
+    
+    avg_rating = models.DecimalField(max_digits=3, decimal_places=2, null=True)
+    total_reviews = models.PositiveIntegerField(default=0)
     
     @property
     def full_name(self):
