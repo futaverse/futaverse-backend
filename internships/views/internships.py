@@ -111,12 +111,14 @@ class RetrieveInternshipEngagementView(generics.RetrieveAPIView):
             return InternshipEngagement.objects.filter(student=user.student_profile).select_related('Internship', 'student')
         
         return InternshipEngagement.objects.none()
-    
+
+@extend_schema(tags=['Internship Engagements'], summary='Mark an internship engagement as completed (alumnus)') 
 class MarkInternshipCompletedView(MarkEngagementCompletedMixin, generics.UpdateAPIView):
     queryset = InternshipEngagement.objects.all()
     engagement_type = 'internship_engagement'
     serializer_class = InternshipEngagementSerializer
-            
+
+@extend_schema(tags=['Internship Engagements'], summary='Mark an internship engagement as acknowledged (student)')            
 class MarkInternshipAcknowledgedView(MarkEngagementAcknowledgedMixin, generics.UpdateAPIView):
     queryset = InternshipEngagement.objects.all()
     engagement_type = 'internship_engagement'

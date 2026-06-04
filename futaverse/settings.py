@@ -75,6 +75,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'futaverse.wsgi.application'
+ASGI_APPLICATION = "futaverse.asgi.application"
 
 tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
 DATABASES = {

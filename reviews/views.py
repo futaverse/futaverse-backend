@@ -1,40 +1,57 @@
-from rest_framework import generics, status
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.shortcuts import get_object_or_404
+
+from rest_framework import generics
+from rest_framework.exceptions import ValidationError
 
 from futaverse.permissions import IsAuthenticatedStudent, IsAuthenticatedAlumnus
 
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import extend_schema
 
 from .models import Review
 from .serializers import ReviewSerializer, CreateReviewSerializer
-from .selectors import get_reviews_for_user
-from .permissions import IsReviewer
+from .schema import CREATEREVIEWSCHEMA
+from .services import create_review
 
-@extend_schema(tags=["Reviews"], summary="Create a review for an engagement")
+from core.models import User, StudentProfile, AlumniProfile
+
+@extend_schema(tags=["Reviews"], summary="Create a review for an engagement.", **CREATEREVIEWSCHEMA)
 class CreateReviewView(generics.CreateAPIView):
     serializer_class = CreateReviewSerializer
     permission_classes = [IsAuthenticatedStudent | IsAuthenticatedAlumnus]
     
-@extend_schema(tags=["Reviews"])
-@extend_schema_view(
-    get=extend_schema(summary="List reviews for a user"),
-)
-class ListReviewsView(generics.ListAPIView):
-    """List all reviews for a specific user (as reviewee)."""
+    def perform_create(self, serializer):
+        create_review(**serializer.validated_data)
+    
+@extend_schema(tags=["Reviews"], summary="List reviews for a user")
+class ListUserReviewsView(generics.ListAPIView):
     serializer_class = ReviewSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticatedAlumnus | IsAuthenticatedStudent]
     
     def get_queryset(self):
-        from core.models import User
+        sqid = self.kwargs.get("sqid")
+        role = self.request.query_params.get("role")
         
-        user_sqid = self.kwargs.get("user_sqid")
-        try:
-            user = User.objects.get(sqid=user_sqid)
-            return get_reviews_for_user(user)
-        except User.DoesNotExist:
-            return Review.objects.none()
-
+        if not role or not role in [User.Role.ALUMNI, User.Role.STUDENT]:
+            raise ValidationError({"details": "Role query parameter is required and must be either 'alumni' or 'student'."})
+        
+        if role == User.Role.STUDENT:
+            profile = get_object_or_404(StudentProfile, sqid=sqid)
+        elif role == User.Role.ALUMNI:
+            profile = get_object_or_404(AlumniProfile, sqid=sqid)
+            
+        return Review.objects.filter(reviewee=profile.user).order_by("-created_at")
+    
+@extend_schema(tags=["Reviews"], summary="List reviews for the logged in user")
+class ListMyReviewsView(generics.ListAPIView):
+    serializer_class = ReviewSerializer
+    permission_classes = [IsAuthenticatedAlumnus | IsAuthenticatedStudent]
+    
+    def get_queryset(self):
+        user = self.request.user
+            
+        print("User:", user)
+        return Review.objects.filter(reviewee=user).order_by("-created_at")
+        # return Review.objects.all()
 
 # @extend_schema(tags=["Reviews"])
 # @extend_schema_view(

@@ -7,6 +7,7 @@ from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
 
 from .tasks import schedule_auto_ackowledgement_task
 from .models import BaseEngagement
+
 class MarkEngagementCompletedMixin:
     permission_classes = [IsAuthenticatedAlumnus]
     serializer_class = None
@@ -48,3 +49,4 @@ class MarkEngagementAcknowledgedMixin:
             raise ValidationError("Only completed engagements can be acknowledged.")
         
         engagement.update_status(BaseEngagement.EngagementStatus.ACKNOWLEDGED)
+        engagement.refresh_from_db()

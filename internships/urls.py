@@ -4,7 +4,7 @@ from .views.applications import ListInternshipApplicationsView, CreateInternship
 
 from .views.offers import ListInternshipOfferView, CreateInternshipOfferView, AcceptInternshipOfferView, RejectInternshipOfferView, WithdrawInternshipOfferView, RetrieveInternshipOfferView
 
-from .views.internships import ListCreateInternshipView, ToggleInternshipActiveView, RetrieveInternshipEngagementView, ListInternshipEngagementsView, RetrieveUpdateDestroyInternshipView
+from .views.internships import ListCreateInternshipView, ToggleInternshipActiveView, RetrieveInternshipEngagementView, ListInternshipEngagementsView, RetrieveUpdateDestroyInternshipView, MarkInternshipAcknowledgedView, MarkInternshipCompletedView
 
 urlpatterns = [
     path('/application', CreateInternshipApplicationView.as_view(), name='create-internship-application'),
@@ -25,6 +25,8 @@ urlpatterns = [
     path('/applications/<slug:application_id>/withdraw', WithdrawInternshipApplicationView.as_view(), name='withdraw-internship-application'),
     
     path('/engagements/<slug:sqid>', RetrieveInternshipEngagementView.as_view(), name='retrieve-internship-engagement'),
+    path('/engagements/<slug:sqid>/completed', MarkInternshipCompletedView.as_view(), name="mark-internship-as-completed"),
+    path('/engagements/<slug:sqid>/acknowledged', MarkInternshipAcknowledgedView.as_view(), name="mark-internship-as-acknowledged"),
     
     path('', ListCreateInternshipView.as_view(), name='list-create-internships'),
     path('/<slug:sqid>', RetrieveUpdateDestroyInternshipView.as_view(), name='retrieve-update-destroy-internships'),

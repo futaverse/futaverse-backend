@@ -1,13 +1,10 @@
 from django.urls import path
 
-from reviews.views import (
-    CreateReviewView,
-    ListReviewsView,
-    # RetrieveUpdateReviewView
-)
+from reviews.views import CreateReviewView, ListUserReviewsView, ListMyReviewsView
 
 urlpatterns = [
     path("", CreateReviewView.as_view(), name="create-review"),
-    path("/<slug:user_sqid>", ListReviewsView.as_view(), name="list-reviews"),
+    path("/me", ListMyReviewsView.as_view(), name="list-my-reviews"),
+    path("/<slug:sqid>", ListUserReviewsView.as_view(), name="list-reviews"),
     # path("/<slug:sqid>", RetrieveUpdateReviewView.as_view(), name="retrieve-update-review"),
 ]

@@ -2,7 +2,7 @@ from django.utils import timezone
 from django.shortcuts import get_object_or_404
 
 from datetime import timedelta
-from django_q.tasks import async_task, schedule, Schedule
+from django_q.tasks import async_task, logger, schedule, Schedule
 
 from notifications.tasks import send_notifications_task
 from engagements.models import BaseEngagement
@@ -48,8 +48,10 @@ def schedule_auto_ackowledgement_task(engagement_data):
     try:
         engagement = model.objects.get(sqid=sqid)
     except model.DoesNotExist:
+        logger.warning(f"Engagement with sqid {sqid} does not exist.")
         return
     
+    engagement.refresh_from_db()
     student_id = engagement.student.user.id
     alumnus_name = engagement.alumnus.full_name
     
@@ -66,7 +68,7 @@ def schedule_auto_ackowledgement_task(engagement_data):
         title=f'Acknowledgement Reminder for {domain}',
         content=f'Please acknowledge your {domain} with {alumnus_name} in 24 hours, else it will be automatically acknowledged.',
         schedule_type=Schedule.ONCE,
-        next_run=timezone.now() + timedelta(hours=24),
+        next_run=timezone.now() + timedelta(seconds=20), #TODO: change to 24 hours later
         name=f'acknowledgement_reminder_{sqid}'
     )
     
@@ -75,6 +77,6 @@ def schedule_auto_ackowledgement_task(engagement_data):
         engagement_sqid=sqid,
         engagement_type=engagement_type,
         schedule_type=Schedule.ONCE,
-        next_run=timezone.now() + timedelta(hours=48),
+        next_run=timezone.now() + timedelta(seconds=40), #TODO: change to 48 hours later
         name=f'auto_acknowledge_engagement_{sqid}'
     )

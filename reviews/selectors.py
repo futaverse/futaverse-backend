@@ -2,20 +2,6 @@ from rest_framework.exceptions import NotFound
 
 from reviews.models import Review
 
-
-def get_reviews_for_user(user):
-    """
-    Get all reviews for a user (as reviewee), ordered by most recent first.
-    
-    Args:
-        user: User instance
-    
-    Returns:
-        QuerySet of Review objects
-    """
-    return Review.objects.filter(reviewee=user).order_by("-created_at")
-
-
 def get_review(review_id):
     """
     Get a single review by ID.

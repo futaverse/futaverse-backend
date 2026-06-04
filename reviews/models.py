@@ -5,7 +5,6 @@ from django.conf import settings
 
 from futaverse.models import BaseModel
 
-
 class Review(BaseModel):
     reviewer = models.ForeignKey(
         settings.AUTH_USER_MODEL,

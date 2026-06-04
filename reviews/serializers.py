@@ -7,59 +7,41 @@ from rest_framework.exceptions import ValidationError
 from engagements.models import BaseEngagement
 from futaverse.lib import MODELS
 from reviews.models import Review
-from core.serializers import StudentProfileSerializer, AlumniProfileSerializer
+from core.serializers import StudentInfoSerializer, AlumniInfoSerializer
+from core.models import User
 
 from .plugins import ENGAGEMENT_REVIEW_PLUGIN, ReviewType
 
-class ReviewerDetailSerializer(serializers.Serializer):
-    """Nested serializer for reviewer user details."""
-    sqid = serializers.CharField(source="reviewer.sqid", read_only=True)
-    email = serializers.EmailField(source="reviewer.email", read_only=True)
-    role = serializers.CharField(source="reviewer.role", read_only=True)
+class ReviewActorDetailSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
     
+    class Meta:
+        model = User
+        fields = ["email", "role", "profile"]
+    
     def get_profile(self, obj):
-        profile = obj.reviewer.profile
+        profile = obj.profile
         if profile is None:
             return None
         
-        if obj.reviewer.role == "student":
-            return StudentProfileSerializer(profile).data
-        elif obj.reviewer.role == "alumni":
-            return AlumniProfileSerializer(profile).data
-        
-        return None
-
-class RevieweeDetailSerializer(serializers.Serializer):
-    """Nested serializer for reviewee user details."""
-    sqid = serializers.CharField(source="reviewee.sqid", read_only=True)
-    email = serializers.EmailField(source="reviewee.email", read_only=True)
-    role = serializers.CharField(source="reviewee.role", read_only=True)
-    profile = serializers.SerializerMethodField()
-    
-    def get_profile(self, obj):
-        profile = obj.reviewee.profile
-        if profile is None:
-            return None
-        
-        if obj.reviewee.role == "student":
-            return StudentProfileSerializer(profile).data
-        elif obj.reviewee.role == "alumni":
-            return AlumniProfileSerializer(profile).data
+        if obj.role == User.Role.STUDENT:
+            return StudentInfoSerializer(profile).data
+        elif obj.role == User.Role.ALUMNI:
+            return AlumniInfoSerializer(profile).data
         
         return None
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    reviewer_info = ReviewerDetailSerializer(source="reviewer", read_only=True)
-    reviewee_info = RevieweeDetailSerializer(source="reviewee", read_only=True)
-    
+    reviewer_info = ReviewActorDetailSerializer(source="reviewer", read_only=True)
+    reviewee_info = ReviewActorDetailSerializer(source="reviewee", read_only=True)
+
     class Meta:
         model = Review
         fields = [
             "sqid",
-            "reviewer_detail",
-            "reviewee_detail",
+            "reviewer_info",
+            "reviewee_info",
             "overall_rating",
             "review_text",
             "metrics",
@@ -76,26 +58,19 @@ class CreateReviewSerializer(serializers.Serializer):
     metrics = serializers.JSONField(required=False, default=dict)
     review_text = serializers.CharField(required=False, allow_blank=True)
     
-    def validate_reviewee(self, value):
-        """Ensure reviewee is not the same as reviewer."""
-        if self.context.get("request"):
-            if value == self.context["request"].user:
-                raise serializers.ValidationError("You cannot review yourself.")
-        return value
-    
     def validate(self, attrs):
         reviewer = self.context["request"].user
         validated_data = super().validate(attrs)
         
-        engagement_type = validated_data['engagement_type']
-        engagement_id = validated_data['engagement']
+        engagement_type = validated_data.pop('engagement_type')
+        engagement_id = validated_data.pop('engagement')
         metrics = validated_data.get("metrics", {})
         
         engagement_model = MODELS.get(engagement_type)
 
         engagement = get_object_or_404(engagement_model, sqid=engagement_id)
         
-        if engagement.status != BaseEngagement.Status.ACKNOWLEDGED:
+        if engagement.status != BaseEngagement.EngagementStatus.ACKNOWLEDGED:
             raise ValidationError("Engagement has not been acknowledged by one or both parties.")
 
         content_type = ContentType.objects.get_for_model(engagement_model)
@@ -110,6 +85,9 @@ class CreateReviewSerializer(serializers.Serializer):
             
         else:
             raise ValidationError({"detail": "You are not part of this engagement."})
+        
+        if reviewee == reviewer:
+            raise serializers.ValidationError("You cannot review yourself.")
             
         plugin = ENGAGEMENT_REVIEW_PLUGIN.get(review_type)
         
@@ -131,6 +109,7 @@ class CreateReviewSerializer(serializers.Serializer):
         if existing_review:
             raise ValidationError({"detail": "You have already reviewed this engagement."})
         
+        validated_data["reviewer"] = reviewer
         validated_data["reviewee"] = reviewee
         validated_data["engagement"] = engagement
         
