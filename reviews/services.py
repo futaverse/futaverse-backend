@@ -28,51 +28,20 @@ def create_review(
     return review
     
 
-# def update_review(*, review, metrics=None, review_text=None):
-#     """
-#     Update an existing review (text and/or metrics).
+def update_review(review, metrics=None, review_text=None, overall_rating=None):
+    if review_text is not None:
+        review.review_text = review_text
     
-#     1. Check timezone.now() <= review.editable_until
-#     2. Re-validate metrics via plugin if applicable
-#     3. Recompute overall_rating
-#     4. Save
-#     5. Call recalculate_profile_rating(review.reviewee)
+    if metrics is not None:
+        review.metrics = metrics
+        review.overall_rating = overall_rating
     
-#     Args:
-#         review: Review instance to update
-#         metrics: dict of updated metrics (optional)
-#         review_text: Updated review text (optional)
+    review.save(update_fields=["review_text", "metrics", "overall_rating", "updated_at"])
     
-#     Returns:
-#         Updated Review instance
+    review.refresh_from_db()
+    recalculate_profile_rating(review.reviewee)
     
-#     Raises:
-#         ValidationError: if review is no longer editable or validation fails
-#     """
-#     # Check if review is still editable
-#     if timezone.now() > review.editable_until:
-#         raise ValidationError("Review can no longer be edited.")
-    
-#     # Update fields if provided
-#     if review_text is not None:
-#         review.review_text = review_text
-    
-#     if metrics is not None:
-#         plugin = get_plugin(review.source_content_type_id, review.reviewer.role)
-#         if plugin:
-#             validated_metrics = plugin.validate_metrics(metrics)
-#             computed_rating = plugin.compute_overall(validated_metrics)
-#             review.metrics = validated_metrics
-#             review.overall_rating = computed_rating
-#         else:
-#             raise ValidationError(
-#                 "Cannot update metrics when no plugin is registered for this review type."
-#             )
-    
-#     review.save()
-#     recalculate_profile_rating(review.reviewee)
-    
-#     return review
+    return review
 
 
 def recalculate_profile_rating(reviewee):

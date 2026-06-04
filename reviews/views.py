@@ -1,14 +1,15 @@
 from django.shortcuts import get_object_or_404
 
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 
 from futaverse.permissions import IsAuthenticatedStudent, IsAuthenticatedAlumnus
 
 from drf_spectacular.utils import extend_schema
 
 from .models import Review
-from .serializers import ReviewSerializer, CreateReviewSerializer
+from .serializers import ReviewSerializer, CreateReviewSerializer, UpdateReviewSerializer
 from .schema import CREATEREVIEWSCHEMA
 from .services import create_review
 
@@ -20,7 +21,13 @@ class CreateReviewView(generics.CreateAPIView):
     permission_classes = [IsAuthenticatedStudent | IsAuthenticatedAlumnus]
     
     def perform_create(self, serializer):
-        create_review(**serializer.validated_data)
+        self.review = create_review(**serializer.validated_data)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(ReviewSerializer(self.review).data, status=status.HTTP_201_CREATED)
     
 @extend_schema(tags=["Reviews"], summary="List reviews for a user")
 class ListUserReviewsView(generics.ListAPIView):
@@ -39,8 +46,8 @@ class ListUserReviewsView(generics.ListAPIView):
         elif role == User.Role.ALUMNI:
             profile = get_object_or_404(AlumniProfile, sqid=sqid)
             
-        return Review.objects.filter(reviewee=profile.user).order_by("-created_at")
-    
+        return Review.objects.filter(reviewee=profile.user).select_related("reviewee", "reviewer").order_by("-created_at")
+
 @extend_schema(tags=["Reviews"], summary="List reviews for the logged in user")
 class ListMyReviewsView(generics.ListAPIView):
     serializer_class = ReviewSerializer
@@ -49,50 +56,26 @@ class ListMyReviewsView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
             
-        print("User:", user)
-        return Review.objects.filter(reviewee=user).order_by("-created_at")
-        # return Review.objects.all()
+        return Review.objects.filter(reviewee=user).select_related("reviewee", "reviewer").order_by("-created_at")
 
-# @extend_schema(tags=["Reviews"])
-# @extend_schema_view(
-#     get=extend_schema(summary="Retrieve a review"),
-#     patch=extend_schema(summary="Update a review"),
-#     put=extend_schema(summary="Update a review"),
-# )
-# class RetrieveUpdateReviewView(generics.RetrieveUpdateAPIView):
-#     """Retrieve or update a review."""
-#     serializer_class = ReviewSerializer
-#     lookup_field = "sqid"
-#     permission_classes = [IsAuthenticated, IsReviewer]
-    
-#     def get_queryset(self):
-#         return Review.objects.all()
-    
-#     def get_object(self):
-#         from reviews.selectors import get_review
-#         from django.contrib.auth.models import AnonymousUser
+class UpdateReview(generics.UpdateAPIView):
+    serializer_class = UpdateReviewSerializer
+    permission_classes = [IsAuthenticatedAlumnus | IsAuthenticatedStudent]
+    lookup_field = "sqid"
+    http_method_names = ["patch"]
+
+    def get_queryset(self):
+        return Review.objects.all()
+
+    def update(self, request, *args, **kwargs):
+        super().update(request, *args, **kwargs)  
         
-#         sqid = self.kwargs.get(self.lookup_field)
-#         try:
-#             review = Review.objects.get(sqid=sqid)
-#             self.check_object_permissions(self.request, review)
-#             return review
-#         except Review.DoesNotExist:
-#             self.kwargs[self.lookup_field] = None
-#             self.check_object_permissions(self.request, None)
-    
-#     def get_serializer_class(self):
-#         if self.request.method in ["PATCH", "PUT"]:
-#             return UpdateReviewSerializer
-#         return ReviewSerializer
-    
-#     def update(self, request, *args, **kwargs):
-#         partial = kwargs.pop("partial", False)
-#         review = self.get_object()
+        instance = self.get_object()
+        return Response(ReviewSerializer(instance).data, status=status.HTTP_200_OK)
         
-#         serializer = self.get_serializer(review, data=request.data, partial=partial)
-#         serializer.is_valid(raise_exception=True)
-#         updated_review = serializer.save()
-        
-#         output_serializer = ReviewSerializer(updated_review)
-#         return Response(output_serializer.data, status=status.HTTP_200_OK)
+@extend_schema(tags=["Reviews"])
+class RetrieveReviewView(generics.RetrieveAPIView):
+    serializer_class = ReviewSerializer
+    lookup_field = "sqid"
+    permission_classes = [IsAuthenticatedAlumnus | IsAuthenticatedStudent]
+    queryset = Review.objects.all().select_related("reviewee", "reviewer")

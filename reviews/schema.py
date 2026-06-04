@@ -1,5 +1,7 @@
 from drf_spectacular.utils import extend_schema, PolymorphicProxySerializer, OpenApiExample
 from drf_spectacular.openapi import AutoSchema
+
+from reviews.serializers import ReviewSerializer
 from .metrics_serializers import StudentRatesAlumnusMetricsSerializer, AlumnusRatesStudentMetricsSerializer
 
 CREATEREVIEWSCHEMA = {
@@ -47,5 +49,6 @@ CREATEREVIEWSCHEMA = {
             },
             request_only=True,
         ),
-    ]
+    ],
+    "responses":{201: ReviewSerializer}   
 }

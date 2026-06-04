@@ -1,6 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404
 
+from pytz import timezone
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -11,6 +12,7 @@ from core.serializers import StudentInfoSerializer, AlumniInfoSerializer
 from core.models import User
 
 from .plugins import ENGAGEMENT_REVIEW_PLUGIN, ReviewType
+from .services import create_review, update_review
 
 class ReviewActorDetailSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
@@ -115,17 +117,41 @@ class CreateReviewSerializer(serializers.Serializer):
         
         return validated_data
 
-# class UpdateReviewSerializer(serializers.Serializer):
-#     """Serializer for updating reviews."""
-#     metrics = serializers.JSONField(required=False)
-#     review_text = serializers.CharField(required=False, allow_blank=True)
-    
-#     def update(self, instance, validated_data):
-#         metrics = validated_data.get("metrics")
-#         review_text = validated_data.get("review_text")
+class UpdateReviewSerializer(serializers.Serializer):
+    metrics = serializers.JSONField(required=False)
+    review_text = serializers.CharField(required=False, allow_blank=True)
+
+    def validate(self, attrs):
+        reviewer = self.context["request"].user
+        instance = self.instance  
         
-#         return update_review(
-#             review=instance,
-#             metrics=metrics,
-#             review_text=review_text
-#         )
+        if timezone.now() > instance.editable_until:
+            raise ValidationError("Review can no longer be edited.")
+
+        if reviewer.role == User.Role.STUDENT:
+            review_type = ReviewType.STUDENT_RATES_ALUMNUS
+
+        elif reviewer.role == User.Role.ALUMNI:
+            review_type = ReviewType.ALUMNUS_RATES_STUDENT
+        
+        else:
+            raise ValidationError({"detail": "You are not the reviewer of this review."})
+        
+        metrics = attrs.get("metrics")
+
+        if metrics:
+            plugin = ENGAGEMENT_REVIEW_PLUGIN.get(review_type)
+            metrics_serializer = plugin.metrics_serializer(data=metrics)
+            metrics_serializer.is_valid(raise_exception=True)
+            attrs["metrics"] = metrics_serializer.validated_data
+            attrs["overall_rating"] = plugin.compute_overall(attrs["metrics"])
+
+        return attrs
+    
+    def update(self, instance, validated_data):
+        return update_review(
+            review=instance,
+            metrics=validated_data.get("metrics"),
+            review_text=validated_data.get("review_text"),
+            overall_rating=validated_data.get("overall_rating"),
+        )
