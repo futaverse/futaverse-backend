@@ -5,12 +5,12 @@ from .models import Post
 from feed.tasks import create_feed_event_task
 from feed.models import FeedEvent
 
-from .lib import POST_PLUGINS
+from engagements.plugins import get_engagement_plugin
 
 @transaction.atomic()
 def share_engagement(user, engagement, custom_text=None):
     context = getattr(engagement, 'post_context', {})
-    plugin = POST_PLUGINS.get(engagement.__class__)
+    plugin = get_engagement_plugin(engagement.__class__)
     
     if not plugin:
         raise ValueError(f"Unknown engagement type")

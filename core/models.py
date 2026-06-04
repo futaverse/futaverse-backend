@@ -49,7 +49,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         Role.STUDENT: "student_profile",
     }
         
-    sqid = SqidsField(real_field_name="id", min_length=7)
+    sqid = SqidsField(real_field_name="id", min_length=7,alphabet="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890", db_index=True)
     email = models.EmailField(unique=True, blank=True, null=True)
     role = models.CharField(max_length=20, choices=Role.choices)
     
@@ -183,6 +183,9 @@ class StudentProfile(BaseModel):
     instagram_url = models.URLField(blank=True, null=True, max_length=200)
     facebook_url = models.URLField(blank=True, null=True, max_length=200)
     
+    avg_rating = models.DecimalField(max_digits=3, decimal_places=2, null=True)
+    total_reviews = models.PositiveIntegerField(default=0)
+    
     @property
     def full_name(self):
         return f"{self.firstname} {self.lastname}"
@@ -265,6 +268,9 @@ class AlumniProfile(BaseModel):
     instagram_url = models.URLField(blank=True, null=True, max_length=200)
     facebook_url = models.URLField(blank=True, null=True, max_length=200)
     
+    avg_rating = models.DecimalField(max_digits=3, decimal_places=2, null=True)
+    total_reviews = models.PositiveIntegerField(default=0)
+    
     @property
     def full_name(self):
         return f"{self.firstname} {self.lastname}"
@@ -296,3 +302,4 @@ class AlumniProfile(BaseModel):
             match_filter |= attr
 
         return match_filter
+    

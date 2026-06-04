@@ -1,0 +1,80 @@
+from django.utils import timezone
+from django.shortcuts import get_object_or_404
+
+from datetime import timedelta
+from django_q.tasks import async_task, schedule, Schedule
+
+from notifications.tasks import send_notifications_task
+from engagements.models import BaseEngagement
+
+from futaverse.lib import MODELS
+from engagements.plugins import get_engagement_plugin
+
+def auto_acknowledge_engagement(engagement_sqid, engagement_type):
+    model = MODELS.get(engagement_type)
+    
+    if not model:
+        raise ValueError(f"Invalid engagement type: {engagement_type}")
+    
+    try:
+        engagement = model.objects.get(sqid=engagement_sqid)
+    except model.DoesNotExist:
+        return  
+    
+    engagement.refresh_from_db()
+    
+    if engagement.status == BaseEngagement.EngagementStatus.COMPLETED:
+        engagement.update_status(BaseEngagement.EngagementStatus.ACKNOWLEDGED)
+        
+        async_task(
+            send_notifications_task,
+            user_ids=[engagement.student.user.id],
+            title='Engagement Auto-Acknowledged',
+            content=f'Your {engagement.engagement_type.lower()} with {engagement.alumnus.full_name} has been automatically acknowledged due to getting no response from your end.'
+        )
+
+
+def schedule_auto_ackowledgement_task(engagement_data):
+    engagement_type = engagement_data.get("engagement_type")
+    sqid = engagement_data.get("sqid")
+    engagement_plugin = get_engagement_plugin(engagement_type)
+    domain = engagement_plugin.get("domain")
+    
+    model = MODELS.get(engagement_type)
+    
+    if not model:
+        raise ValueError(f"Invalid engagement type: {engagement_type}")
+    
+    try:
+        engagement = model.objects.get(sqid=sqid)
+    except model.DoesNotExist:
+        return
+    
+    student_id = engagement.student.user.id
+    alumnus_name = engagement.alumnus.full_name
+    
+    async_task(
+        send_notifications_task,
+        user_ids=[student_id],
+        title=f'{domain} Completed',
+        content=f'Your {engagement_plugin.get("domain")} with {alumnus_name} has been marked as completed.'
+    )
+    
+    schedule(
+        send_notifications_task,
+        user_ids=[student_id],
+        title=f'Acknowledgement Reminder for {domain}',
+        content=f'Please acknowledge your {domain} with {alumnus_name} in 24 hours, else it will be automatically acknowledged.',
+        schedule_type=Schedule.ONCE,
+        next_run=timezone.now() + timedelta(hours=24),
+        name=f'acknowledgement_reminder_{sqid}'
+    )
+    
+    schedule(
+        auto_acknowledge_engagement,
+        engagement_sqid=sqid,
+        engagement_type=engagement_type,
+        schedule_type=Schedule.ONCE,
+        next_run=timezone.now() + timedelta(hours=48),
+        name=f'auto_acknowledge_engagement_{sqid}'
+    )

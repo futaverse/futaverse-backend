@@ -3,12 +3,13 @@ from core.models import StudentProfile, AlumniProfile
 from futaverse.models import BaseModel
 from django.utils import timezone
 
+from engagements.models import BaseEngagement
+
 class InternshipStatus(models.TextChoices):
         PENDING = 'pending', 'Pending'
         ACCEPTED = 'accepted', 'Accepted'
         REJECTED = 'rejected', 'Rejected'
         WITHDRAWN = 'withdrawn', 'Withdrawn'
-
 class Internship(BaseModel):
     class WorkMode(models.TextChoices):
         REMOTE = 'Remote', 'Remote'
@@ -82,8 +83,6 @@ class Internship(BaseModel):
             
         return targets
     
-    
-    
 class InternshipApplication(BaseModel):
     internship = models.ForeignKey(Internship, on_delete=models.CASCADE, related_name='applications')
     student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, related_name='internship_applications')
@@ -136,41 +135,12 @@ class InternshipOffer(BaseModel):
     def __str__(self):
         return f"Offer to {self.student.full_name} for {self.internship.title}"
     
-class InternshipEngagement(BaseModel):
+class InternshipEngagement(BaseEngagement):
     class Source(models.TextChoices):
         APPLICATION = "application", "Application"
         OFFER = "offer", "Offer"
-        
-    class EngagementStatus(models.TextChoices):
-        ACTIVE = "active", "Active"
-        COMPLETED = "completed", "Completed"
-        TERMINATED = "terminated", "Terminated"
-        ARCHIVED = "archived", "Archived"
-        
+    
     internship = models.ForeignKey(Internship, on_delete=models.CASCADE, related_name='engagements')
-    student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, related_name='internship_engagements')
-    alumnus = models.ForeignKey(AlumniProfile, on_delete=models.CASCADE, related_name='internship_engagements')    
-    
-    source = models.CharField(choices=Source.choices, max_length=20)
-    source_id = models.PositiveIntegerField()
-    status = models.CharField(choices=EngagementStatus.choices, max_length=20, default=EngagementStatus.ACTIVE)
-    
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    @property
-    def engagement(self):
-        source = self.source
-        if source == self.Source.APPLICATION:
-            return InternshipApplication.objects.filter(pk=self.source_id).first()
-        elif source == self.Source.OFFER:
-            return InternshipOffer.objects.filter(pk=self.source_id).first()
-        
-    @property
-    def is_active(self):
-        return self.status == self.EngagementStatus.ACTIVE
-
-    def __str__(self):
-        return f"Engagement of {self.student.full_name} in {self.internship.title}"
     
     @property
     def post_context(self):
@@ -179,6 +149,9 @@ class InternshipEngagement(BaseModel):
             "title": self.internship.title,
             "company": self.internship.company,
         }
+        
+    def __str__(self):
+        return f"Engagement of {self.student.full_name} in {self.internship.title}"
     
 class ApplicationResume(BaseModel):
     application = models.OneToOneField(InternshipApplication, on_delete=models.CASCADE, related_name='resume', blank=True, null=True)

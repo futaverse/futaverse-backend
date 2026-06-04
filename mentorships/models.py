@@ -4,6 +4,8 @@ from futaverse.models import BaseModel
 from django.utils import timezone
 from .lib import FocusArea
 
+from engagements.models import BaseEngagement
+
 class MentorshipStatus(models.TextChoices):
     PENDING = 'pending', 'Pending'
     ACCEPTED = 'accepted', 'Accepted'
@@ -126,39 +128,13 @@ class MentorshipRequest(BaseModel):
         self.responded_at = timezone.now()
         self.save(update_fields=['status', 'responded_at'])
         
-class MentorshipEngagement(BaseModel):
+class MentorshipEngagement(BaseEngagement):
     class Source(models.TextChoices):
         APPLICATION = "application", "Application"
         OFFER = "offer", "Offer",
         REQUEST = "request", "Request"
         
-    class EngagementStatus(models.TextChoices):
-        ACTIVE = "active", "Active"
-        COMPLETED = "completed", "Completed"
-        TERMINATED = "terminated", "Terminated"
-        ARCHIVED = "archived", "Archived"
-        
     mentorship = models.ForeignKey(Mentorship, on_delete=models.CASCADE, related_name='engagements')
-    student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, related_name='mentorship_engagements')
-    alumnus = models.ForeignKey(AlumniProfile, on_delete=models.CASCADE, related_name='mentorship_engagements')    
-    
-    source = models.CharField(choices=Source.choices, max_length=20)
-    source_id = models.PositiveIntegerField()
-    status = models.CharField(choices=EngagementStatus.choices, max_length=20, default=EngagementStatus.ACTIVE)
-    
-    @property
-    def engagement(self):
-        source = self.source
-        if source == self.Source.APPLICATION:
-            return MentorshipApplication.objects.filter(pk=self.source_id).first()
-        elif source == self.Source.OFFER:
-            return MentorshipOffer.objects.filter(pk=self.source_id).first()
-        elif source == self.Source.REQUEST:
-            return MentorshipRequest.objects.filter(pk=self.source_id).first()
-        
-    @property
-    def is_active(self):
-        return self.status == self.EngagementStatus.ACTIVE
     
     @property
     def post_context(self):

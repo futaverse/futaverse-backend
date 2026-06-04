@@ -16,6 +16,9 @@ DEBUG = DEVELOPMENT
 ALLOWED_HOSTS = ["futaverse-backend.onrender.com", "futaverse-backend-xfcs.onrender.com", "localhost", "127.0.0.1", "0.0.0.0", "futaverse-backend-3.onrender.com"]
 
 INSTALLED_APPS = [
+    "daphne",
+    "django_eventstream",
+    
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -36,6 +39,9 @@ INSTALLED_APPS = [
     'payments',
     'feed',
     'posts',
+    'notifications',
+    'engagements',
+    'reviews',
 ]
 
 AUTH_USER_MODEL = "core.User"

@@ -1,8 +1,9 @@
 from django_q.tasks import async_task
-
 from rest_framework import generics
-
 from drf_spectacular.utils import extend_schema, extend_schema_view
+
+from engagements.mixins import MarkEngagementCompletedMixin, MarkEngagementAcknowledgedMixin
+from engagements.models import BaseEngagement
 
 from internships.models import Internship, InternshipEngagement
 from internships.serializers import InternshipSerializer, InternshipStatusSerializer, InternshipEngagementSerializer
@@ -110,3 +111,13 @@ class RetrieveInternshipEngagementView(generics.RetrieveAPIView):
             return InternshipEngagement.objects.filter(student=user.student_profile).select_related('Internship', 'student')
         
         return InternshipEngagement.objects.none()
+    
+class MarkInternshipCompletedView(MarkEngagementCompletedMixin, generics.UpdateAPIView):
+    queryset = InternshipEngagement.objects.all()
+    engagement_type = 'internship_engagement'
+    serializer_class = InternshipEngagementSerializer
+            
+class MarkInternshipAcknowledgedView(MarkEngagementAcknowledgedMixin, generics.UpdateAPIView):
+    queryset = InternshipEngagement.objects.all()
+    engagement_type = 'internship_engagement'
+    serializer_class = InternshipEngagementSerializer

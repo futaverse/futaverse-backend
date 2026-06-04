@@ -5,6 +5,7 @@ from rest_framework.response import Response
 
 from drf_spectacular.utils import extend_schema, extend_schema_view
 
+from engagements.mixins import MarkEngagementCompletedMixin, MarkEngagementAcknowledgedMixin
 from mentorships.models import Mentorship, MentorshipEngagement
 from mentorships.serializers import MentorshipSerializer, MentorshipStatusSerializer, MentorshipEngagementSerializer
 from mentorships.lib import FocusArea, MentorshipCategory
@@ -14,6 +15,7 @@ from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
 from core.models import User
 from feed.tasks import create_feed_event_task
 from feed.models import FeedEvent
+
 
 @extend_schema_view(
     list=extend_schema(summary="List mentorships (alumnus)"),
@@ -120,3 +122,13 @@ class MentorshipChoicesView(generics.GenericAPIView):
             'categories':  [{'value': v, 'label': l} for v, l in MentorshipCategory.choices],
             'focus_areas': [{'value': v, 'label': l} for v, l in FocusArea.choices],
         })
+        
+class MarkMentorshipCompletedView(MarkEngagementCompletedMixin, generics.UpdateAPIView):
+    queryset = MentorshipEngagement.objects.all()
+    engagement_type = 'mentorship_engagement'
+    serializer_class = MentorshipEngagementSerializer  
+    
+class MarkMentorshipAcknowledgedView(MarkEngagementAcknowledgedMixin, generics.UpdateAPIView):
+    queryset = MentorshipEngagement.objects.all()
+    engagement_type = 'mentorship_engagement'
+    serializer_class = MentorshipEngagementSerializer

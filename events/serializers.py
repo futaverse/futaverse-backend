@@ -40,10 +40,12 @@ class EventSerializer(serializers.ModelSerializer):
     virtual_meeting = VirtualMeetingSerializer(required=False, read_only=True)
     free_ticket = FreeTicketSchemaSerializer(write_only=True, required=False)
     
+    creator = serializers.SlugRelatedField(read_only=True, slug_field='sqid')
+    
     class Meta:
         model = Event
         exclude = ['is_deleted', 'deleted_at', 'id']
-        read_only_fields = ['sqid', 'created_at', 'updated_at', 'google_event_id', 'google_meet_link', 'is_cancelled', 'creator']
+        read_only_fields = ['sqid', 'created_at', 'updated_at', 'is_cancelled', 'creator']
         
     def validate(self, attrs):
         validated_data = super().validate(attrs)
