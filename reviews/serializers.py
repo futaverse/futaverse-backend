@@ -1,4 +1,3 @@
-
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404
 
@@ -8,11 +7,9 @@ from rest_framework.exceptions import ValidationError
 from engagements.models import BaseEngagement
 from futaverse.lib import MODELS
 from reviews.models import Review
-from reviews.services import create_review, update_review
 from core.serializers import StudentProfileSerializer, AlumniProfileSerializer
 
 from .plugins import ENGAGEMENT_REVIEW_PLUGIN, ReviewType
-
 
 class ReviewerDetailSerializer(serializers.Serializer):
     """Nested serializer for reviewer user details."""
@@ -32,7 +29,6 @@ class ReviewerDetailSerializer(serializers.Serializer):
             return AlumniProfileSerializer(profile).data
         
         return None
-
 
 class RevieweeDetailSerializer(serializers.Serializer):
     """Nested serializer for reviewee user details."""
@@ -71,11 +67,9 @@ class ReviewSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at"
         ]
-        read_only_fields = fields
+        read_only_fields = fields      
         
-
-
-class ReviewEngagementSerializer(serializers.Serializer):
+class CreateReviewSerializer(serializers.Serializer):
     engagement_type = serializers.ChoiceField(choices=['internship_engagement', 'mentorship_engagement'], required=True)
     engagement = serializers.SlugField(required=True)
     
@@ -142,18 +136,17 @@ class ReviewEngagementSerializer(serializers.Serializer):
         
         return validated_data
 
-
-class UpdateReviewSerializer(serializers.Serializer):
-    """Serializer for updating reviews."""
-    metrics = serializers.JSONField(required=False)
-    review_text = serializers.CharField(required=False, allow_blank=True)
+# class UpdateReviewSerializer(serializers.Serializer):
+#     """Serializer for updating reviews."""
+#     metrics = serializers.JSONField(required=False)
+#     review_text = serializers.CharField(required=False, allow_blank=True)
     
-    def update(self, instance, validated_data):
-        metrics = validated_data.get("metrics")
-        review_text = validated_data.get("review_text")
+#     def update(self, instance, validated_data):
+#         metrics = validated_data.get("metrics")
+#         review_text = validated_data.get("review_text")
         
-        return update_review(
-            review=instance,
-            metrics=metrics,
-            review_text=review_text
-        )
+#         return update_review(
+#             review=instance,
+#             metrics=metrics,
+#             review_text=review_text
+#         )
