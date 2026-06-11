@@ -17,3 +17,5 @@ staticfiles/
 # VSCode / IDE
 .vscode/
 .idea/
+
+test.py

@@ -19,7 +19,6 @@ from .services import EventService, GoogleCalendarService, get_user_credentials,
 from futaverse.utils.email_service import BrevoEmailService
 from payments.requests import initialize_transaction
 
-from feed.tasks import create_feed_event_task
 from feed.models import FeedEvent
 
 import uuid
@@ -49,7 +48,7 @@ class CreateEventView(generics.CreateAPIView):
             event_service = EventService(event)
             event_service.create_virtual_event(user, platform, attendee_emails=[user.email], redirect_after_auth=redirect_after_auth)
             
-        async_task(create_feed_event_task, 
+        async_task("feed.tasks.create_feed_event_task", 
             event_type=FeedEvent.EventType.EVENT_CREATED,
             related_object_id=event.id,
             related_model='event',  

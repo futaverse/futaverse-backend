@@ -1,10 +1,8 @@
 from django.utils import timezone
-from django.shortcuts import get_object_or_404
 
 from datetime import timedelta
 from django_q.tasks import async_task, logger, schedule, Schedule
 
-from notifications.tasks import send_notifications_task
 from engagements.models import BaseEngagement
 
 from futaverse.lib import MODELS
@@ -27,7 +25,7 @@ def auto_acknowledge_engagement(engagement_sqid, engagement_type):
         engagement.update_status(BaseEngagement.EngagementStatus.ACKNOWLEDGED)
         
         async_task(
-            send_notifications_task,
+            "notifications.tasks.send_notifications_task",
             user_ids=[engagement.student.user.id],
             title='Engagement Auto-Acknowledged',
             content=f'Your {engagement.engagement_type.lower()} with {engagement.alumnus.full_name} has been automatically acknowledged due to getting no response from your end.'
@@ -56,27 +54,27 @@ def schedule_auto_ackowledgement_task(engagement_data):
     alumnus_name = engagement.alumnus.full_name
     
     async_task(
-        send_notifications_task,
+        "notifications.tasks.send_notifications_task",
         user_ids=[student_id],
         title=f'{domain} Completed',
         content=f'Your {engagement_plugin.get("domain")} with {alumnus_name} has been marked as completed.'
     )
     
     schedule(
-        send_notifications_task,
+        "notifications.tasks.send_notifications_task",
         user_ids=[student_id],
         title=f'Acknowledgement Reminder for {domain}',
         content=f'Please acknowledge your {domain} with {alumnus_name} in 24 hours, else it will be automatically acknowledged.',
         schedule_type=Schedule.ONCE,
         next_run=timezone.now() + timedelta(seconds=20), #TODO: change to 24 hours later
-        name=f'acknowledgement_reminder_{sqid}'
+        name=f'acknowledgement_reminder_{domain}_{sqid}'
     )
     
     schedule(
-        auto_acknowledge_engagement,
+        "engagements.tasks.auto_acknowledge_engagement",
         engagement_sqid=sqid,
         engagement_type=engagement_type,
         schedule_type=Schedule.ONCE,
         next_run=timezone.now() + timedelta(seconds=40), #TODO: change to 48 hours later
-        name=f'auto_acknowledge_engagement_{sqid}'
+        name=f'auto_acknowledge_engagement_{domain}_{sqid}'
     )

@@ -9,7 +9,7 @@ from drf_spectacular.utils import extend_schema
 from core.models import User
 from futaverse.permissions import IsAuthenticatedStudent
 
-from .serializers import ShareEngagementSerializer, PostSerializer
+from .serializers import ShareEngagementSerializer, PostSerializer, ShareEngagementCompletionSerializer
 from .services import share_engagement
 from .models import Post
 
@@ -58,5 +58,27 @@ class ListUserPostsView(generics.ListAPIView):
         user = get_object_or_404(User, sqid=user_id)
         
         return Post.objects.filter(author=user, is_public=True).order_by('-created_at')
+    
+@extend_schema(tags=['Posts'], summary="Share the completion of an internship or mentorship engagement as a post (student)")
+class ShareEngagementCompletionView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticatedStudent]
+    serializer_class = ShareEngagementCompletionSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        validated_data = serializer.validated_data
+        
+        content = validated_data.get('content')
+        engagement = validated_data['engagement']
+
+        post = share_engagement_completion(
+            user=request.user,
+            engagement=engagement,
+            custom_text=content
+        )
+
+        return Response(PostSerializer(post).data, status=status.HTTP_201_CREATED)
         
         

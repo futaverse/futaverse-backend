@@ -1,11 +1,9 @@
 from django_q.tasks import async_task
 from django.db import transaction
 
-from rest_framework import generics
 from rest_framework.exceptions import ValidationError
 from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
 
-from .tasks import schedule_auto_ackowledgement_task
 from .models import BaseEngagement
 
 class MarkEngagementCompletedMixin:
@@ -31,7 +29,7 @@ class MarkEngagementCompletedMixin:
 
         # TODO: FE dev urges student to acknowledge completion. It will be auto-ackowledged in 48 hours.
         transaction.on_commit(lambda: async_task(
-            schedule_auto_ackowledgement_task,
+            "engagements.tasks.schedule_auto_ackowledgement_task",
             engagement_data
         ))
         

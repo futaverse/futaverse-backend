@@ -19,6 +19,10 @@ _internship_engagement_plugin = {
         f"I'm excited to share that I've just started a new internship "
         f"at {context['company']} as a {context['title']}!"
     ),
+    "default_completion_text": lambda context: (
+        f"I'm thrilled to announce that I've successfully completed my internship "
+        f"at {context['company']} as a {context['title']}!"
+    ),
     "feed_event":  FeedEvent.EventType.INTERNSHIP_STARTED,
     "model_key":   "internship_engagement",
     "domain":      "internship",
@@ -30,6 +34,11 @@ _mentorship_engagement_plugin = {
         f"Excited to share that I've just started a mentorship journey in the "
         f"{context['category']} field with a FUTA alumnus! "
         f"Looking forward to learning and growing."
+    ),
+    "default_completion_text": lambda context: (
+        f"Excited to share that I've successfully completed my mentorship journey in the "
+        f"{context['category']} field with a FUTA alumnus! "
+        f"Looking back on the experience, I'm grateful for the guidance and support."
     ),
     "feed_event":  FeedEvent.EventType.MENTORSHIP_STARTED,
     "model_key":   "mentorship_engagement",

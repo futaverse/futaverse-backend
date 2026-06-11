@@ -8,6 +8,7 @@ from core.models import User
 class Post(BaseModel):
     class PostType(models.TextChoices):
         ENGAGEMENT_STARTED = 'engagement_started', 'Engagement Started'
+        ENGAGEMENT_COMPLETED = 'engagement_completed', 'Engagement Completed'
         MILESTONE          = 'milestone',           'Milestone'
 
     author       = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')

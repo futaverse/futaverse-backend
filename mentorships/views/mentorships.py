@@ -13,7 +13,6 @@ from mentorships.lib import FocusArea, MentorshipCategory
 from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
 
 from core.models import User
-from feed.tasks import create_feed_event_task
 from feed.models import FeedEvent
 
 
@@ -34,7 +33,7 @@ class ListCreateMentorshipView(generics.ListCreateAPIView):
         alumnus = self.request.user.alumni_profile
         mentorship = serializer.save(alumnus=alumnus)
         
-        async_task(create_feed_event_task, 
+        async_task("feed.tasks.create_feed_event_task", 
             event_type=FeedEvent.EventType.MENTORSHIP_CREATED,
             related_object_id=mentorship.id,
             related_model='mentorship', 

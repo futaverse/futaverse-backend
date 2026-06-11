@@ -3,12 +3,10 @@ from rest_framework import generics
 from drf_spectacular.utils import extend_schema, extend_schema_view
 
 from engagements.mixins import MarkEngagementCompletedMixin, MarkEngagementAcknowledgedMixin
-from engagements.models import BaseEngagement
 
 from internships.models import Internship, InternshipEngagement
 from internships.serializers import InternshipSerializer, InternshipStatusSerializer, InternshipEngagementSerializer
 from core.models import User
-from feed.tasks import create_feed_event_task
 from feed.models import FeedEvent
 
 from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
@@ -30,7 +28,7 @@ class ListCreateInternshipView(generics.ListCreateAPIView):
         alumnus = self.request.user.alumni_profile
         internship = serializer.save(alumnus=alumnus)
         
-        async_task(create_feed_event_task, 
+        async_task("feed.tasks.create_feed_event_task", 
             event_type=FeedEvent.EventType.INTERNSHIP_CREATED,
             related_object_id=internship.id,
             related_model='internship',  
