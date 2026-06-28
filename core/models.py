@@ -14,7 +14,7 @@ def default_expiry():
 
 class UserManager(BaseUserManager):
     def create_user(self, **extra_fields):
-        email = extra_fields.pop("email")
+        email = extra_fields.get("email")
         password = extra_fields.pop("password", None)
         
         email = self.normalize_email(email)
