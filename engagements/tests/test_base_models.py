@@ -3,11 +3,11 @@ from datetime import date
 from django.test import TestCase
 from django.utils import timezone
 
+from engagements.models import EngagementLifecycleStatus
 from internships.models import (
     Internship,
     InternshipApplication,
     InternshipOffer,
-    InternshipStatus,
 )
 from core.models import User, StudentProfile, AlumniProfile
 
@@ -93,7 +93,7 @@ class BaseEngagementLifecycleTests(TestCase):
             internship=self.internship,
             student=self.student,
         )
-        self.assertEqual(app.status, InternshipStatus.PENDING)
+        self.assertEqual(app.status, EngagementLifecycleStatus.PENDING)
 
     def test_application_accept_sets_accepted_and_responded_at(self):
         app = InternshipApplication.objects.create(
@@ -102,7 +102,7 @@ class BaseEngagementLifecycleTests(TestCase):
         )
         app.accept()
         app.refresh_from_db()
-        self.assertEqual(app.status, InternshipStatus.ACCEPTED)
+        self.assertEqual(app.status, EngagementLifecycleStatus.ACCEPTED)
         self.assertIsNotNone(app.responded_at)
         self.assertTrue(app.responded_at <= timezone.now())
 
@@ -113,7 +113,7 @@ class BaseEngagementLifecycleTests(TestCase):
         )
         app.reject()
         app.refresh_from_db()
-        self.assertEqual(app.status, InternshipStatus.REJECTED)
+        self.assertEqual(app.status, EngagementLifecycleStatus.REJECTED)
         self.assertIsNotNone(app.responded_at)
         self.assertTrue(app.responded_at <= timezone.now())
 
@@ -124,14 +124,14 @@ class BaseEngagementLifecycleTests(TestCase):
         )
         app.withdraw()
         app.refresh_from_db()
-        self.assertEqual(app.status, InternshipStatus.WITHDRAWN)
+        self.assertEqual(app.status, EngagementLifecycleStatus.WITHDRAWN)
 
     def test_offer_default_status_is_pending(self):
         offer = InternshipOffer.objects.create(
             internship=self.internship,
             student=self.student,
         )
-        self.assertEqual(offer.status, InternshipStatus.PENDING)
+        self.assertEqual(offer.status, EngagementLifecycleStatus.PENDING)
 
     def test_offer_accept_sets_accepted_and_responded_at(self):
         offer = InternshipOffer.objects.create(
@@ -140,7 +140,7 @@ class BaseEngagementLifecycleTests(TestCase):
         )
         offer.accept()
         offer.refresh_from_db()
-        self.assertEqual(offer.status, InternshipStatus.ACCEPTED)
+        self.assertEqual(offer.status, EngagementLifecycleStatus.ACCEPTED)
         self.assertIsNotNone(offer.responded_at)
         self.assertTrue(offer.responded_at <= timezone.now())
 
@@ -151,7 +151,7 @@ class BaseEngagementLifecycleTests(TestCase):
         )
         offer.reject()
         offer.refresh_from_db()
-        self.assertEqual(offer.status, InternshipStatus.REJECTED)
+        self.assertEqual(offer.status, EngagementLifecycleStatus.REJECTED)
         self.assertIsNotNone(offer.responded_at)
         self.assertTrue(offer.responded_at <= timezone.now())
 
@@ -162,4 +162,4 @@ class BaseEngagementLifecycleTests(TestCase):
         )
         offer.withdraw()
         offer.refresh_from_db()
-        self.assertEqual(offer.status, InternshipStatus.WITHDRAWN)
+        self.assertEqual(offer.status, EngagementLifecycleStatus.WITHDRAWN)

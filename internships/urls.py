@@ -1,35 +1,66 @@
 from django.urls import path
 
-from .views.applications import ListInternshipApplicationsView, CreateInternshipApplicationView, UploadApplicationResumeView, AcceptInternshipApplicationView, RejectInternshipApplicationView, WithdrawInternshipApplicationView, RetrieveInternshipApplicationView
+from engagements.helpers import generate_engagement_urls
 
-from .views.offers import ListInternshipOfferView, CreateInternshipOfferView, AcceptInternshipOfferView, RejectInternshipOfferView, WithdrawInternshipOfferView, RetrieveInternshipOfferView
+from .views.applications import (
+    ListInternshipApplicationsView,
+    CreateInternshipApplicationView,
+    UploadApplicationResumeView,
+    AcceptInternshipApplicationView,
+    RejectInternshipApplicationView,
+    WithdrawInternshipApplicationView,
+    RetrieveInternshipApplicationView,
+)
 
-from .views.internships import ListCreateInternshipView, ToggleInternshipActiveView, RetrieveInternshipEngagementView, ListInternshipEngagementsView, RetrieveUpdateDestroyInternshipView, MarkInternshipAcknowledgedView, MarkInternshipCompletedView
+from .views.offers import (
+    ListInternshipOfferView,
+    CreateInternshipOfferView,
+    AcceptInternshipOfferView,
+    RejectInternshipOfferView,
+    WithdrawInternshipOfferView,
+    RetrieveInternshipOfferView,
+)
 
-urlpatterns = [
-    path('/application', CreateInternshipApplicationView.as_view(), name='create-internship-application'),
-    path('/applications', ListInternshipApplicationsView.as_view(), name='list-create-internship-applications'),
-    path('/offer', CreateInternshipOfferView.as_view(), name='create-internship-offers'),
-    path('/offers', ListInternshipOfferView.as_view(), name='list-internship-offers'),
-    path('/engagements', ListInternshipEngagementsView.as_view(), name='list-internship-engagements'),
-    path('/upload-resume', UploadApplicationResumeView.as_view(), name='upload-application-resume'),
-    
-    path('/offers/<slug:sqid>', RetrieveInternshipOfferView.as_view(), name='retrieve-internship-offers'),
-    path('/offers/<slug:offer_id>/accept', AcceptInternshipOfferView.as_view(), name='accept-internship-offer'),
-    path('/offers/<slug:offer_id>/reject', RejectInternshipOfferView.as_view(), name='reject-internship-offer'),
-    path('/offers/<slug:offer_id>/withdraw', WithdrawInternshipOfferView.as_view(), name='withdraw-internship-offer'),
-   
-    path('/applications/<slug:sqid>', RetrieveInternshipApplicationView.as_view(), name='retrieve-internship-application'),
-    path('/applications/<slug:application_id>/accept', AcceptInternshipApplicationView.as_view(), name='accept-internship-application'),
-    path('/applications/<slug:application_id>/reject', RejectInternshipApplicationView.as_view(), name='reject-internship-application'),
-    path('/applications/<slug:application_id>/withdraw', WithdrawInternshipApplicationView.as_view(), name='withdraw-internship-application'),
-    
-    path('/engagements/<slug:sqid>', RetrieveInternshipEngagementView.as_view(), name='retrieve-internship-engagement'),
-    path('/engagements/<slug:sqid>/completed', MarkInternshipCompletedView.as_view(), name="mark-internship-as-completed"),
-    path('/engagements/<slug:sqid>/acknowledged', MarkInternshipAcknowledgedView.as_view(), name="mark-internship-as-acknowledged"),
-    
-    path('', ListCreateInternshipView.as_view(), name='list-create-internships'),
-    path('/<slug:sqid>', RetrieveUpdateDestroyInternshipView.as_view(), name='retrieve-update-destroy-internships'),
-    path('/<slug:sqid>/toggle-active', ToggleInternshipActiveView.as_view(), name='toggle-internship-active'),
-]
-    
+from .views.internships import (
+    ListCreateInternshipView,
+    ToggleInternshipActiveView,
+    RetrieveInternshipEngagementView,
+    ListInternshipEngagementsView,
+    RetrieveUpdateDestroyInternshipView,
+    MarkInternshipAcknowledgedView,
+    MarkInternshipCompletedView,
+)
+
+urlpatterns = generate_engagement_urls(
+    prefix="internship",
+    entity_views={
+        "list_create": ListCreateInternshipView,
+        "rud": RetrieveUpdateDestroyInternshipView,
+        "toggle_active": ToggleInternshipActiveView,
+    },
+    application_views={
+        "create": CreateInternshipApplicationView,
+        "list": ListInternshipApplicationsView,
+        "retrieve": RetrieveInternshipApplicationView,
+        "accept": AcceptInternshipApplicationView,
+        "reject": RejectInternshipApplicationView,
+        "withdraw": WithdrawInternshipApplicationView,
+    },
+    offer_views={
+        "create": CreateInternshipOfferView,
+        "list": ListInternshipOfferView,
+        "retrieve": RetrieveInternshipOfferView,
+        "accept": AcceptInternshipOfferView,
+        "reject": RejectInternshipOfferView,
+        "withdraw": WithdrawInternshipOfferView,
+    },
+    engagement_views={
+        "list": ListInternshipEngagementsView,
+        "retrieve": RetrieveInternshipEngagementView,
+        "completed": MarkInternshipCompletedView,
+        "acknowledged": MarkInternshipAcknowledgedView,
+    },
+    extra=[
+        path('/upload-resume', UploadApplicationResumeView.as_view(), name='upload-application-resume'),
+    ],
+)
