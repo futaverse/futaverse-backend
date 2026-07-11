@@ -57,3 +57,62 @@ class BaseEngagement(BaseModel):
     class Meta:
         abstract = True
 
+
+class EngagementLifecycleStatus(models.TextChoices):
+    PENDING = "pending", "Pending"
+    ACCEPTED = "accepted", "Accepted"
+    REJECTED = "rejected", "Rejected"
+    WITHDRAWN = "withdrawn", "Withdrawn"
+
+
+class BaseApplication(BaseModel):
+    status = models.CharField(
+        choices=EngagementLifecycleStatus.choices,
+        max_length=20,
+        default=EngagementLifecycleStatus.PENDING,
+    )
+    responded_at = models.DateTimeField(null=True, blank=True)
+    cover_letter = models.TextField(blank=True, null=True)
+
+    class Meta:
+        abstract = True
+
+    def accept(self):
+        self.status = EngagementLifecycleStatus.ACCEPTED
+        self.responded_at = timezone.now()
+        self.save(update_fields=["status", "responded_at"])
+
+    def reject(self):
+        self.status = EngagementLifecycleStatus.REJECTED
+        self.responded_at = timezone.now()
+        self.save(update_fields=["status", "responded_at"])
+
+    def withdraw(self):
+        self.status = EngagementLifecycleStatus.WITHDRAWN
+        self.save(update_fields=["status"])
+
+
+class BaseOffer(BaseModel):
+    status = models.CharField(
+        choices=EngagementLifecycleStatus.choices,
+        max_length=20,
+        default=EngagementLifecycleStatus.PENDING,
+    )
+    responded_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+    def accept(self):
+        self.status = EngagementLifecycleStatus.ACCEPTED
+        self.responded_at = timezone.now()
+        self.save(update_fields=["status", "responded_at"])
+
+    def reject(self):
+        self.status = EngagementLifecycleStatus.REJECTED
+        self.responded_at = timezone.now()
+        self.save(update_fields=["status", "responded_at"])
+
+    def withdraw(self):
+        self.status = EngagementLifecycleStatus.WITHDRAWN
+        self.save(update_fields=["status"])
