@@ -12,39 +12,44 @@ class MarkEngagementCompletedMixin:
     http_method_names = ['patch']
     lookup_field = 'sqid'
     engagement_type = None
-    
+
+    def get_queryset(self):
+        return self.queryset.filter(alumnus=self.request.user.alumni_profile)
+
     def perform_update(self, serializer):
-        engagement = self.get_object()
-        
+        engagement = serializer.instance
+
         if engagement.status != BaseEngagement.EngagementStatus.ACTIVE:
             raise ValidationError("Only active engagements can be completed.")
-        
+
         with transaction.atomic():
             engagement.update_status(BaseEngagement.EngagementStatus.COMPLETED)
-            
+
         engagement_data = {
             'engagement_type': self.engagement_type,
             'sqid': engagement.sqid
         }
 
-        # TODO: FE dev urges student to acknowledge completion. It will be auto-ackowledged in 48 hours.
+        # TODO: FE dev urges student to acknowledge completion. It will be auto-acknowledged in 48 hours.
         transaction.on_commit(lambda: async_task(
             "engagements.tasks.schedule_auto_ackowledgement_task",
             engagement_data
         ))
-        
+
 class MarkEngagementAcknowledgedMixin:
     permission_classes = [IsAuthenticatedStudent]
     serializer_class = None
     http_method_names = ['patch']
     lookup_field = 'sqid'
     engagement_type = None
-    
+
+    def get_queryset(self):
+        return self.queryset.filter(student=self.request.user.student_profile)
+
     def perform_update(self, serializer):
-        engagement = self.get_object()
-        
+        engagement = serializer.instance
+
         if engagement.status != BaseEngagement.EngagementStatus.COMPLETED:
             raise ValidationError("Only completed engagements can be acknowledged.")
-        
+
         engagement.update_status(BaseEngagement.EngagementStatus.ACKNOWLEDGED)
-        engagement.refresh_from_db()

@@ -150,7 +150,7 @@ class Gender(models.TextChoices):
 class StudentProfile(BaseModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="student_profile")
         
-    phone_num = models.CharField()
+    phone_num = models.CharField(max_length=20)
     gender = models.CharField(choices=Gender.choices)
         
     firstname = models.CharField(max_length=100)
@@ -235,7 +235,7 @@ class StudentResume(BaseModel):
 class AlumniProfile(BaseModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="alumni_profile")
     
-    phone_num = models.CharField()
+    phone_num = models.CharField(max_length=20)
     gender = models.CharField(choices=Gender.choices)
         
     firstname = models.CharField(max_length=100)
@@ -253,9 +253,9 @@ class AlumniProfile(BaseModel):
     faculty = models.CharField(max_length=20)
     grad_year = models.CharField(max_length=4)
     
-    current_job_title = models.CharField()
-    current_company = models.CharField() # TODO: Add company type
-    industry = models.CharField()
+    current_job_title = models.CharField(max_length=255)
+    current_company = models.CharField(max_length=255)
+    industry = models.CharField(max_length=100)
     years_of_exp = models.IntegerField()
     previous_comps = models.JSONField(default=list, blank=True, null=True)
     
