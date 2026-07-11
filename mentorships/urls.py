@@ -1,34 +1,66 @@
 from django.urls import path
 
-from .views.applications import ListMentorshipApplicationsView, CreateMentorshipApplicationView, AcceptMentorshipApplicationView, RejectMentorshipApplicationView, WithdrawMentorshipApplicationView, RetrieveMentorshipApplicationView
+from engagements.helpers import generate_engagement_urls
 
-from .views.offers import ListMentorshipOfferView, CreateMentorshipOfferView, AcceptMentorshipOfferView, RejectMentorshipOfferView, WithdrawMentorshipOfferView, RetrieveMentorshipOfferView
+from .views.applications import (
+    ListMentorshipApplicationsView,
+    CreateMentorshipApplicationView,
+    AcceptMentorshipApplicationView,
+    RejectMentorshipApplicationView,
+    WithdrawMentorshipApplicationView,
+    RetrieveMentorshipApplicationView,
+)
 
-from .views.mentorships import ListCreateMentorshipView, ToggleMentorshipActiveView, RetrieveMentorshipEngagementView, ListMentorshipEngagementsView, RetrieveUpdateDestroyMentorshipView, MentorshipChoicesView, MarkMentorshipAcknowledgedView, MarkMentorshipCompletedView
+from .views.offers import (
+    ListMentorshipOfferView,
+    CreateMentorshipOfferView,
+    AcceptMentorshipOfferView,
+    RejectMentorshipOfferView,
+    WithdrawMentorshipOfferView,
+    RetrieveMentorshipOfferView,
+)
 
-urlpatterns = [
-    path('/offer', CreateMentorshipOfferView.as_view(), name='create-mentorship-offers'),
-    path('/offers', ListMentorshipOfferView.as_view(), name='list-mentorship-offers'),
-    path('/application', CreateMentorshipApplicationView.as_view(), name='create-mentorship-application'),
-    path('/applications', ListMentorshipApplicationsView.as_view(), name='list-mentorship-applications'),
-    path('/engagements', ListMentorshipEngagementsView.as_view(), name='list-mentorship-engagements'),
-    path('/choices', MentorshipChoicesView.as_view(), name='mentorship-choices'),
-    
-    path('/offers/<slug:sqid>', RetrieveMentorshipOfferView.as_view(), name='retrieve-mentorship-offers'),
-    path('/offers/<slug:offer_id>/accept', AcceptMentorshipOfferView.as_view(), name='accept-mentorship-offer'),
-    path('/offers/<slug:offer_id>/reject', RejectMentorshipOfferView.as_view(), name='reject-mentorship-offer'),
-    path('/offers/<slug:offer_id>/withdraw', WithdrawMentorshipOfferView.as_view(), name='withdraw-mentorship-offer'),
-    
-    path('/applications/<slug:sqid>', RetrieveMentorshipApplicationView.as_view(), name='retrieve-mentorship-application'),
-    path('/applications/<slug:application_id>/accept', AcceptMentorshipApplicationView.as_view(), name='accept-mentorship-application'),
-    path('/applications/<slug:application_id>/reject', RejectMentorshipApplicationView.as_view(), name='reject-mentorship-application'),
-    path('/applications/<slug:application_id>/withdraw', WithdrawMentorshipApplicationView.as_view(), name='withdraw-mentorship-application'),
-    
-    path('/engagements/<slug:sqid>', RetrieveMentorshipEngagementView.as_view(), name='retrieve-mentorship-engagement'),
-    path('/engagements/<slug:sqid>/completed', MarkMentorshipCompletedView.as_view(), name="mark-mentorship-as-completed"),
-    path('/engagements/<slug:sqid>/acknowledged', MarkMentorshipAcknowledgedView.as_view(), name="mark-mentorship-as-acknowledged"),
-    
-    path('', ListCreateMentorshipView.as_view(), name='list-create-mentorships'),
-    path('/<slug:sqid>', RetrieveUpdateDestroyMentorshipView.as_view(), name='retrieve-update-destroy-mentorships'),
-    path('/<slug:sqid>/toggle-active', ToggleMentorshipActiveView.as_view(), name='toggle-mentorship-active'),
-]
+from .views.mentorships import (
+    ListCreateMentorshipView,
+    ToggleMentorshipActiveView,
+    RetrieveMentorshipEngagementView,
+    ListMentorshipEngagementsView,
+    RetrieveUpdateDestroyMentorshipView,
+    MentorshipChoicesView,
+    MarkMentorshipAcknowledgedView,
+    MarkMentorshipCompletedView,
+)
+
+urlpatterns = generate_engagement_urls(
+    prefix="mentorship",
+    entity_views={
+        "list_create": ListCreateMentorshipView,
+        "rud": RetrieveUpdateDestroyMentorshipView,
+        "toggle_active": ToggleMentorshipActiveView,
+    },
+    application_views={
+        "create": CreateMentorshipApplicationView,
+        "list": ListMentorshipApplicationsView,
+        "retrieve": RetrieveMentorshipApplicationView,
+        "accept": AcceptMentorshipApplicationView,
+        "reject": RejectMentorshipApplicationView,
+        "withdraw": WithdrawMentorshipApplicationView,
+    },
+    offer_views={
+        "create": CreateMentorshipOfferView,
+        "list": ListMentorshipOfferView,
+        "retrieve": RetrieveMentorshipOfferView,
+        "accept": AcceptMentorshipOfferView,
+        "reject": RejectMentorshipOfferView,
+        "withdraw": WithdrawMentorshipOfferView,
+    },
+    engagement_views={
+        "list": ListMentorshipEngagementsView,
+        "retrieve": RetrieveMentorshipEngagementView,
+        "completed": MarkMentorshipCompletedView,
+        "acknowledged": MarkMentorshipAcknowledgedView,
+    },
+    extra=[
+        path('/choices', MentorshipChoicesView.as_view(), name='mentorship-choices'),
+    ],
+)
