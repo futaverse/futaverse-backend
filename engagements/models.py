@@ -41,14 +41,11 @@ class BaseEngagement(BaseModel):
 
     @property
     def engagement(self):
-        
         if hasattr(self, 'internship'):
             return self.internship
-        
         if hasattr(self, 'mentorship'):
             return self.mentorship
-        
-        return 
+        return None
     
     def update_status(self, status):
         self.status = status
