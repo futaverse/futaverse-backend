@@ -17,3 +17,9 @@ Q_CLUSTER = {
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': None,
 }
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
