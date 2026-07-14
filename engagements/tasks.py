@@ -28,7 +28,7 @@ def auto_acknowledge_engagement(engagement_sqid, engagement_type):
             "notifications.tasks.send_notifications_task",
             user_ids=[engagement.student.user.id],
             title='Engagement Auto-Acknowledged',
-            content=f'Your {engagement.engagement_type.lower()} with {engagement.alumnus.full_name} has been automatically acknowledged due to getting no response from your end.'
+            content=f'Your {engagement_type.replace("_engagement", "")} with {engagement.alumnus.full_name} has been automatically acknowledged due to getting no response from your end.'
         )
 
 
