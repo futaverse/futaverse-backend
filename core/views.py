@@ -1,14 +1,10 @@
 from django.db import transaction
 
-from rest_framework import generics
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import generics, status
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from rest_framework.generics import GenericAPIView
 
 from drf_spectacular.utils import extend_schema
 
@@ -146,7 +142,7 @@ class VerifyForgotPasswordOTPView(PublicGenericAPIView):
         return Response({"data": {"access_token": str(access)}, "detail": "Access granted to reset password", "status": "success"}, status=status.HTTP_200_OK,)
 
 @extend_schema(tags=['Auth'])  
-class ResetPasswordView(GenericAPIView):
+class ResetPasswordView(generics.GenericAPIView):
     serializer_class = ResetPasswordSerializer
     
     def patch(self, request):
