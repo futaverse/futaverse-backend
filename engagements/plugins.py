@@ -11,7 +11,7 @@ def humanize_list(items):
         return items[0]
     return ', '.join(items[:-1]) + f' and {items[-1]}' 
 
-#TODO: Move this to a more appropriate place, maybe a registry in the feed app or something like that. Also, work on the default text. Use def register_post_plugin(model_class, serializer, default_text, feed_event, model_key)
+#TODO: Move this to a more appropriate place, maybe a registry in the feed app or something like that. Also, work on the default text. Use def register_post_plugin(model_class, serializer, default_text, feed_event, model)
 
 _internship_engagement_plugin = {
     "serializer":   InternshipEngagementFeedSerializer,
@@ -24,7 +24,7 @@ _internship_engagement_plugin = {
         f"at {context['company']} as a {context['title']}!"
     ),
     "feed_event":  FeedEvent.EventType.INTERNSHIP_STARTED,
-    "model_key":   "internship_engagement",
+    "model":   "internship_engagement",
     "domain":      "internship",
 }
 
@@ -41,7 +41,7 @@ _mentorship_engagement_plugin = {
         f"Looking back on the experience, I'm grateful for the guidance and support."
     ),
     "feed_event":  FeedEvent.EventType.MENTORSHIP_STARTED,
-    "model_key":   "mentorship_engagement",
+    "model":   "mentorship_engagement",
     "domain":      "mentorship",
 }
 
