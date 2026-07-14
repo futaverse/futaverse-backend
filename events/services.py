@@ -111,8 +111,7 @@ class EventService:
         
         try:
             credentials = get_user_credentials(user, redirect_after_auth)
-            print(credentials)
-            
+
         except GoogleAuthRequired as e:
             raise PermissionDenied({
                 "detail": "Authenticate with Google",
@@ -181,8 +180,8 @@ class EventService:
                 
     def send_mode_change_email(self, old_mode, new_mode):
         event = self.event
-        
-        print("Sending mode change email...")
+
+        logger.info("Sending mode change email for event %s", event.sqid)
         attendee_emails = list(TicketPurchase.objects.filter(ticket__event=event, is_paid=True).values_list('email', flat=True).distinct())
 
         if not attendee_emails:

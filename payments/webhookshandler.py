@@ -8,7 +8,7 @@ from logging import getLogger
 logger = getLogger(__name__)
 
 def handle_charge_success(data):
-    print("Handling charge success webhook...")
+    logger.debug("Handling charge.success for reference %s", data.get("reference"))
     reference = data.get("reference")
     
     try:

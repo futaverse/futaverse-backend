@@ -21,7 +21,6 @@ class ListBanksView(APIView):
         banks = cache.get(cache_key)
         
         if not banks:
-            print("Fetching banks from payment provider...")
             try:
                 banks = list_banks()
                 cache.set(cache_key, banks, 86400) # 24 hours

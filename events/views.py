@@ -121,8 +121,8 @@ class CreateTicketPurchaseView(generics.CreateAPIView):
         else:
             organizer_subaccount = Subaccount.objects.filter(user=event.creator).first()
             
-            if not organizer_subaccount: # TODO: Add logging here to track how often this happens and for which users/events so we can proactively reach out to those users to set up their accounts. This should be a rare occurrence since we check for account setup when creating paid tickets, but we should handle it gracefully just in case.
-                print(f"Subaccount not found for user {event.creator.email}")
+            if not organizer_subaccount:
+                logger.warning("Subaccount not found for user %s on event %s", event.creator.email, event.sqid)
                 raise Exception("Something went wrong, please try again later. If the problem persists, contact support.")
             
             payload = {

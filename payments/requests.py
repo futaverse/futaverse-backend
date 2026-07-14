@@ -20,9 +20,7 @@ def send_paystack_request(method, url, payload=None):
 def initialize_transaction(payload): # amount in kobo, email, customer_code, reference
     response = send_paystack_request("POST", "transaction/initialize", payload)
     response_data = response.json()
-    
-    print(response_data)
-    
+
     if response.ok and response_data.get("status"):
         return response_data["data"]["authorization_url"]
     
@@ -68,7 +66,6 @@ def resolve_bank_account(account_number, bank_code):
     response_data = response.json()
     
     if response.ok and response_data.get("status"):
-        print(response_data['data'])
         return response_data['data']['account_name']
     
     raise Exception(response_data.get("message", "Could not verify account details."))

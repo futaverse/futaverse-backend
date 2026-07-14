@@ -6,12 +6,14 @@ import hmac
 import hashlib
 import os
 import json
+import logging
 
 from drf_spectacular.utils import extend_schema
 
 from .webhookshandler import handle_charge_success
 
 PAYSTACK_SECRET_KEY = os.getenv("PAYSTACK_TEST_SECRET_KEY")
+logger = logging.getLogger(__name__)
 
 @extend_schema(tags=["Payments"], summary="Paystack Webhook Endpoint")
 class PaystackWebhookView(APIView):
@@ -34,10 +36,9 @@ class PaystackWebhookView(APIView):
         event = json.loads(payload)
         event_type = event.get("event")
         data = event.get("data", {})
-        
-        print("Received event:", event_type)
-        print("Data:", data)
-        
+
+        logger.info("Webhook received: %s", event_type)
+
         if event_type == "charge.success":
             handle_charge_success(data)
             

@@ -18,8 +18,7 @@ class FeedView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         profile = user.profile
-        
-        print(user.role)
+
         match_filter = profile.feed_match_filter
         queryset = FeedEvent.objects.filter(is_active=True, audience__in=[user.role, FeedEvent.Audience.PUBLIC])
         

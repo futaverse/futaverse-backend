@@ -26,7 +26,6 @@ def set_refresh_cookie(response):
     refresh = data.get("refresh")
     access = data.get("access")
 
-    print("Setting refresh token cookie")
     response.set_cookie(
         key="refresh_token",
         value=refresh,
@@ -80,8 +79,7 @@ class LoginView(TokenObtainPairView, PublicGenericAPIView):
             role = user.role
             user_sqid = user.sqid
             sqid = user.profile.sqid
-            print(user, role)
-            
+
             response.data["data"]["role"] = role
             response.data["data"]["user_sqid"] = user_sqid
             response.data["data"]["sqid"] = sqid
@@ -116,8 +114,7 @@ class ForgotPasswordView(PublicGenericAPIView):
         serializer.is_valid(raise_exception=True)
         
         otp = OTP.generate_otp(serializer.user)
-        print(otp)
-        
+
         mailer.send(
             subject="Account Recovery",
             body= (
