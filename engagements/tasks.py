@@ -40,29 +40,32 @@ def schedule_auto_ackowledgement_task(engagement_data):
     engagement_type = engagement_data.get("engagement_type")
     sqid = engagement_data.get("sqid")
     engagement_plugin = get_engagement_plugin(engagement_type)
-    domain = engagement_plugin.get("domain")
-    
+    domain = engagement_plugin.get("domain") if engagement_plugin else engagement_type
+
     model = MODELS.get(engagement_type)
-    
+
     if not model:
         raise ValueError(f"Invalid engagement type: {engagement_type}")
-    
+
     try:
         engagement = model.objects.get(sqid=sqid)
     except model.DoesNotExist:
         logger.warning(f"Engagement with sqid {sqid} does not exist.")
         return
-    
+
     engagement.refresh_from_db()
     student_id = engagement.student.user.id
     alumnus_name = engagement.alumnus.full_name
-    
-    async_task(
-        "notifications.tasks.send_notifications_task",
-        user_ids=[student_id],
-        title=f'{domain} Completed',
-        content=f'Your {engagement_plugin.get("domain")} with {alumnus_name} has been marked as completed.'
-    )
+
+    try:
+        async_task(
+            "notifications.tasks.send_notifications_task",
+            user_ids=[student_id],
+            title=f'{domain} Completed',
+            content=f'Your {domain} with {alumnus_name} has been marked as completed.'
+        )
+    except Exception as e:
+        logger.warning("Notification task dispatch failed for engagement %s: %s", sqid, e)
     
     schedule(
         "notifications.tasks.send_notifications_task",
