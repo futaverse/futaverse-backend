@@ -49,11 +49,11 @@ class ListInternshipApplicationsView(generics.ListAPIView):
         return queryset_by_role(
             self.request.user,
             InternshipApplication,
-            alumnus_filter={
+            alumnus_filter=lambda: {
                 "internship__alumnus": self.request.user.alumni_profile,
                 "status": "pending",
             },
-            student_filter={
+            student_filter=lambda: {
                 "student": self.request.user.student_profile,
                 "status": "pending",
             },
@@ -72,8 +72,8 @@ class RetrieveInternshipApplicationView(generics.RetrieveAPIView):
         return queryset_by_role(
             self.request.user,
             InternshipApplication,
-            alumnus_filter={"internship__alumnus": self.request.user.alumni_profile},
-            student_filter={"student": self.request.user.student_profile},
+            alumnus_filter=lambda: {"internship__alumnus": self.request.user.alumni_profile},
+            student_filter=lambda: {"student": self.request.user.student_profile},
             select_related=("internship", "student", "internship__alumnus"),
         )
 

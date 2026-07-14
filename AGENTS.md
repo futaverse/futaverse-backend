@@ -23,7 +23,7 @@ python manage.py qcluster
 | Create migrations | `python manage.py makemigrations` |
 | Run qcluster worker | `python manage.py qcluster` |
 | Create superuser | `python manage.py createsuperuser` |
-| Run tests | `python manage.py test <app>` (most test files are stubs) |
+| Run tests | `python manage.py test <app> --settings=test_settings --keepdb --parallel` |
 | Shell | `python manage.py shell` |
 
 ## Style Guide

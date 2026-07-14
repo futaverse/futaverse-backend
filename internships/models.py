@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MinValueValidator
 from core.models import StudentProfile, AlumniProfile
 from futaverse.models import BaseModel
 from django.utils import timezone
@@ -25,7 +26,7 @@ class Internship(BaseModel):
     engagement_type = models.CharField(choices=EngagementType.choices, max_length=20)
     location = models.CharField(max_length=255)
     skills_required = models.JSONField(default=list, blank=True)
-    duration_weeks = models.PositiveIntegerField()
+    duration_weeks = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     start_date = models.DateField()
     end_date = models.DateField()
     is_paid = models.BooleanField(default=False)

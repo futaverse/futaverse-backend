@@ -34,6 +34,8 @@ class Mentorship(BaseModel):
         return f"{self.title} (mentorship)"
 
     def decrement_remaining_slots(self):
+        if self.remaining_slots is None:
+            return
         if self.remaining_slots > 0:
             self.remaining_slots -= 1
             self.save(update_fields=['remaining_slots'])

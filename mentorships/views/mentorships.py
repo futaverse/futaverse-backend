@@ -74,10 +74,12 @@ class RetrieveUpdateDestroyMentorshipView(generics.RetrieveUpdateDestroyAPIView)
 @extend_schema(tags=['Mentorships'], summary='Toggle active status of a mentorship (alumnus)')
 class ToggleMentorshipActiveView(generics.UpdateAPIView):
     permission_classes = [IsAuthenticatedAlumnus]
-    queryset = Mentorship.objects.all()
     serializer_class = MentorshipStatusSerializer
     http_method_names = ['patch']
     lookup_field = 'sqid'
+
+    def get_queryset(self):
+        return Mentorship.objects.filter(alumnus=self.request.user.alumni_profile)
 
     def perform_update(self, serializer):
         serializer.instance.toggle_active()
@@ -92,8 +94,8 @@ class ListMentorshipEngagementsView(generics.ListAPIView):
         return queryset_by_role(
             self.request.user,
             MentorshipEngagement,
-            alumnus_filter={"alumnus": self.request.user.alumni_profile},
-            student_filter={"student": self.request.user.student_profile},
+            alumnus_filter=lambda: {"alumnus": self.request.user.alumni_profile},
+            student_filter=lambda: {"student": self.request.user.student_profile},
             select_related=("mentorship", "student", "alumnus"),
         )
 
@@ -108,8 +110,8 @@ class RetrieveMentorshipEngagementView(generics.RetrieveAPIView):
         return queryset_by_role(
             self.request.user,
             MentorshipEngagement,
-            alumnus_filter={"alumnus": self.request.user.alumni_profile},
-            student_filter={"student": self.request.user.student_profile},
+            alumnus_filter=lambda: {"alumnus": self.request.user.alumni_profile},
+            student_filter=lambda: {"student": self.request.user.student_profile},
             select_related=("mentorship", "student", "alumnus"),
         )
 

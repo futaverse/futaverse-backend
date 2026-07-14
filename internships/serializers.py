@@ -31,6 +31,24 @@ class InternshipSerializer(serializers.ModelSerializer):
         validated_data['remaining_slots'] = available_slots
         return super().create(validated_data)
 
+    def validate(self, attrs):
+        validated_data = super().validate(attrs)
+
+        end_date = validated_data.get('end_date')
+        start_date = validated_data.get('start_date')
+        if end_date and start_date and end_date <= start_date:
+            raise serializers.ValidationError({"end_date": "End date must be after start date."})
+
+        levels = validated_data.get('levels')
+        if levels is not None and not levels:
+            raise serializers.ValidationError({"levels": "At least one level is required."})
+
+        stipend = validated_data.get('stipend')
+        if stipend is not None and stipend < 0:
+            raise serializers.ValidationError({"stipend": "Stipend cannot be negative."})
+
+        return validated_data
+
 
 class InternshipStatusSerializer(serializers.ModelSerializer):
     class Meta:

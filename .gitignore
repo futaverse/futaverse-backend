@@ -19,3 +19,4 @@ staticfiles/
 .idea/
 
 test.py
+test_db.sqlite3

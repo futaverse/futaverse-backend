@@ -2,13 +2,14 @@ from django.urls import path
 
 from core.models import User
 
-
 def queryset_by_role(user, model_class, *, alumnus_filter, student_filter,
                      select_related=(), order_by=None):
     if user.role == User.Role.ALUMNI:
-        qs = model_class.objects.filter(**alumnus_filter)
+        filter_kwargs = alumnus_filter() if callable(alumnus_filter) else alumnus_filter
+        qs = model_class.objects.filter(**filter_kwargs)
     elif user.role == User.Role.STUDENT:
-        qs = model_class.objects.filter(**student_filter)
+        filter_kwargs = student_filter() if callable(student_filter) else student_filter
+        qs = model_class.objects.filter(**filter_kwargs)
     else:
         return model_class.objects.none()
 
@@ -106,6 +107,9 @@ def generate_engagement_urls(*, prefix, entity_views, application_views,
         name=f"mark-{prefix}-acknowledged",
     ))
 
+    if extra:
+        patterns.extend(extra)
+
     patterns.append(path(
         "",
         entity_views["list_create"].as_view(),
@@ -121,8 +125,5 @@ def generate_engagement_urls(*, prefix, entity_views, application_views,
         entity_views["toggle_active"].as_view(),
         name=f"toggle-{prefix}-active",
     ))
-
-    if extra:
-        patterns.extend(extra)
 
     return patterns
