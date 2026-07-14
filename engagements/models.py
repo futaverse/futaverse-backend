@@ -36,7 +36,7 @@ class BaseEngagement(BaseModel):
     updated_at = models.DateTimeField(auto_now=True)
 
     @property
-    def is_active(self):
+    def is_status_active(self):
         return self.status == self.EngagementStatus.ACTIVE
 
     @property
