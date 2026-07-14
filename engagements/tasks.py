@@ -24,12 +24,15 @@ def auto_acknowledge_engagement(engagement_sqid, engagement_type):
     
     if engagement.status == BaseEngagement.EngagementStatus.COMPLETED:
         engagement.update_status(BaseEngagement.EngagementStatus.ACKNOWLEDGED)
-        
+
+        plugin = get_engagement_plugin(engagement_type)
+        domain = plugin.get("domain", engagement_type) if plugin else engagement_type
+
         async_task(
             "notifications.tasks.send_notifications_task",
             user_ids=[engagement.student.user.id],
             title='Engagement Auto-Acknowledged',
-            content=f'Your {engagement_type.replace("_engagement", "")} with {engagement.alumnus.full_name} has been automatically acknowledged due to getting no response from your end.'
+            content=f'Your {domain} with {engagement.alumnus.full_name} has been automatically acknowledged due to getting no response from your end.'
         )
 
 

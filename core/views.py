@@ -170,10 +170,10 @@ class CreateStudentView(generics.CreateAPIView, PublicGenericAPIView):
 
         return super().post(request, *args, **kwargs)
     
-    @transaction.atomic
     def perform_create(self, serializer):
-        user = serializer.save()
-        otp = OTP.generate_otp(user)
+        with transaction.atomic():
+            user = serializer.save()
+            otp = OTP.generate_otp(user)
 
         mailer.send(
             subject="Verify your email",
