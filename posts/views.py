@@ -10,7 +10,7 @@ from core.models import User
 from futaverse.permissions import IsAuthenticatedStudent
 
 from .serializers import ShareEngagementSerializer, PostSerializer, ShareEngagementCompletionSerializer
-from .services import share_engagement
+from .services import share_engagement, share_engagement_completion
 from .models import Post
 
 @extend_schema(tags=['Posts'], summary="Share an internship or mentorship engagement as a post (student)")
