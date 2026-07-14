@@ -73,12 +73,15 @@ class EventService:
         
         html_body = render_to_string('emails/ticket_confirmation.html', context)
         
-        mailer.send(
-            subject=f"Confirmation: Your Ticket for {event.title}",
-            body=html_body,
-            recipient=ticket_purchase.email,
-            is_html=True
-        )
+        try:
+            mailer.send(
+                subject=f"Confirmation: Your Ticket for {event.title}",
+                body=html_body,
+                recipient=ticket_purchase.email,
+                is_html=True,
+            )
+        except Exception as e:
+            logger.warning("Ticket email send failed for %s: %s", ticket_purchase.email, e)
     
     def send_event_update_emails(self, old_data):
         event = self.event
@@ -99,12 +102,15 @@ class EventService:
         
         html_body = render_to_string('emails/event_schedule_update.html', context)
         
-        mailer.send_bulk(
-            subject=f"SCHEDULE UPDATE: {event.title}",
-            body=html_body,
-            recipients=attendee_emails, 
-            is_html=True
-        )
+        try:
+            mailer.send_bulk(
+                subject=f"SCHEDULE UPDATE: {event.title}",
+                body=html_body,
+                recipients=attendee_emails,
+                is_html=True,
+            )
+        except Exception as e:
+            logger.warning("Bulk schedule-update email send failed for event %s: %s", event.sqid, e)
     
     def create_virtual_event(self, user, platform, attendee_emails, redirect_after_auth=None):
         event = self.event 
@@ -198,12 +204,15 @@ class EventService:
         
         html_body = render_to_string('emails/event_mode_change.html', context)
         
-        mailer.send_bulk(
-            subject=f"Format Change: {event.title}",
-            body=html_body,
-            recipients=attendee_emails,
-            is_html=True
-        )
+        try:
+            mailer.send_bulk(
+                subject=f"Format Change: {event.title}",
+                body=html_body,
+                recipients=attendee_emails,
+                is_html=True,
+            )
+        except Exception as e:
+            logger.warning("Bulk mode-change email send failed for event %s: %s", event.sqid, e)
     
 class GoogleAuthRequired(Exception):
     def __init__(self, auth_url):
