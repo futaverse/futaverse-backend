@@ -11,7 +11,10 @@ def humanize_list(items):
         return items[0]
     return ', '.join(items[:-1]) + f' and {items[-1]}' 
 
-#TODO: Move this to a more appropriate place, maybe a registry in the feed app or something like that. Also, work on the default text. Use def register_post_plugin(model_class, serializer, default_text, feed_event, model)
+# The engagement plugin registry maps model classes to serializers and feed metadata.
+# This lives in engagements/ because engagements is the shared layer that both
+# internships and mentorships depend on. To add a new engagement type, register
+# it in ENGAGEMENT_PLUGIN below and add to futaverse/lib.py MODELS dict.
 
 _internship_engagement_plugin = {
     "serializer":   InternshipEngagementFeedSerializer,

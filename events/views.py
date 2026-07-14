@@ -93,7 +93,8 @@ class CreateTicketPurchaseView(generics.CreateAPIView):
     
     @transaction.atomic
     def perform_create(self, serializer):
-        # TODO: Handle when action is not performed by user
+        # Purchases can optionally be made by an unauthenticated guest via email only.
+        # Currently all purchases require an authenticated user.
         
         user = self.request.user
         validated_data = serializer.validated_data
