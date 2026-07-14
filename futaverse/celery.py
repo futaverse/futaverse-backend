@@ -1,5 +1,9 @@
 import os
 
+# Celery app — reserved for future use. django-q is the active task queue.
+# Registered automatically by futaverse/__init__.py on Django startup.
+# No tasks are currently registered.
+
 from celery import Celery
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'futaverse.settings')

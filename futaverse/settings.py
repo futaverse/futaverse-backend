@@ -211,6 +211,10 @@ if not DEVELOPMENT:
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
 
+# Celery configuration — RESERVED for future use.
+# django-q (Q_CLUSTER below) is the active task queue.
+# The Celery app is defined in futaverse/celery.py and auto-discovered on startup.
+# No Celery tasks are currently registered.
 CELERY_BROKER_URL = os.environ.get("REDIS_URL")
 CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL")
 CELERY_RESULT_EXPIRES = 3600
