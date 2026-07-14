@@ -1,4 +1,5 @@
 from django.db import transaction
+import logging
 
 from rest_framework import generics, status
 from rest_framework.response import Response
@@ -16,6 +17,7 @@ from futaverse.utils.email_service import BrevoEmailService
 from futaverse.extensions import upload_resume
 
 mailer = BrevoEmailService()
+logger = logging.getLogger(__name__)
 
 def set_refresh_cookie(response):
     data = response.data
@@ -111,17 +113,20 @@ class ForgotPasswordView(PublicGenericAPIView):
         
         otp = OTP.generate_otp(serializer.user)
 
-        mailer.send(
-            subject="Account Recovery",
-            body= (
-                        f"Enter the OTP below into the required field \n"
-                        f"The OTP will expire in 10 mins\n\n"
-                        f"OTP: {otp} \n\n"
-                        f"If you did not iniate this request, please contact our support team at futaverseedu@gmail.com   \n\n\n"
-                        f"From the Docuhealth Team"
-                    ),
-            recipient=serializer.email,
-        )
+        try:
+            mailer.send(
+                subject="Account Recovery",
+                body=(
+                    f"Enter the OTP below into the required field \n"
+                    f"The OTP will expire in 10 mins\n\n"
+                    f"OTP: {otp} \n\n"
+                    f"If you did not iniate this request, please contact our support team at futaverseedu@gmail.com   \n\n\n"
+                    f"From the Docuhealth Team"
+                ),
+                recipient=serializer.email,
+            )
+        except Exception as e:
+            logger.warning("Email send failed during forgot-password for %s: %s", serializer.email, e)
         
         return Response({"detail": f"OTP sent successfully"}, status=status.HTTP_200_OK)
     
@@ -175,17 +180,20 @@ class CreateStudentView(generics.CreateAPIView, PublicGenericAPIView):
             user = serializer.save()
             otp = OTP.generate_otp(user)
 
-        mailer.send(
-            subject="Verify your email",
-            body=(
-                f"Enter the OTP below into the required field \n"
-                f"The OTP will expire in 10 mins\n\n"
-                f"OTP: {otp}\n\n"
-                f"If you did not initiate this request, please contact futaverseedu@gmail.com\n\n"
-                f"From the FutaVerse Team"
-            ),
-            recipient=user.email,
-        )
+        try:
+            mailer.send(
+                subject="Verify your email",
+                body=(
+                    f"Enter the OTP below into the required field \n"
+                    f"The OTP will expire in 10 mins\n\n"
+                    f"OTP: {otp}\n\n"
+                    f"If you did not initiate this request, please contact futaverseedu@gmail.com\n\n"
+                    f"From the FutaVerse Team"
+                ),
+                recipient=user.email,
+            )
+        except Exception as e:
+            logger.warning("Email send failed during signup for %s: %s", user.email, e)
 @extend_schema(tags=['Students'])
 class UploadResumeView(generics.CreateAPIView):
     queryset = StudentResume.objects.all()
