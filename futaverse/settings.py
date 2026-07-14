@@ -239,3 +239,7 @@ Q_CLUSTER = {
     'orm': 'default',         
     'poll': 5,                
 }
+
+# Engagement auto-acknowledgement delays
+ENGAGEMENT_ACKNOWLEDGEMENT_REMINDER_HOURS = 1 if DEVELOPMENT else 24
+ENGAGEMENT_AUTO_ACKNOWLEDGE_HOURS = 1 if DEVELOPMENT else 48

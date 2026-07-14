@@ -1,6 +1,7 @@
 from django.utils import timezone
 
 from datetime import timedelta
+from django.conf import settings
 from django_q.tasks import async_task, logger, schedule, Schedule
 
 from engagements.models import BaseEngagement
@@ -66,7 +67,7 @@ def schedule_auto_ackowledgement_task(engagement_data):
         title=f'Acknowledgement Reminder for {domain}',
         content=f'Please acknowledge your {domain} with {alumnus_name} in 24 hours, else it will be automatically acknowledged.',
         schedule_type=Schedule.ONCE,
-        next_run=timezone.now() + timedelta(seconds=20), #TODO: change to 24 hours later
+        next_run=timezone.now() + timedelta(hours=settings.ENGAGEMENT_ACKNOWLEDGEMENT_REMINDER_HOURS),
         name=f'acknowledgement_reminder_{domain}_{sqid}'
     )
     
@@ -75,6 +76,6 @@ def schedule_auto_ackowledgement_task(engagement_data):
         engagement_sqid=sqid,
         engagement_type=engagement_type,
         schedule_type=Schedule.ONCE,
-        next_run=timezone.now() + timedelta(seconds=40), #TODO: change to 48 hours later
+        next_run=timezone.now() + timedelta(hours=settings.ENGAGEMENT_AUTO_ACKNOWLEDGE_HOURS),
         name=f'auto_acknowledge_engagement_{domain}_{sqid}'
     )
