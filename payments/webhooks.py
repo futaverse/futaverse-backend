@@ -30,7 +30,7 @@ class PaystackWebhookView(APIView):
             digestmod=hashlib.sha512
         ).hexdigest()
         
-        if hashed != signature:
+        if not hmac.compare_digest(hashed, signature):
             return Response({"detail": "Invalid signature"}, status=403)
         
         event = json.loads(payload)
@@ -40,6 +40,10 @@ class PaystackWebhookView(APIView):
         logger.info("Webhook received: %s", event_type)
 
         if event_type == "charge.success":
-            handle_charge_success(data)
+            try:
+                handle_charge_success(data)
+            except Exception as e:
+                logger.error("Webhook handler failed: %s", e)
+                return Response({"status": "error", "detail": str(e)}, status=500)
             
         return Response({"status": "ok"}, status=200)

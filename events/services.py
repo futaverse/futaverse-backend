@@ -354,7 +354,6 @@ def get_user_credentials(user: User, redirect_after_auth=None):
     google_auth_url = build_google_auth_url(user.sqid, redirect_after_auth)
     
     if not creds_data or not creds_data.get('token'):
-        print("no creds")
         raise GoogleAuthRequired(google_auth_url)
     
     credentials = Credentials.from_authorized_user_info(creds_data)

@@ -14,7 +14,7 @@ from .serializers import UserProfileImageSerializer, VerifyOTPSerializer, Forgot
 
 from futaverse.views import PublicGenericAPIView
 from futaverse.utils.email_service import BrevoEmailService
-from futaverse.extensions import upload_resume
+from futaverse.utils.supabase import upload_file_to_supabase
 
 mailer = BrevoEmailService()
 logger = logging.getLogger(__name__)
@@ -120,8 +120,8 @@ class ForgotPasswordView(PublicGenericAPIView):
                     f"Enter the OTP below into the required field \n"
                     f"The OTP will expire in 10 mins\n\n"
                     f"OTP: {otp} \n\n"
-                    f"If you did not iniate this request, please contact our support team at futaverseedu@gmail.com   \n\n\n"
-                    f"From the Docuhealth Team"
+                    f"If you did not initiate this request, please contact our support team at futaverseedu@gmail.com   \n\n\n"
+                    f"From the FutaVerse Team"
                 ),
                 recipient=serializer.email,
             )
@@ -207,7 +207,7 @@ class UploadResumeView(generics.CreateAPIView):
         if not resume:
             return Response({"detail": "Resume not provided", "status": "error"}, status=status.HTTP_400_BAD_REQUEST)
         
-        public_url = upload_resume(resume, user.student_profile.id)
+        public_url = upload_file_to_supabase(resume, f'resumes/{user.student_profile.id}')
         
         serializer = self.get_serializer(data={"resume": public_url, "student": user.student_profile.id, "filename": resume.name})
         serializer.is_valid(raise_exception=True)

@@ -2,12 +2,16 @@ from django.utils import timezone
 
 from datetime import timedelta
 from django.conf import settings
-from django_q.tasks import async_task, logger, schedule, Schedule
+from django_q.tasks import async_task, schedule, Schedule
+
+import logging
 
 from engagements.models import BaseEngagement
 
 from futaverse.lib import MODELS
 from engagements.plugins import get_engagement_plugin
+
+logger = logging.getLogger(__name__)
 
 def auto_acknowledge_engagement(engagement_sqid, engagement_type):
     model = MODELS.get(engagement_type)
@@ -36,7 +40,7 @@ def auto_acknowledge_engagement(engagement_sqid, engagement_type):
         )
 
 
-def schedule_auto_ackowledgement_task(engagement_data):
+def schedule_auto_acknowledgement_task(engagement_data):
     engagement_type = engagement_data.get("engagement_type")
     sqid = engagement_data.get("sqid")
     engagement_plugin = get_engagement_plugin(engagement_type)

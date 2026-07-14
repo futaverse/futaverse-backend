@@ -20,3 +20,7 @@ staticfiles/
 
 test.py
 test_db.sqlite3
+
+.superpowers/
+.opencode/
+docs/superpowers/

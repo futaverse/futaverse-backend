@@ -5,11 +5,10 @@ from rest_framework import serializers
 from core.serializers import StudentInfoSerializer, AlumniInfoSerializer
 from core.models import StudentProfile
 
-from .models import Mentorship, MentorshipOffer, MentorshipApplication, MentorshipEngagement
+from .models import Mentorship, MentorshipOffer, MentorshipApplication, MentorshipEngagement, FocusArea, MentorshipCategory
 from engagements.models import EngagementLifecycleStatus
 
 from futaverse.serializers import StrictFieldsMixin
-from mentorships.lib import FocusArea, MentorshipCategory
 
 from engagements.serializers import (
     make_student_manage_offer_serializer,

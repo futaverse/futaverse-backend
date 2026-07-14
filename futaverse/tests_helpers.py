@@ -91,7 +91,7 @@ class BaseAPITestCase(APITestCase):
 
     def make_mentorship(self, alumnus_user, **kwargs):
         from mentorships.models import Mentorship
-        from mentorships.lib import MentorshipCategory
+        from mentorships.models import MentorshipCategory
         defaults = dict(
             title="Career Mentorship",
             description="Guidance",

@@ -1,10 +1,18 @@
 from django_q.tasks import async_task
 from django.db import transaction
+from django.core.cache import cache
 
 from rest_framework.exceptions import ValidationError
 from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
 
 from .models import BaseEngagement
+
+
+class ConflictError(ValidationError):
+    status_code = 409
+    default_detail = "Request already in progress."
+    default_code = "conflict"
+
 
 class MarkEngagementCompletedMixin:
     permission_classes = [IsAuthenticatedAlumnus]
@@ -18,6 +26,12 @@ class MarkEngagementCompletedMixin:
 
     def perform_update(self, serializer):
         engagement = serializer.instance
+        lock_key = f"engagement_status_{engagement.sqid}"
+
+        if cache.get(lock_key):
+            raise ConflictError({"detail": "Request already in progress."})
+
+        cache.set(lock_key, True, timeout=10)
 
         if engagement.status != BaseEngagement.EngagementStatus.ACTIVE:
             raise ValidationError("Only active engagements can be completed.")
@@ -30,11 +44,11 @@ class MarkEngagementCompletedMixin:
             'sqid': engagement.sqid
         }
 
-        # TODO: FE dev urges student to acknowledge completion. It will be auto-acknowledged in 48 hours.
         transaction.on_commit(lambda: async_task(
-            "engagements.tasks.schedule_auto_ackowledgement_task",
+            "engagements.tasks.schedule_auto_acknowledgement_task",
             engagement_data
         ))
+
 
 class MarkEngagementAcknowledgedMixin:
     permission_classes = [IsAuthenticatedStudent]
@@ -48,6 +62,12 @@ class MarkEngagementAcknowledgedMixin:
 
     def perform_update(self, serializer):
         engagement = serializer.instance
+        lock_key = f"engagement_status_{engagement.sqid}"
+
+        if cache.get(lock_key):
+            raise ConflictError({"detail": "Request already in progress."})
+
+        cache.set(lock_key, True, timeout=10)
 
         if engagement.status != BaseEngagement.EngagementStatus.COMPLETED:
             raise ValidationError("Only completed engagements can be acknowledged.")

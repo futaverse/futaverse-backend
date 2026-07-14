@@ -1,7 +1,7 @@
 from django.test import TestCase
 
 from mentorships.models import Mentorship
-from mentorships.lib import MentorshipCategory
+from mentorships.models import MentorshipCategory
 
 
 class MentorshipModelTests(TestCase):

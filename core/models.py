@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils import timezone
 from datetime import timedelta
+from functools import cached_property
 from django_sqids import SqidsField
 
 from cloudinary.models import CloudinaryField
@@ -193,7 +194,7 @@ class StudentProfile(BaseModel):
     def __str__(self):
         return f"{self.full_name} (student)"
     
-    @property
+    @cached_property
     def feed_match_filter(self):
         attributes = []
 
@@ -223,7 +224,6 @@ class StudentProfile(BaseModel):
             match_filter |= attr
 
         return match_filter
-    
 class StudentResume(BaseModel):
     student = models.OneToOneField(StudentProfile, on_delete=models.CASCADE, related_name='resume', blank=True, null=True)
     resume = models.URLField(max_length=200)
@@ -278,7 +278,7 @@ class AlumniProfile(BaseModel):
     def __str__(self):
         return f"{self.full_name} (alumnus)"
     
-    @property
+    @cached_property
     def feed_match_filter(self):
         attributes = []
 
@@ -290,9 +290,6 @@ class AlumniProfile(BaseModel):
 
         if self.industry:
             attributes.append(models.Q(targets__target_type='industry', targets__target_value=self.industry))
-            
-        # if self.company_type:
-        #     attributes.append(models.Q(targets__target_type='company_type', targets__target_value=self.company_type))
 
         if not attributes:
             return None

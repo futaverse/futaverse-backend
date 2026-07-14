@@ -8,9 +8,8 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
 from engagements.mixins import MarkEngagementCompletedMixin, MarkEngagementAcknowledgedMixin
 from engagements.helpers import queryset_by_role
 
-from mentorships.models import Mentorship, MentorshipEngagement
+from mentorships.models import Mentorship, MentorshipEngagement, FocusArea, MentorshipCategory
 from mentorships.serializers import MentorshipSerializer, MentorshipStatusSerializer, MentorshipEngagementSerializer
-from mentorships.lib import FocusArea, MentorshipCategory
 
 from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
 

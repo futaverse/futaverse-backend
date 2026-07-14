@@ -36,5 +36,7 @@ def handle_charge_success(data):
                 
     except TicketPurchase.DoesNotExist:
         logger.error(f"Purchase not found for reference: {reference}")
+        raise ValueError(f"Purchase not found for reference: {reference}")
     except Exception as e:
         logger.error(f"Error processing webhook for {reference}: {str(e)}")
+        raise

@@ -211,24 +211,6 @@ if not DEVELOPMENT:
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
 
-# Celery configuration — RESERVED for future use.
-# django-q (Q_CLUSTER below) is the active task queue.
-# The Celery app is defined in futaverse/celery.py and auto-discovered on startup.
-# No Celery tasks are currently registered.
-CELERY_BROKER_URL = os.environ.get("REDIS_URL")
-CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL")
-CELERY_RESULT_EXPIRES = 3600
-CELERY_ACCEPT_CONTENT = ["json"]
-CELERY_TASK_SERIALIZER = "json"
-
-if not DEVELOPMENT:
-    CELERY_BROKER_USE_SSL = {
-        "ssl_cert_reqs": ssl.CERT_NONE
-    }
-
-    CELERY_REDIS_BACKEND_USE_SSL = {
-        "ssl_cert_reqs": ssl.CERT_NONE
-    }
     
 EVENTSTREAM_REDIS = {
     "host": "redis",

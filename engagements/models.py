@@ -6,15 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from core.models import StudentProfile, AlumniProfile, User
 from futaverse.models import BaseModel
 
-class Review(BaseModel):
-    reviewer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
-
-    rating = models.PositiveIntegerField()
-    comment = models.TextField()
-
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name='reviews')
-    object_id = models.PositiveIntegerField()
-    related_object = GenericForeignKey('content_type', 'object_id')
+from reviews.models import Review
 
 class BaseEngagement(BaseModel):
     class EngagementStatus(models.TextChoices):
@@ -41,10 +33,12 @@ class BaseEngagement(BaseModel):
 
     @property
     def engagement(self):
-        if hasattr(self, 'internship'):
-            return self.internship
-        if hasattr(self, 'mentorship'):
-            return self.mentorship
+        internship = getattr(self, 'internship', None)
+        if internship is not None:
+            return internship
+        mentorship = getattr(self, 'mentorship', None)
+        if mentorship is not None:
+            return mentorship
         return None
     
     def update_status(self, status):
@@ -75,16 +69,22 @@ class BaseApplication(BaseModel):
         abstract = True
 
     def accept(self):
+        if self.status != EngagementLifecycleStatus.PENDING:
+            raise ValueError(f"Cannot accept application with status '{self.status}'. Expected 'pending'.")
         self.status = EngagementLifecycleStatus.ACCEPTED
         self.responded_at = timezone.now()
         self.save(update_fields=["status", "responded_at"])
 
     def reject(self):
+        if self.status != EngagementLifecycleStatus.PENDING:
+            raise ValueError(f"Cannot reject application with status '{self.status}'. Expected 'pending'.")
         self.status = EngagementLifecycleStatus.REJECTED
         self.responded_at = timezone.now()
         self.save(update_fields=["status", "responded_at"])
 
     def withdraw(self):
+        if self.status != EngagementLifecycleStatus.PENDING:
+            raise ValueError(f"Cannot withdraw application with status '{self.status}'. Expected 'pending'.")
         self.status = EngagementLifecycleStatus.WITHDRAWN
         self.save(update_fields=["status"])
 
@@ -101,15 +101,21 @@ class BaseOffer(BaseModel):
         abstract = True
 
     def accept(self):
+        if self.status != EngagementLifecycleStatus.PENDING:
+            raise ValueError(f"Cannot accept offer with status '{self.status}'. Expected 'pending'.")
         self.status = EngagementLifecycleStatus.ACCEPTED
         self.responded_at = timezone.now()
         self.save(update_fields=["status", "responded_at"])
 
     def reject(self):
+        if self.status != EngagementLifecycleStatus.PENDING:
+            raise ValueError(f"Cannot reject offer with status '{self.status}'. Expected 'pending'.")
         self.status = EngagementLifecycleStatus.REJECTED
         self.responded_at = timezone.now()
         self.save(update_fields=["status", "responded_at"])
 
     def withdraw(self):
+        if self.status != EngagementLifecycleStatus.PENDING:
+            raise ValueError(f"Cannot withdraw offer with status '{self.status}'. Expected 'pending'.")
         self.status = EngagementLifecycleStatus.WITHDRAWN
         self.save(update_fields=["status"])

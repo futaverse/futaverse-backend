@@ -21,11 +21,11 @@ class FeedView(generics.ListAPIView):
 
         match_filter = profile.feed_match_filter
         queryset = FeedEvent.objects.filter(is_active=True, audience__in=[user.role, FeedEvent.Audience.PUBLIC])
-        
+
         # .exclude(
         #     impressions__user=self.request.user
         # )
-        
+
         # Ranking based on number of matched filters
         if match_filter:
             queryset = queryset.annotate(score=Count('targets', filter=match_filter))
@@ -33,18 +33,18 @@ class FeedView(generics.ListAPIView):
             queryset = queryset.annotate(score=Value(0, output_field=IntegerField()))  # score=0 for everyone
 
         return queryset.order_by('-score', '-created_at')
-        
+
     # def list(self, request, *args, **kwargs):
     #     response = super().list(request, *args, **kwargs)
-        
+    #
     #     print(response.data)
-
+    #
     #     ids = [item['sqid'] for item in response.data['results']]
     #     if ids:
     #         record_impressions_task.delay(request.user.id, ids)
-
+    #
     #     return response
-    
+
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)

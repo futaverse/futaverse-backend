@@ -5,7 +5,7 @@ from mentorships.models import (
     MentorshipEngagement,
 )
 from engagements.models import EngagementLifecycleStatus
-from mentorships.lib import MentorshipCategory, FocusArea
+from mentorships.models import MentorshipCategory, FocusArea
 from futaverse.tests_helpers import BaseAPITestCase
 
 
