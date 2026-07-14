@@ -13,3 +13,7 @@ DATABASES = {
 Q_CLUSTER = {
     'sync': True,
 }
+
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': None,
+}
