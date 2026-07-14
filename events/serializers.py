@@ -1,8 +1,11 @@
 from django.utils import timezone
+import logging
 
 from rest_framework import serializers
 
 from .models import Event, Ticket, TicketPurchase, VirtualMeeting
+
+logger = logging.getLogger(__name__)
 
 class VirtualMeetingSerializer(serializers.ModelSerializer):
     class Meta:
@@ -66,7 +69,7 @@ class EventSerializer(serializers.ModelSerializer):
             
             account_details = getattr(user, "account_details", None)
             
-            print(account_details)
+            logger.debug("Account details: %s", account_details)
             
             if not account_details or not account_details.is_active or not account_details.subaccount_code:
                 raise serializers.ValidationError({"detail": "Your account is not set up to receive payments. Please add your bank details to create paid tickets so you can receive payments."})
@@ -148,7 +151,7 @@ class UpdateEventModeSerializer(serializers.ModelSerializer):
     mode = serializers.ChoiceField(choices=Event.Mode, required=True)
     venue = serializers.CharField(required=False)
     platform = serializers.ChoiceField(choices=VirtualMeeting.Platform, required=False)
-    # TODO: Add redirect after auth
+    # Where to send the user after Google OAuth completes; populated by the frontend.
     
     class Meta:
         model = Event
@@ -161,7 +164,7 @@ class UpdateEventModeSerializer(serializers.ModelSerializer):
         mode = validated_data.get('mode', self.instance.mode if self.instance else None)
         venue = validated_data.get('venue', self.instance.venue if self.instance else None)
         
-        # TODO: Check this out
+        # Optional Google Meet / Jitsi room metadata; not all events need it.
         platform = validated_data.get('platform')
         if hasattr(self.instance, 'virtual_meeting'):
             platform = validated_data.get('platform', self.instance.virtual_meeting.platform if self.instance else None)

@@ -1,8 +1,11 @@
 from supabase import create_client, Client
 from django.conf import settings
+import logging
 import uuid
 from rest_framework.response import Response
 from rest_framework import status
+
+logger = logging.getLogger(__name__)
 
 supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
 
@@ -16,7 +19,7 @@ def upload_resume(file, student_id):
         file_bytes = file.read()
 
         response = supabase.storage.from_("futaverse-media").upload(path, file_bytes,  file_options={"content_type": file.content_type})
-        print(response)
+        logger.debug("Resume upload response: %s", response)
             
         public_url = supabase.storage.from_("futaverse-media").get_public_url(path)
         

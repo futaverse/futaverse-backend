@@ -1,6 +1,9 @@
 from supabase import create_client, Client
 from django.conf import settings
+import logging
 import uuid
+
+logger = logging.getLogger(__name__)
 
 # Initialize Supabase client
 supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
@@ -37,7 +40,7 @@ def upload_file_to_supabase(file, folder: str, bucket_name=bucket_name, custom_n
             file_bytes,
             file_options={"content_type": file.content_type}
         )
-        print(response)
+        logger.debug("Supabase upload response: %s", response)
 
         public_url = supabase.storage.from_(bucket_name).get_public_url(path)
 
