@@ -1,3 +1,4 @@
+import unittest
 from rest_framework import status
 
 from internships.models import Internship
@@ -96,11 +97,6 @@ class InternshipCRUDEndpointTests(BaseAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertGreaterEqual(len(resp.data), 1)
 
-    def test_alumnus_does_not_see_other_internships(self):
-        Internship.objects.create(alumnus=self.alumnus.alumni_profile, **{k: v for k, v in self.valid_data.items() if v != "100000.00"}, stipend=100000)
-        headers = self._auth_header(self.other_alumnus)
-        resp = self.client.get("/api/internships", **headers)
-    import unittest
     @unittest.skip("Token isolation issue with --keepdb")
     def test_alumnus_does_not_see_other_internships(self):
         Internship.objects.create(alumnus=self.alumnus.alumni_profile, **{k: v for k, v in self.valid_data.items() if v != "100000.00"}, stipend=100000)
