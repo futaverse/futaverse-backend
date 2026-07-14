@@ -94,7 +94,7 @@ class EventService:
             'old_time': old_data['time'],
             'new_date': event.date.strftime('%B %d, %Y'),
             'new_time': event.start_time.strftime('%I:%M %p'),
-            'event_url': f"https://google.com" #TODO: Change later to actual event URL
+            'event_url': f"{settings.FRONTEND_BASE_URL}/events/{event.sqid}"
         }
         
         html_body = render_to_string('emails/event_schedule_update.html', context)
@@ -193,7 +193,7 @@ class EventService:
             'new_mode': new_mode,
             'venue': event.venue if event.venue else "TBA",
             'platform': event.virtual_meeting.platform if hasattr(event, 'virtual_meeting') else "TBA",
-            'event_url': f"https://google.com" #TODO: Change later to actual event URL
+            'event_url': f"{settings.FRONTEND_BASE_URL}/events/{event.sqid}"
         }
         
         html_body = render_to_string('emails/event_mode_change.html', context)

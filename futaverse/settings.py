@@ -159,6 +159,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get("MAIL_USERNAME")         
 EMAIL_HOST_PASSWORD = os.environ.get("MAIL_PASSWORD") 
 DEFAULT_FROM_EMAIL = "Futaverse Support <covenantcrackslord03@gmail.com>"
+FRONTEND_BASE_URL = os.environ.get("FRONTEND_BASE_URL", "http://localhost:5173")
 # SERVER_EMAIL = DEFAULT_FROM_EMAIL        
 EMAIL_TIMEOUT = 20  
 
