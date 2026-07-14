@@ -4,13 +4,18 @@ from django.core.cache import cache
 from django_q.tasks import async_task
 
 from rest_framework import generics, status
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
 from drf_spectacular.utils import extend_schema
 
 from payments.models import Subaccount
+
+class ConflictError(ValidationError):
+    status_code = 409
+    default_detail = "Request already in progress."
+    default_code = "conflict"
 
 from .serializers import EventSerializer, CreateTicketSerializer, TicketPurchaseSerializer, UpdateEventSerializer, ListEventSerializer, UpdateEventModeSerializer, ListTicketPurchaseSerializer
 from .models import Event, VirtualMeeting, Ticket, TicketPurchase
@@ -144,7 +149,7 @@ class UpdateEventView(generics.UpdateAPIView):
         
         lock_key = f"info_update_{instance.sqid}"
         if cache.get(lock_key):
-            return Response({"detail": "Request already in progress."}, status=409)
+            raise ConflictError({"detail": "Request already in progress."})
         
         cache.set(lock_key, True, timeout=5) 
         
@@ -215,7 +220,7 @@ class UpdateEventModeView(generics.UpdateAPIView):
         
         lock_key = f"mode_update_{instance.sqid}"
         if cache.get(lock_key):
-            return Response({"detail": "Request already in progress."}, status=409)
+            raise ConflictError({"detail": "Request already in progress."})
         
         cache.set(lock_key, True, timeout=10) 
         
