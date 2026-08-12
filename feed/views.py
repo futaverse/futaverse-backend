@@ -19,7 +19,7 @@ class FeedView(generics.ListAPIView):
         user = self.request.user
         profile = user.profile
 
-        match_filter = profile.feed_match_filter
+        match_filter = profile.feed_match_filter if profile else None
         queryset = FeedEvent.objects.filter(is_active=True, audience__in=[user.role, FeedEvent.Audience.PUBLIC])
 
         # .exclude(
@@ -32,7 +32,7 @@ class FeedView(generics.ListAPIView):
         else:
             queryset = queryset.annotate(score=Value(0, output_field=IntegerField()))  # score=0 for everyone
 
-        return queryset.order_by('-score', '-created_at')
+        return queryset.order_by('-score', '-created_at', 'id')
 
     # def list(self, request, *args, **kwargs):
     #     response = super().list(request, *args, **kwargs)

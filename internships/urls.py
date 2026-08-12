@@ -1,17 +1,14 @@
-from django.urls import path
-
 from engagements.helpers import generate_engagement_urls
 
 from .views.applications import (
     ListInternshipApplicationsView,
     CreateInternshipApplicationView,
-    UploadApplicationResumeView,
     AcceptInternshipApplicationView,
     RejectInternshipApplicationView,
     WithdrawInternshipApplicationView,
     RetrieveInternshipApplicationView,
 )
-
+ 
 from .views.offers import (
     ListInternshipOfferView,
     CreateInternshipOfferView,
@@ -26,7 +23,7 @@ from .views.internships import (
     ToggleInternshipActiveView,
     RetrieveInternshipEngagementView,
     ListInternshipEngagementsView,
-    RetrieveUpdateDestroyInternshipView,
+    InternshipDetailView,
     MarkInternshipAcknowledgedView,
     MarkInternshipCompletedView,
 )
@@ -35,7 +32,7 @@ urlpatterns = generate_engagement_urls(
     prefix="internship",
     entity_views={
         "list_create": ListCreateInternshipView,
-        "rud": RetrieveUpdateDestroyInternshipView,
+        "rud": InternshipDetailView,
         "toggle_active": ToggleInternshipActiveView,
     },
     application_views={
@@ -60,7 +57,4 @@ urlpatterns = generate_engagement_urls(
         "completed": MarkInternshipCompletedView,
         "acknowledged": MarkInternshipAcknowledgedView,
     },
-    extra=[
-        path('/upload-resume', UploadApplicationResumeView.as_view(), name='upload-application-resume'),
-    ],
 )

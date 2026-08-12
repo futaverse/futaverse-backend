@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from drf_spectacular.utils import extend_schema
 
 from .models import Subaccount
-from .serializers import ResolveBankAccountSerializer, CreateSubaccountSerializer
+from .serializers import ResolveBankAccountSerializer
 from .requests import resolve_bank_account, create_paystack_subaccount, list_banks
 
 @extend_schema(tags=["Payments"], summary="List Paystack Banks and their bank codes")

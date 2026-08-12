@@ -5,6 +5,8 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn futaverse.wsgi:application
     envVars:
+      - key: ENVIRONMENT
+        value: production
       - key: DATABASE_URL
         sync: false
       - key: REDIS_URL
@@ -16,6 +18,8 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: python manage.py qcluster
     envVars:
+      - key: ENVIRONMENT
+        value: production
       - key: DATABASE_URL
         sync: false
       - key: REDIS_URL

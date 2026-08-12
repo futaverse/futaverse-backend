@@ -13,11 +13,14 @@ from .models import User, OTP, UserProfileImage, StudentResume
 from .serializers import UserProfileImageSerializer, VerifyOTPSerializer, ForgotPasswordSerializer, ResetPasswordSerializer, CreateStudentSerializer, StudentResumeSerializer, CreateAlumnusSerializer
 
 from futaverse.views import PublicGenericAPIView
+from futaverse.permissions import IsAuthenticatedStudent
 from futaverse.utils.email_service import BrevoEmailService
 from futaverse.utils.supabase import upload_file_to_supabase
 
 mailer = BrevoEmailService()
 logger = logging.getLogger(__name__)
+
+MAX_RESUME_SIZE = 5 * 1024 * 1024
 
 def set_refresh_cookie(response):
     data = response.data
@@ -194,26 +197,54 @@ class CreateStudentView(generics.CreateAPIView, PublicGenericAPIView):
             )
         except Exception as e:
             logger.warning("Email send failed during signup for %s: %s", user.email, e)
+            
 @extend_schema(tags=['Students'])
-class UploadResumeView(generics.CreateAPIView):
+class ListStudentResumesView(generics.ListAPIView):
+    serializer_class = StudentResumeSerializer
+    permission_classes = [IsAuthenticatedStudent]
+
+    def get_queryset(self):
+        return StudentResume.objects.filter(student=self.request.user.student_profile).order_by('-uploaded_at')
+
+@extend_schema(tags=['Students'])
+class UploadStudentResumeView(generics.CreateAPIView):
     queryset = StudentResume.objects.all()
     serializer_class = StudentResumeSerializer
     parser_classes = [MultiPartParser, FormParser]
-    
+    permission_classes = [IsAuthenticatedStudent]
+
     def create(self, request, *args, **kwargs):
-        user = request.user
+        student = request.user.student_profile
         resume = request.FILES.get('resume')
-        
+
         if not resume:
             return Response({"detail": "Resume not provided", "status": "error"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        public_url = upload_file_to_supabase(resume, f'resumes/{user.student_profile.id}')
-        
-        serializer = self.get_serializer(data={"resume": public_url, "student": user.student_profile.id, "filename": resume.name})
+
+        if not resume.name.lower().endswith('.pdf'):
+            return Response({"detail": "Only PDF files are allowed", "status": "error"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if resume.size > MAX_RESUME_SIZE:
+            return Response({"detail": "Resume must be 5MB or less", "status": "error"}, status=status.HTTP_400_BAD_REQUEST)
+
+        public_url = upload_file_to_supabase(resume, f'resumes/{student.id}')
+
+        serializer = self.get_serializer(data={"resume": public_url, "filename": resume.name})
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        
+        serializer.save(student=student)
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+@extend_schema(tags=['Students'])
+class DeleteStudentResumeView(generics.DestroyAPIView):
+    serializer_class = StudentResumeSerializer
+    permission_classes = [IsAuthenticatedStudent]
+    lookup_field = 'sqid'
+
+    def get_queryset(self):
+        return StudentResume.objects.filter(student=self.request.user.student_profile)
+
+    def perform_destroy(self, instance):
+        instance.soft_delete()
     
 @extend_schema(tags=['Auth'])
 class CreateAlumnusView(generics.CreateAPIView, PublicGenericAPIView):

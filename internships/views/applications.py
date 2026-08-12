@@ -2,14 +2,12 @@ from django.db import transaction
 
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.parsers import MultiPartParser, FormParser
 
 from drf_spectacular.utils import extend_schema
 
-from internships.models import InternshipApplication, ApplicationResume, InternshipEngagement
+from internships.models import InternshipApplication, InternshipEngagement
 from internships.serializers import (
     InternshipApplicationSerializer,
-    ApplicationResumeSerializer,
     StudentManageInternshipApplicationSerializer,
     AlumnusManageInternshipApplicationSerializer,
     InternshipEngagementSerializer,
@@ -17,7 +15,6 @@ from internships.serializers import (
 from core.models import User
 
 from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
-from futaverse.utils.supabase import upload_file_to_supabase
 
 from engagements.helpers import queryset_by_role
 from engagements.views import AcceptApplicationView, RejectApplicationView, WithdrawApplicationView
@@ -30,14 +27,8 @@ class CreateInternshipApplicationView(generics.CreateAPIView):
 
     @transaction.atomic
     def perform_create(self, serializer):
-        resume = serializer.validated_data.pop('resume', None)
         student = self.request.user.student_profile
-
-        application = serializer.save(student=student)
-
-        if resume:
-            resume.application = application
-            resume.save(update_fields=['application'])
+        serializer.save(student=student)
 
 
 @extend_schema(tags=['Internship Applications'], summary='List all internship applications (alumnus and student)')
@@ -76,29 +67,6 @@ class RetrieveInternshipApplicationView(generics.RetrieveAPIView):
             student_filter=lambda: {"student": self.request.user.student_profile},
             select_related=("internship", "student", "internship__alumnus"),
         )
-
-
-@extend_schema(tags=['Internship Applications'], summary='Upload a resume for an internship application (student)')
-class UploadApplicationResumeView(generics.CreateAPIView):
-    queryset = ApplicationResume.objects.all()
-    serializer_class = ApplicationResumeSerializer
-    parser_classes = [MultiPartParser, FormParser]
-    permission_classes = [IsAuthenticatedStudent]
-
-    def create(self, request, *args, **kwargs):
-        resume = request.FILES.get('resume')
-        student = request.user.student_profile
-
-        if not resume:
-            return Response({"detail": "Resume not provided", "status": "error"}, status=status.HTTP_400_BAD_REQUEST)
-
-        resume_url = upload_file_to_supabase(resume, 'application_resumes/')
-
-        serializer = self.get_serializer(data={'resume': resume_url})
-        serializer.is_valid(raise_exception=True)
-        serializer.save(student=student)
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 @extend_schema(tags=['Internship Applications'], summary='Accept an internship application (alumnus)')

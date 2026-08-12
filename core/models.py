@@ -225,8 +225,9 @@ class StudentProfile(BaseModel):
 
         return match_filter
 class StudentResume(BaseModel):
-    student = models.OneToOneField(StudentProfile, on_delete=models.CASCADE, related_name='resume', blank=True, null=True)
+    student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, related_name='resumes')
     resume = models.URLField(max_length=200)
+    filename = models.CharField(max_length=255)
     uploaded_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):

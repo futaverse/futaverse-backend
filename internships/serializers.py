@@ -2,11 +2,11 @@ from django.shortcuts import get_object_or_404
 
 from rest_framework import serializers
 
-from .models import Internship, InternshipApplication, InternshipOffer, InternshipEngagement, ApplicationResume
+from .models import Internship, InternshipApplication, InternshipOffer, InternshipEngagement
 from engagements.models import EngagementLifecycleStatus
 
-from core.models import StudentProfile, LevelChoices
-from core.serializers import StudentInfoSerializer, AlumniInfoSerializer
+from core.models import StudentProfile, LevelChoices, StudentResume
+from core.serializers import StudentInfoSerializer, AlumniInfoSerializer, StudentResumeSerializer
 
 from engagements.serializers import (
     make_student_manage_offer_serializer,
@@ -98,11 +98,12 @@ class InternshipApplicationSerializer(serializers.ModelSerializer):
     student_info = StudentInfoSerializer(read_only=True, source='student')
     alumnus_info = AlumniInfoSerializer(read_only=True, source='internship.alumnus')
 
-    resume = serializers.SlugRelatedField(queryset=ApplicationResume.objects.all(), required=False, write_only=True, slug_field='sqid')
+    resume = serializers.SlugRelatedField(queryset=StudentResume.objects.all(), required=False, write_only=True, slug_field='sqid')
+    resume_info = StudentResumeSerializer(read_only=True, source='resume')
 
     class Meta:
         model = InternshipApplication
-        fields = ['sqid', 'cover_letter', 'resume', 'internship', 'internship_info', 'student_info', 'alumnus_info', 'status', 'created_at']
+        fields = ['sqid', 'cover_letter', 'resume', 'resume_info', 'internship', 'internship_info', 'student_info', 'alumnus_info', 'status', 'created_at']
         read_only_fields = ['sqid', 'created_at', 'status']
 
     def validate(self, attrs):
@@ -123,22 +124,16 @@ class InternshipApplicationSerializer(serializers.ModelSerializer):
         if require_resume and not resume:
             raise serializers.ValidationError({"detail": "You must upload a resume before applying for this internship."})
 
+        if resume and resume.student != student:
+            raise serializers.ValidationError({"detail": "This resume does not belong to you."})
+
         return validated_data
-
-
-class ApplicationResumeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ApplicationResume
-        fields = ['resume', 'sqid']
-        read_only_fields = ['sqid', 'uploaded_at', 'application', 'student']
 
 
 class InternshipEngagementSerializer(serializers.ModelSerializer):
     internship_info = InternshipSerializer(read_only=True, source='internship')
     student_info = StudentInfoSerializer(read_only=True, source='student')
     alumnus_info = AlumniInfoSerializer(read_only=True, source='alumnus')
-
-    engagement = serializers.CharField(read_only=True, source='engagement_ptr.sqid')
 
     class Meta:
         model = InternshipEngagement

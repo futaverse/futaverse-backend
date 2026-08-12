@@ -5,7 +5,7 @@ from .models import FeedEvent
 
 class FeedCursorPagination(CursorPagination):
     page_size = 20
-    ordering  = ('-created_at', 'id')
+    ordering  = ('-score', '-created_at', 'id')
     
 class FeedEventSerializer(serializers.ModelSerializer):
     score = serializers.IntegerField(read_only=True)

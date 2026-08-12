@@ -119,11 +119,19 @@ class InternshipCRUDEndpointTests(BaseAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["title"], self.valid_data["title"])
 
-    def test_other_alumnus_gets_404_on_retrieve(self):
+    def test_other_alumnus_can_retrieve_internship(self):
         internship = Internship.objects.create(alumnus=self.alumnus.alumni_profile, **{k: v for k, v in self.valid_data.items() if v != "100000.00"}, stipend=100000)
         headers = self._auth_header(self.other_alumnus)
         resp = self.client.get(f"/api/internships/{internship.sqid}", **headers)
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["title"], self.valid_data["title"])
+
+    def test_student_can_retrieve_internship(self):
+        internship = Internship.objects.create(alumnus=self.alumnus.alumni_profile, **{k: v for k, v in self.valid_data.items() if v != "100000.00"}, stipend=100000)
+        headers = self._auth_header(self.student)
+        resp = self.client.get(f"/api/internships/{internship.sqid}", **headers)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["title"], self.valid_data["title"])
 
     def test_soft_deleted_internship_returns_404(self):
         internship = Internship.objects.create(alumnus=self.alumnus.alumni_profile, **{k: v for k, v in self.valid_data.items() if v != "100000.00"}, stipend=100000)

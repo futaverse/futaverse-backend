@@ -1,3 +1,4 @@
+from django.db import transaction
 from django_q.tasks import async_task
 
 from rest_framework import generics
@@ -34,7 +35,7 @@ class ListCreateMentorshipView(generics.ListCreateAPIView):
         alumnus = self.request.user.alumni_profile
         mentorship = serializer.save(alumnus=alumnus)
 
-        async_task("feed.tasks.create_feed_event_task",
+        transaction.on_commit(lambda: async_task("feed.tasks.create_feed_event_task",
             event_type=FeedEvent.EventType.MENTORSHIP_CREATED,
             related_object_id=mentorship.id,
             related_model='mentorship',
@@ -47,7 +48,7 @@ class ListCreateMentorshipView(generics.ListCreateAPIView):
                 'remaining_slots': mentorship.remaining_slots,
                 'created_at': mentorship.created_at.isoformat(),
             }
-        )
+        ))
 
 
 @extend_schema_view(

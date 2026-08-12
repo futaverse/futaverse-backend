@@ -35,6 +35,7 @@ class FeedTarget(models.Model):
         FACULTY = "faculty", "Faculty"
         INDUSTRY = "industry", "Industry"
         COMPANY_TYPE = "company_type", "Company Type"
+        CATEGORY = "category", "Category"
     
     event        = models.ForeignKey(FeedEvent, on_delete=models.CASCADE, related_name='targets')
     target_type  = models.CharField(max_length=50, choices=TARGET_TYPES)

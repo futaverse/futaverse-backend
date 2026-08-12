@@ -2,6 +2,7 @@ from rest_framework import status
 
 from internships.models import Internship, InternshipApplication, InternshipEngagement
 from engagements.models import EngagementLifecycleStatus
+from core.models import StudentResume
 from futaverse.tests_helpers import BaseAPITestCase
 
 
@@ -29,6 +30,27 @@ class InternshipApplicationEndpointTests(BaseAPITestCase):
             student=(student or self.student).student_profile,
             status=EngagementLifecycleStatus.PENDING,
         )
+
+    def _create_resume(self, student_user, filename="resume.pdf"):
+        return StudentResume.objects.create(
+            student=student_user.student_profile,
+            resume=f"http://example.com/resumes/{filename}",
+            filename=filename,
+        )
+
+    def _create_internship(self, **kwargs):
+        defaults = {
+            "alumnus": self.alumnus.alumni_profile,
+            "title": "SE Intern", "description": "desc", "work_mode": "Remote",
+            "engagement_type": "Full-time", "location": "Lagos", "duration_weeks": 12,
+            "start_date": "2026-01-01", "end_date": "2026-03-31",
+            "is_paid": True, "stipend": 100000, "levels": [300],
+            "company": "TC", "company_type": "Tech", "industry": "Tech",
+            "available_slots": 5, "remaining_slots": 5,
+            "require_resume": False,
+        }
+        defaults.update(kwargs)
+        return Internship.objects.create(**defaults)
 
     # --- CREATE ---
     def test_student_can_apply(self):
@@ -85,6 +107,56 @@ class InternshipApplicationEndpointTests(BaseAPITestCase):
         resp = self.client.post("/api/internships/application", {"internship": self.internship.sqid}, format="json")
         self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    # --- RESUME ---
+    def test_apply_with_own_resume_returns_201(self):
+        resume = self._create_resume(self.student)
+        headers = self._auth_header(self.student)
+        resp = self.client.post("/api/internships/application", {
+            "internship": self.internship.sqid,
+            "resume": resume.sqid,
+        }, **headers, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(resp.data["resume_info"]["sqid"], resume.sqid)
+        self.assertEqual(resp.data["resume_info"]["resume"], resume.resume)
+
+    def test_apply_with_other_students_resume_returns_400(self):
+        resume = self._create_resume(self.other_student)
+        headers = self._auth_header(self.student)
+        resp = self.client.post("/api/internships/application", {
+            "internship": self.internship.sqid,
+            "resume": resume.sqid,
+        }, **headers, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_apply_with_soft_deleted_resume_returns_400(self):
+        resume = self._create_resume(self.student)
+        resume.soft_delete()
+        headers = self._auth_header(self.student)
+        resp = self.client.post("/api/internships/application", {
+            "internship": self.internship.sqid,
+            "resume": resume.sqid,
+        }, **headers, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_apply_without_resume_when_required_returns_400(self):
+        internship = self._create_internship(require_resume=True)
+        headers = self._auth_header(self.student)
+        resp = self.client.post("/api/internships/application", {
+            "internship": internship.sqid,
+        }, **headers, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_apply_with_resume_when_required_returns_201(self):
+        internship = self._create_internship(require_resume=True)
+        resume = self._create_resume(self.student)
+        headers = self._auth_header(self.student)
+        resp = self.client.post("/api/internships/application", {
+            "internship": internship.sqid,
+            "resume": resume.sqid,
+        }, **headers, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(resp.data["resume_info"]["sqid"], resume.sqid)
+
     # --- LIST ---
     def test_alumnus_sees_applications_for_own_internship(self):
         self._create_application()
@@ -106,6 +178,18 @@ class InternshipApplicationEndpointTests(BaseAPITestCase):
         resp = self.client.get("/api/internships/applications", **headers)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(len(resp.data), 0)
+
+    def test_alumnus_sees_resume_info_on_application(self):
+        resume = self._create_resume(self.student)
+        app = self._create_application()
+        app.resume = resume
+        app.save(update_fields=["resume"])
+        headers = self._auth_header(self.alumnus)
+        resp = self.client.get("/api/internships/applications", **headers)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        application = resp.data[0]
+        self.assertEqual(application["resume_info"]["sqid"], resume.sqid)
+        self.assertEqual(application["resume_info"]["resume"], resume.resume)
 
     # --- RETRIEVE ---
     def test_student_retrieves_own_application(self):

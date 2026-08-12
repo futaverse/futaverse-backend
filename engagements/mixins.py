@@ -4,14 +4,9 @@ from django.core.cache import cache
 
 from rest_framework.exceptions import ValidationError
 from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
+from futaverse.exceptions import ConflictError
 
 from .models import BaseEngagement
-
-
-class ConflictError(ValidationError):
-    status_code = 409
-    default_detail = "Request already in progress."
-    default_code = "conflict"
 
 
 class MarkEngagementCompletedMixin:

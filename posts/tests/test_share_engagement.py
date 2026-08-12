@@ -33,7 +33,8 @@ class ShareEngagementBehaviorTests(BaseAPITestCase):
     @patch("posts.services.async_task")
     def test_share_engagement_passes_correct_model_key_to_feed(self, mock_task):
         """B3: The 'model' key (not 'model_key') must reach create_feed_event_task."""
-        share_engagement(user=self.student, engagement=self.engagement)
+        with self.captureOnCommitCallbacks(execute=True):
+            share_engagement(user=self.student, engagement=self.engagement)
 
         self.assertTrue(mock_task.called)
         call_kwargs = mock_task.call_args.kwargs
@@ -42,7 +43,8 @@ class ShareEngagementBehaviorTests(BaseAPITestCase):
     @patch("posts.services.async_task")
     def test_share_engagement_completion_passes_correct_model_key(self, mock_task):
         """B3: same fix must apply to share_engagement_completion."""
-        share_engagement_completion(user=self.student, engagement=self.engagement)
+        with self.captureOnCommitCallbacks(execute=True):
+            share_engagement_completion(user=self.student, engagement=self.engagement)
 
         self.assertTrue(mock_task.called)
         call_kwargs = mock_task.call_args.kwargs

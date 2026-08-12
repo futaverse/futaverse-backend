@@ -1,13 +1,19 @@
-from supabase import create_client, Client
+from supabase import create_client
 from django.conf import settings
 import logging
 import uuid
 
 logger = logging.getLogger(__name__)
 
-# Initialize Supabase client
-supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
-bucket_name  = settings.SUPABASE_BUCKET_NAME 
+# Initialize Supabase client lazily to avoid a network call at import time
+supabase = None
+bucket_name = settings.SUPABASE_BUCKET_NAME
+
+def get_supabase():
+    global supabase
+    if supabase is None:
+        supabase = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_KEY)
+    return supabase
 
 def upload_file_to_supabase(file, folder: str, bucket_name=bucket_name, custom_name: str = None):
     """
@@ -35,14 +41,14 @@ def upload_file_to_supabase(file, folder: str, bucket_name=bucket_name, custom_n
         file_bytes = file.read()
 
         # Upload to Supabase
-        response = supabase.storage.from_(bucket_name).upload(
+        response = get_supabase().storage.from_(bucket_name).upload(
             path, 
             file_bytes,
             file_options={"content_type": file.content_type}
         )
         logger.debug("Supabase upload response: %s", response)
 
-        public_url = supabase.storage.from_(bucket_name).get_public_url(path)
+        public_url = get_supabase().storage.from_(bucket_name).get_public_url(path)
 
         if not public_url:
             raise Exception("Failed to retrieve public URL from Supabase.")

@@ -3,7 +3,7 @@ from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 
-from core.models import StudentProfile, AlumniProfile, User
+from core.models import StudentProfile, AlumniProfile
 from futaverse.models import BaseModel
 
 from reviews.models import Review

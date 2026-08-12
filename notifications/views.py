@@ -25,9 +25,11 @@ class ListNotificationsView(generics.ListAPIView):
 class MarkNotificationAsReadView(generics.UpdateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = NotificationSerializer
-    queryset = Notification.objects.none()
     http_method_names = ['patch']
     lookup_field = 'sqid'
+    
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user)
     
     def perform_update(self, serializer):
         notification = serializer.instance
@@ -38,8 +40,10 @@ class MarkNotificationAsReadView(generics.UpdateAPIView):
 class DeleteNotificationView(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = NotificationSerializer
-    queryset = Notification.objects.none()
     lookup_field = 'sqid'
+    
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user)
     
 @extend_schema(tags=['Notifications'], summary="Mark all notifications as read")
 class MarkAllNotificationsAsReadView(generics.GenericAPIView):

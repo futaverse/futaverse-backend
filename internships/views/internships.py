@@ -1,5 +1,7 @@
+from django.db import transaction
 from django_q.tasks import async_task
 from rest_framework import generics
+from rest_framework.permissions import OR
 from drf_spectacular.utils import extend_schema, extend_schema_view
 
 from engagements.mixins import MarkEngagementCompletedMixin, MarkEngagementAcknowledgedMixin
@@ -30,7 +32,7 @@ class ListCreateInternshipView(generics.ListCreateAPIView):
         alumnus = self.request.user.alumni_profile
         internship = serializer.save(alumnus=alumnus)
 
-        async_task("feed.tasks.create_feed_event_task",
+        transaction.on_commit(lambda: async_task("feed.tasks.create_feed_event_task",
             event_type=FeedEvent.EventType.INTERNSHIP_CREATED,
             related_object_id=internship.id,
             related_model='internship',
@@ -46,28 +48,31 @@ class ListCreateInternshipView(generics.ListCreateAPIView):
                 'remaining_slots': internship.remaining_slots,
                 'created_at': internship.created_at.isoformat(),
             }
-        )
-
+        ))
 
 @extend_schema_view(
-    retrieve=extend_schema(summary="Get an internship by id (alumnus)"),
+    retrieve=extend_schema(summary="Get an internship by id (alumnus, student)"),
     update=extend_schema(summary="Update an internship by id (alumnus)"),
     destroy=extend_schema(summary="Delete an internship by id (alumnus)"),
 )
 @extend_schema(tags=['Internships'])
-class RetrieveUpdateDestroyInternshipView(generics.RetrieveUpdateDestroyAPIView):
+class InternshipDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = InternshipSerializer
-    http_method_names = ['patch', 'get', 'delete']
-    permission_classes = [IsAuthenticatedAlumnus]
+    http_method_names = ['get', 'patch', 'delete']
     lookup_field = 'sqid'
 
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [OR(IsAuthenticatedAlumnus(), IsAuthenticatedStudent())]
+        return [IsAuthenticatedAlumnus()]
+
     def get_queryset(self):
-        user = self.request.user
-        return Internship.objects.filter(alumnus=user.alumni_profile).select_related('alumnus')
+        if self.request.method == "GET":
+            return Internship.objects.all()
+        return Internship.objects.filter(alumnus=self.request.user.alumni_profile)
 
     def perform_destroy(self, instance):
         instance.soft_delete()
-
 
 @extend_schema(tags=['Internships'], summary='Toggle internship active status (alumnus)')
 class ToggleInternshipActiveView(generics.UpdateAPIView):

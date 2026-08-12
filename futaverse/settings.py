@@ -10,8 +10,8 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
-DEVELOPMENT = os.getenv("DEVELOPMENT", False)
-DEBUG = DEVELOPMENT
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development").strip().lower()
+DEBUG = ENVIRONMENT == "development"
 
 ALLOWED_HOSTS = ["futaverse-backend.onrender.com", "futaverse-backend-xfcs.onrender.com", "localhost", "127.0.0.1", "0.0.0.0", "futaverse-backend-3.onrender.com"]
 
@@ -184,7 +184,7 @@ CLOUDINARY_STORAGE = {
 
 DEFAULT_FILE_STORAGE = 'storages.backends.s3.S3Storage'
 
-SUPABASE_KEY = os.environ.get('SUPABASE_SERVICE_KEY')
+SUPABASE_SERVICE_KEY = os.environ.get('SUPABASE_SERVICE_KEY')
 SUPABASE_URL = os.environ.get('SUPABASE_URL')
 SUPABASE_BUCKET_NAME = os.environ.get('SUPABASE_BUCKET_NAME', 'futaverse-bucket')
 
@@ -203,7 +203,7 @@ CACHES = {
     }
 }
 
-if not DEVELOPMENT:
+if ENVIRONMENT != "development":
     CACHES["default"]["OPTIONS"]["REDIS_CLIENT_KWARGS"] = {
         "ssl_cert_reqs": ssl.CERT_NONE
     }
@@ -212,10 +212,11 @@ SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
 
     
+_eventstream_redis = urlparse(REDIS_URL)
 EVENTSTREAM_REDIS = {
-    "host": "redis",
-    "port": 6379,
-    "db": 0,
+    "host": _eventstream_redis.hostname or "redis",
+    "port": _eventstream_redis.port or 6379,
+    "db": int(_eventstream_redis.path.lstrip("/") or 0),
 }
 
 Q_CLUSTER = {
@@ -223,10 +224,11 @@ Q_CLUSTER = {
     'workers': 2,             
     'timeout': 60,            
     'retry': 120,             
-    'orm': 'default',         
+    'orm': 'default', 
+    'max_attempts': 3,
     'poll': 5,                
 }
 
 # Engagement auto-acknowledgement delays
-ENGAGEMENT_ACKNOWLEDGEMENT_REMINDER_HOURS = 1 if DEVELOPMENT else 24
-ENGAGEMENT_AUTO_ACKNOWLEDGE_HOURS = 1 if DEVELOPMENT else 48
+ENGAGEMENT_ACKNOWLEDGEMENT_REMINDER_HOURS = 1 if ENVIRONMENT == "development" else 24
+ENGAGEMENT_AUTO_ACKNOWLEDGE_HOURS = 1 if ENVIRONMENT == "development" else 48

@@ -3,7 +3,7 @@
 ## Quick Start
 
 ```powershell
-cp .env.example .env          # or use existing .env
+cp .env.example .env          # no .env.example exists — copy from an existing .env instead
 docker compose up             # starts redis, web (dev server), qcluster
 # OR without Docker:
 python -m venv venv; venv\Scripts\activate
@@ -23,7 +23,7 @@ python manage.py qcluster
 | Create migrations | `python manage.py makemigrations` |
 | Run qcluster worker | `python manage.py qcluster` |
 | Create superuser | `python manage.py createsuperuser` |
-| Run tests | `python manage.py test <app> --settings=test_settings --keepdb --parallel` |
+| Run tests | `python manage.py test <app> --settings=test_settings` (no `--parallel` on Windows — crashes) |
 | Shell | `python manage.py shell` |
 
 ## Style Guide
@@ -53,10 +53,10 @@ python manage.py qcluster
 
 ## Task Queues
 
-Both **django-q** and **Celery** are configured. django-q is the primary active queue:
+Only **django-q** is configured (django-q2, `Q_CLUSTER` in settings, ORM broker). Celery is **not** installed:
 - `python manage.py qcluster` runs the worker
 - Used for: auto-acknowledge, notification sending, feed event creation, impression recording
-- Celery is configured but not actively used in app code
+- `ENVIRONMENT` (development/staging/production) switches auto-ack delays and DEBUG/SSL behavior
 
 ## API Docs
 
@@ -77,20 +77,20 @@ Both **django-q** and **Celery** are configured. django-q is the primary active 
 
 ## Testing
 
-Test files exist per app but are mostly stubs (empty `TestCase` classes). No test suite is actively maintained. Running `python manage.py test` will run all of them.
+Each app has a test package (`<app>/tests/`, built on `futaverse/tests_helpers.py:BaseAPITestCase`). Several apps also carry stub top-level `tests.py` files — an app must not have both `tests.py` and a `tests/` package or test discovery crashes. **Baseline status: ~100 of 183 tests fail — do not assume green.**
 
 **Always use SQLite for tests.** Tests must never hit the production PostgreSQL database. Always run tests with:
 ```
 python manage.py test <app> --settings=test_settings
 ```
-This uses the in-memory SQLite configuration in `test_settings.py` at the project root.
+This uses the SQLite file `test_db.sqlite3` defined in `test_settings.py` at the project root (file-based, not in-memory).
 
 ## Dependencies (key)
 
 - Django 5.x, DRF, djangorestframework-simplejwt
 - drf-spectacular (schema/docs), django-cors-headers
-- django-sqids (SqidsField), django-soft-delete (ActiveManager)
-- django-q (task queue), celery + redis
+- django-sqids (SqidsField); soft delete is a hand-rolled `ActiveManager` in `futaverse/models.py` (no django-soft-delete package)
+- django-q (task queue); redis (cache + eventstream)
 - django-eventstream (SSE), daphne (ASGI)
 - boto3 (S3 storage), cloudinary, paystackapi
 - sib-api-v3-sdk (Brevo email), google-auth, google-api-python-client
@@ -100,4 +100,6 @@ This uses the in-memory SQLite configuration in `test_settings.py` at the projec
 - `.env` contains live credentials — never commit it
 - `db.sqlite3` is committed to the repo (stale local DB)
 - No `opencode.json` config exists
-- `requirements.txt` is committed as a binary file (git LFS or similar)
+- `requirements.txt` is committed as a normal text file (no LFS) — claims of binary tracking are wrong
+- `ENVIRONMENT` must be set to `production` on Render (render.yaml) — `development` is the local default
+- Apps with a top-level `tests.py` stub AND a `tests/` package break `manage.py test` discovery — keep exactly one

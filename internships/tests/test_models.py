@@ -1,7 +1,7 @@
 from django.db import models
 from django.test import TestCase
 
-from internships.models import Internship, InternshipApplication, ApplicationResume
+from internships.models import Internship, InternshipApplication
 from futaverse.tests_helpers import BaseAPITestCase
 
 
@@ -26,23 +26,12 @@ class InternshipModelTests(BaseAPITestCase):
         field = InternshipApplication._meta.get_field("responded_at")
         self.assertTrue(field.null)
 
+    def test_application_resume_nullable(self):
+        """Applications may be created without a resume."""
+        field = InternshipApplication._meta.get_field("resume")
+        self.assertTrue(field.null)
 
-class ApplicationResumeStrTests(TestCase):
-    def test_str_without_application_does_not_crash(self):
-        """B10: __str__ must not crash when application is None."""
-        from core.models import StudentProfile, User
-        user = User.objects.create_user(
-            email="resume@test.com", password="pass", role=User.Role.STUDENT, is_active=True
-        )
-        profile = StudentProfile.objects.create(
-            user=user, phone_num="08000000000", gender="male",
-            firstname="Resume", lastname="Test",
-            address="Addr", state="LA", country="NG",
-            department="CS", faculty="Eng", level=300, cgpa=3.0,
-            skills=[], expected_grad_year="2027",
-        )
-        resume = ApplicationResume.objects.create(
-            student=profile, resume="http://example.com/resume.pdf"
-        )
-        # Should not raise
-        str(resume)
+    def test_application_resume_protected(self):
+        """A resume referenced by an application can never be hard-deleted."""
+        field = InternshipApplication._meta.get_field("resume")
+        self.assertEqual(field.remote_field.on_delete, models.PROTECT)

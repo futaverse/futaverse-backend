@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator
-from core.models import StudentProfile, AlumniProfile
+from core.models import StudentProfile, AlumniProfile, StudentResume
 from futaverse.models import BaseModel
 from django.utils import timezone
 
@@ -84,6 +84,7 @@ class Internship(BaseModel):
 class InternshipApplication(BaseApplication):
     internship = models.ForeignKey(Internship, on_delete=models.CASCADE, related_name='applications')
     student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, related_name='internship_applications')
+    resume = models.ForeignKey(StudentResume, on_delete=models.PROTECT, related_name='applications', null=True, blank=True)
 
     def __str__(self):
         return f"Application of {self.student.full_name} for {self.internship.title} (internship)"
@@ -116,15 +117,3 @@ class InternshipEngagement(BaseEngagement):
 
     def __str__(self):
         return f"Engagement of {self.student.full_name} in {self.internship.title}"
-
-
-class ApplicationResume(BaseModel):
-    application = models.OneToOneField(InternshipApplication, on_delete=models.CASCADE, related_name='resume', blank=True, null=True)
-    student = models.ForeignKey(StudentProfile, on_delete=models.SET_NULL, related_name='application_resumes', null=True)
-    resume = models.URLField(max_length=200)
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        if self.application:
-            return f"Resume of {self.application.student.full_name} for {self.application.internship.title}"
-        return f"Unlinked resume (ID: {self.sqid})"

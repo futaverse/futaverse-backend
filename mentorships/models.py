@@ -114,17 +114,6 @@ class MentorshipOffer(BaseOffer):
         return f"Offer of {self.student.full_name} for {self.mentorship.title} (mentorship)"
 
 
-class MentorshipRequest(BaseOffer):
-    mentor = models.ForeignKey(AlumniProfile, on_delete=models.CASCADE, related_name='mentorship_requests')
-    student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, related_name='mentorship_requests')
-    message = models.TextField()
-
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"Request by {self.student.full_name} to {self.mentor.full_name}"
-
-
 class MentorshipEngagement(BaseEngagement):
     class Source(models.TextChoices):
         APPLICATION = "application", "Application"

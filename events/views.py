@@ -4,7 +4,7 @@ from django.core.cache import cache
 from django_q.tasks import async_task
 
 from rest_framework import generics, status
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
@@ -12,10 +12,7 @@ from drf_spectacular.utils import extend_schema
 
 from payments.models import Subaccount
 
-class ConflictError(ValidationError):
-    status_code = 409
-    default_detail = "Request already in progress."
-    default_code = "conflict"
+from futaverse.exceptions import ConflictError
 
 from .serializers import EventSerializer, CreateTicketSerializer, TicketPurchaseSerializer, UpdateEventSerializer, ListEventSerializer, UpdateEventModeSerializer, ListTicketPurchaseSerializer
 from .models import Event, VirtualMeeting, Ticket, TicketPurchase
@@ -53,7 +50,7 @@ class CreateEventView(generics.CreateAPIView):
             event_service = EventService(event)
             event_service.create_virtual_event(user, platform, attendee_emails=[user.email], redirect_after_auth=redirect_after_auth)
             
-        async_task("feed.tasks.create_feed_event_task", 
+        transaction.on_commit(lambda: async_task("feed.tasks.create_feed_event_task", 
             event_type=FeedEvent.EventType.EVENT_CREATED,
             related_object_id=event.id,
             related_model='event',  
@@ -67,7 +64,7 @@ class CreateEventView(generics.CreateAPIView):
                 'virtual_meeting': event.virtual_meeting.platform,
                 'created_at': event.created_at.isoformat(),
             }
-        )
+        ))
             
 @extend_schema(tags=['Events'], summary="Add ticket for an event")
 class CreateTicketView(generics.CreateAPIView):

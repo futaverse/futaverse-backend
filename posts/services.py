@@ -23,7 +23,7 @@ def share_engagement(user, engagement, custom_text=None):
         related_object=engagement,
     )
 
-    async_task("feed.tasks.create_feed_event_task",
+    transaction.on_commit(lambda: async_task("feed.tasks.create_feed_event_task",
         event_type=plugin.get("feed_event"),
         related_object_id=engagement.id,
         related_model= plugin.get("model"),
@@ -31,7 +31,7 @@ def share_engagement(user, engagement, custom_text=None):
         data={
             **context,
         }
-    )
+    ))
 
     return post
 
@@ -52,7 +52,7 @@ def share_engagement_completion(user, engagement, custom_text=None):
         related_object=engagement,
     )
 
-    async_task("feed.tasks.create_feed_event_task",
+    transaction.on_commit(lambda: async_task("feed.tasks.create_feed_event_task",
         event_type=plugin.get("feed_event"),
         related_object_id=engagement.id,
         related_model= plugin.get("model"),
@@ -60,6 +60,6 @@ def share_engagement_completion(user, engagement, custom_text=None):
         data={
             **context,
         }
-    )
+    ))
 
     return post

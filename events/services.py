@@ -66,7 +66,7 @@ class EventService:
             'user_name': user_name,
             'event_title': event.title,
             'event_date': start_datetime.strftime('%B %d, %Y at %H:%M %p'),
-            'event_location': "Virtual Meeting" if event.mode == "VIRTUAL" else event.venue, # TODO: Add location to event
+            'event_location': "Virtual Meeting" if event.mode in (Event.Mode.VIRTUAL, Event.Mode.HYBRID) else event.venue, # TODO: Add location to event
             'ticket_uid': str(ticket_purchase.ticket_uid),
             'join_url': join_url
         }
