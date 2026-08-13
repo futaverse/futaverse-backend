@@ -64,7 +64,6 @@ class RetrieveMentorshipOfferView(generics.RetrieveAPIView):
 
 @extend_schema(tags=['Mentorship Offers'], summary='Accept a mentorship offer (student)')
 class AcceptMentorshipOfferView(AcceptOfferView):
-    offer_model = MentorshipOffer
     engagement_type = Engagement.EngagementType.MENTORSHIP
     engagement_serializer_class = MentorshipEngagementSerializer
     validation_serializer_class = StudentManageMentorshipOfferSerializer

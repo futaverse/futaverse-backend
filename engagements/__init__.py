@@ -1,11 +1,12 @@
 """
-Engagements — shared abstraction layer for internship and mentorship engagement models.
+Engagements — shared layer for internship and mentorship engagements.
 
 Provides:
-  - BaseEngagement, BaseApplication, BaseOffer abstract models
-  - EngagementLifecycleStatus enum
+  - Engagement concrete model with canonical EngagementType enum
+  - EngagementLifecycleStatus enum and BaseApplication/BaseOffer abstract models
+  - Engagement service (creation, detail resolution, display text, feed events)
   - Generic accept/reject/withdraw views in views.py
-  - Plugin registry for per-type serializers and feed metadata in plugins.py
-  - Task utilities for auto-acknowledge workflow in tasks.py
+  - Serializer registry for engagement feed rendering in plugins.py
+  - Auto-acknowledge task utilities in tasks.py
   - Factory serializers for per-domain validation in serializers.py
 """

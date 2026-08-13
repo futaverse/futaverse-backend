@@ -1,5 +1,5 @@
 from django.core.exceptions import FieldDoesNotExist
-from django.db import models
+from django.db import IntegrityError, models
 from django.test import TestCase
 
 from engagements.models import Engagement
@@ -64,7 +64,6 @@ class InternshipEngagementDetailTests(BaseAPITestCase):
                 InternshipEngagement._meta.get_field(name)
 
     def test_single_origin_constraint_rejects_both_origins(self):
-        from django.db import IntegrityError
         student = self._create_student("stu@test.com")
         alumnus = self._create_alumnus("alum@test.com")
         internship = self.make_internship(alumnus_user=alumnus)
