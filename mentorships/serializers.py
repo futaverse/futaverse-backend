@@ -6,7 +6,7 @@ from core.serializers import StudentInfoSerializer, AlumniInfoSerializer
 from core.models import StudentProfile
 
 from .models import Mentorship, MentorshipOffer, MentorshipApplication, MentorshipEngagement, FocusArea, MentorshipCategory
-from engagements.models import EngagementLifecycleStatus
+from engagements.models import Engagement, EngagementLifecycleStatus
 
 from futaverse.serializers import StrictFieldsMixin
 
@@ -129,9 +129,9 @@ AlumnusManageMentorshipApplicationSerializer = make_alumnus_manage_application_s
 
 
 class MentorshipEngagementFeedSerializer(serializers.ModelSerializer):
-    mentorship_title = serializers.CharField(source='mentorship.title')
+    mentorship_title = serializers.CharField(source='mentorship_detail.mentorship.title')
     mentor_name = serializers.CharField(source='alumnus.full_name')
 
     class Meta:
-        model = MentorshipEngagement
+        model = Engagement
         fields = ['sqid', 'mentorship_title', 'mentor_name', 'status']
