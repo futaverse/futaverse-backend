@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from .models import Internship, InternshipApplication, InternshipOffer, InternshipEngagement
-from engagements.models import EngagementLifecycleStatus
+from engagements.models import Engagement, EngagementLifecycleStatus
 
 from core.models import StudentProfile, LevelChoices, StudentResume
 from core.serializers import StudentInfoSerializer, AlumniInfoSerializer, StudentResumeSerializer
@@ -159,10 +159,10 @@ AlumnusManageInternshipApplicationSerializer = make_alumnus_manage_application_s
 
 
 class InternshipEngagementFeedSerializer(serializers.ModelSerializer):
-    internship_title = serializers.CharField(source='internship.title')
-    company = serializers.CharField(source='internship.company')
+    internship_title = serializers.CharField(source='internship_detail.internship.title')
+    company = serializers.CharField(source='internship_detail.internship.company')
     alumnus_name = serializers.CharField(source='alumnus.full_name')
 
     class Meta:
-        model = InternshipEngagement
+        model = Engagement
         fields = ['sqid', 'internship_title', 'company', 'alumnus_name', 'status']
