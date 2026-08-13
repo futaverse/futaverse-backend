@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from engagements.models import BaseEngagement
+from engagements.models import Engagement
 
 from .models import Post
 from engagements.plugins import get_engagement_plugin
@@ -86,7 +86,7 @@ class ShareEngagementCompletionSerializer(serializers.Serializer):
             student=user.student_profile
         )
         
-        if engagement.status != BaseEngagement.EngagementStatus.ACKNOWLEDGED:
+        if engagement.status != Engagement.EngagementStatus.ACKNOWLEDGED:
             raise ValidationError("Engagement has not been acknowledged by one or both parties.")
 
         content_type = ContentType.objects.get_for_model(engagement_model)

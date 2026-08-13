@@ -142,19 +142,19 @@ class InternshipEngagementSerializer(serializers.ModelSerializer):
 
 
 StudentManageInternshipOfferSerializer = make_student_manage_offer_serializer(
-    InternshipOffer, InternshipEngagement, "internship"
+    InternshipOffer, "internship", Engagement.EngagementType.INTERNSHIP
 )
 
 AlumnusManageInternshipOfferSerializer = make_alumnus_manage_offer_serializer(
-    InternshipOffer, "internship"
+    InternshipOffer, "internship", Engagement.EngagementType.INTERNSHIP
 )
 
 StudentManageInternshipApplicationSerializer = make_student_manage_application_serializer(
-    InternshipApplication, InternshipEngagement, "internship"
+    InternshipApplication, "internship", Engagement.EngagementType.INTERNSHIP
 )
 
 AlumnusManageInternshipApplicationSerializer = make_alumnus_manage_application_serializer(
-    InternshipApplication, InternshipEngagement, "internship"
+    InternshipApplication, "internship", Engagement.EngagementType.INTERNSHIP
 )
 
 

@@ -6,13 +6,14 @@ from rest_framework.views import APIView
 
 from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
 
+from .services import create_engagement
+
 
 class AcceptApplicationView(APIView):
     permission_classes = [IsAuthenticatedAlumnus]
     serializer_class = None
 
-    application_model = None
-    engagement_model = None
+    engagement_type = None
     engagement_serializer_class = None
     validation_serializer_class = None
     relation_name = None
@@ -27,15 +28,12 @@ class AcceptApplicationView(APIView):
         application = serializer.validated_data["application"]
 
         parent = getattr(application, self.relation_name)
-        student = application.student
-        alumnus = parent.alumnus
 
-        engagement = self.engagement_model.objects.create(
-            **{self.relation_name: parent},
-            student=student,
-            alumnus=alumnus,
-            source=self.engagement_model.Source.APPLICATION,
-            source_id=application.id,
+        engagement = create_engagement(
+            engagement_type=self.engagement_type,
+            student=application.student,
+            alumnus=parent.alumnus,
+            application=application,
         )
 
         application.accept()
@@ -98,8 +96,7 @@ class AcceptOfferView(APIView):
     permission_classes = [IsAuthenticatedStudent]
     serializer_class = None
 
-    offer_model = None
-    engagement_model = None
+    engagement_type = None
     engagement_serializer_class = None
     validation_serializer_class = None
     relation_name = None
@@ -114,15 +111,12 @@ class AcceptOfferView(APIView):
         offer = serializer.validated_data["offer"]
 
         parent = getattr(offer, self.relation_name)
-        student = offer.student
-        alumnus = parent.alumnus
 
-        engagement = self.engagement_model.objects.create(
-            **{self.relation_name: parent},
-            student=student,
-            alumnus=alumnus,
-            source=self.engagement_model.Source.OFFER,
-            source_id=offer.id,
+        engagement = create_engagement(
+            engagement_type=self.engagement_type,
+            student=offer.student,
+            alumnus=parent.alumnus,
+            offer=offer,
         )
 
         offer.accept()

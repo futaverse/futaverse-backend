@@ -112,19 +112,19 @@ class MentorshipEngagementSerializer(serializers.ModelSerializer):
 
 
 StudentManageMentorshipOfferSerializer = make_student_manage_offer_serializer(
-    MentorshipOffer, MentorshipEngagement, "mentorship"
+    MentorshipOffer, "mentorship", Engagement.EngagementType.MENTORSHIP
 )
 
 AlumnusManageMentorshipOfferSerializer = make_alumnus_manage_offer_serializer(
-    MentorshipOffer, "mentorship"
+    MentorshipOffer, "mentorship", Engagement.EngagementType.MENTORSHIP
 )
 
 StudentManageMentorshipApplicationSerializer = make_student_manage_application_serializer(
-    MentorshipApplication, MentorshipEngagement, "mentorship"
+    MentorshipApplication, "mentorship", Engagement.EngagementType.MENTORSHIP
 )
 
 AlumnusManageMentorshipApplicationSerializer = make_alumnus_manage_application_serializer(
-    MentorshipApplication, MentorshipEngagement, "mentorship"
+    MentorshipApplication, "mentorship", Engagement.EngagementType.MENTORSHIP
 )
 
 

@@ -1,5 +1,4 @@
-from internships.models import Internship, InternshipEngagement
-from engagements.models import BaseEngagement, EngagementLifecycleStatus
+from engagements.models import Engagement
 from futaverse.tests_helpers import BaseAPITestCase
 
 
@@ -15,18 +14,20 @@ class EngagementFactoryTests(BaseAPITestCase):
         student = self._create_student("stu@test.com")
         internship = self.make_internship(alumnus_user=alumnus)
         engagement = self.make_engagement(
-            InternshipEngagement,
+            Engagement.EngagementType.INTERNSHIP,
             student_user=student,
             alumnus_user=alumnus,
             internship=internship,
         )
         self.assertIsNotNone(engagement.sqid)
-        self.assertEqual(engagement.status, BaseEngagement.EngagementStatus.ACTIVE)
+        self.assertEqual(engagement.status, Engagement.EngagementStatus.ACTIVE)
+        self.assertEqual(engagement.engagement_type, Engagement.EngagementType.INTERNSHIP)
 
     def test_make_application_factory_works(self):
         alumnus = self._create_alumnus("alum@test.com")
         student = self._create_student("stu@test.com")
         internship = self.make_internship(alumnus_user=alumnus)
+        from engagements.models import EngagementLifecycleStatus
         from internships.models import InternshipApplication
         app = self.make_application(
             InternshipApplication,

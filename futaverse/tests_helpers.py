@@ -108,16 +108,39 @@ class BaseAPITestCase(APITestCase):
         defaults.update(kwargs)
         return Mentorship.objects.create(alumnus=alumnus_user.alumni_profile, **defaults)
 
-    def make_engagement(self, engagement_model, *, student_user, alumnus_user, **kwargs):
-        defaults = dict(
+    def make_engagement(self, engagement_type, *, student_user, alumnus_user, **detail_kwargs):
+        from engagements.models import Engagement
+        from engagements.services import create_engagement
+
+        application = detail_kwargs.pop("application", None)
+        offer = detail_kwargs.pop("offer", None)
+
+        if application is None and offer is None:
+            if engagement_type == Engagement.EngagementType.INTERNSHIP:
+                internship = detail_kwargs.pop("internship")
+                from internships.models import InternshipApplication
+                application = self.make_application(
+                    InternshipApplication,
+                    student_user=student_user,
+                    internship=internship,
+                )
+            elif engagement_type == Engagement.EngagementType.MENTORSHIP:
+                mentorship = detail_kwargs.pop("mentorship")
+                from mentorships.models import MentorshipApplication
+                application = self.make_application(
+                    MentorshipApplication,
+                    student_user=student_user,
+                    mentorship=mentorship,
+                    cover_letter="Factory application",
+                )
+
+        return create_engagement(
+            engagement_type=engagement_type,
             student=student_user.student_profile,
             alumnus=alumnus_user.alumni_profile,
-            source="application",
-            source_id=1,
-            status="active",
+            application=application,
+            offer=offer,
         )
-        defaults.update(kwargs)
-        return engagement_model.objects.create(**defaults)
 
     def make_application(self, application_model, *, student_user, **kwargs):
         from engagements.models import EngagementLifecycleStatus

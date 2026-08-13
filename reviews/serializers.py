@@ -5,7 +5,7 @@ from pytz import timezone
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from engagements.models import BaseEngagement
+from engagements.models import Engagement
 from futaverse.lib import MODELS
 from reviews.models import Review
 from core.serializers import StudentInfoSerializer, AlumniInfoSerializer
@@ -72,7 +72,7 @@ class CreateReviewSerializer(serializers.Serializer):
 
         engagement = get_object_or_404(engagement_model, sqid=engagement_id)
         
-        if engagement.status != BaseEngagement.EngagementStatus.ACKNOWLEDGED:
+        if engagement.status != Engagement.EngagementStatus.ACKNOWLEDGED:
             raise ValidationError("Engagement has not been acknowledged by one or both parties.")
 
         content_type = ContentType.objects.get_for_model(engagement_model)
