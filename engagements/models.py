@@ -8,6 +8,46 @@ from futaverse.models import BaseModel
 
 from reviews.models import Review
 
+
+class Engagement(BaseModel):
+    class EngagementType(models.TextChoices):
+        INTERNSHIP = "internship_engagement", "Internship"
+        MENTORSHIP = "mentorship_engagement", "Mentorship"
+
+    class EngagementStatus(models.TextChoices):
+        ACTIVE = "active", "Active"
+        COMPLETED = "completed", "Completed"
+        ACKNOWLEDGED = "acknowledged", "Acknowledged"
+        TERMINATED = "terminated", "Terminated"
+        ARCHIVED = "archived", "Archived"
+
+    engagement_type = models.CharField(choices=EngagementType.choices, max_length=30)
+    student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, related_name='engagements')
+    alumnus = models.ForeignKey(AlumniProfile, on_delete=models.CASCADE, related_name='engagements')
+
+    status = models.CharField(choices=EngagementStatus.choices, max_length=20, default=EngagementStatus.ACTIVE)
+
+    reviews = GenericRelation(Review, related_query_name='engagement')
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def is_status_active(self):
+        return self.status == self.EngagementStatus.ACTIVE
+
+    @property
+    def detail(self):
+        related_name = f"{self.engagement_type.removesuffix('_engagement')}_detail"
+        return getattr(self, related_name, None)
+
+    def update_status(self, status):
+        self.status = status
+        self.save(update_fields=['status', 'updated_at'])
+
+    def __str__(self):
+        return f"Engagement of {self.student.full_name} with {self.alumnus.full_name} ({self.engagement_type})"
+
+
 class BaseEngagement(BaseModel):
     class EngagementStatus(models.TextChoices):
         ACTIVE = "active", "Active"
