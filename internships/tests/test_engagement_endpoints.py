@@ -1,12 +1,15 @@
 from rest_framework import status
 
-from internships.models import Internship, InternshipEngagement
-from engagements.models import BaseEngagement
+from django.core.cache import cache
+
+from internships.models import Internship
+from engagements.models import Engagement
 from futaverse.tests_helpers import BaseAPITestCase
 
 
 class InternshipEngagementEndpointTests(BaseAPITestCase):
     def setUp(self):
+        cache.clear()
         self.alumnus = self._create_alumnus("alum@test.com")
         self.other_alumnus = self._create_alumnus("other@test.com", firstname="Other")
         self.student = self._create_student("stu@test.com")
@@ -22,13 +25,11 @@ class InternshipEngagementEndpointTests(BaseAPITestCase):
             available_slots=5, remaining_slots=5,
         )
 
-        self.engagement = InternshipEngagement.objects.create(
+        self.engagement = self.make_engagement(
+            Engagement.EngagementType.INTERNSHIP,
+            student_user=self.student,
+            alumnus_user=self.alumnus,
             internship=self.internship,
-            student=self.student.student_profile,
-            alumnus=self.alumnus.alumni_profile,
-            source=InternshipEngagement.Source.APPLICATION,
-            source_id=1,
-            status=BaseEngagement.EngagementStatus.ACTIVE,
         )
 
     # --- LIST ---
@@ -78,7 +79,7 @@ class InternshipEngagementEndpointTests(BaseAPITestCase):
         resp = self.client.patch(f"/api/internships/engagements/{self.engagement.sqid}/completed", **headers)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.engagement.refresh_from_db()
-        self.assertEqual(self.engagement.status, BaseEngagement.EngagementStatus.COMPLETED)
+        self.assertEqual(self.engagement.status, Engagement.EngagementStatus.COMPLETED)
 
     def test_other_alumnus_gets_404_on_complete(self):
         headers = self._auth_header(self.other_alumnus)
@@ -86,7 +87,7 @@ class InternshipEngagementEndpointTests(BaseAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_cannot_complete_non_active_engagement(self):
-        self.engagement.status = BaseEngagement.EngagementStatus.COMPLETED
+        self.engagement.status = Engagement.EngagementStatus.COMPLETED
         self.engagement.save(update_fields=["status"])
         headers = self._auth_header(self.alumnus)
         resp = self.client.patch(f"/api/internships/engagements/{self.engagement.sqid}/completed", **headers)
@@ -99,13 +100,13 @@ class InternshipEngagementEndpointTests(BaseAPITestCase):
 
     # --- ACKNOWLEDGE ---
     def test_student_acknowledges_completed_engagement(self):
-        self.engagement.status = BaseEngagement.EngagementStatus.COMPLETED
+        self.engagement.status = Engagement.EngagementStatus.COMPLETED
         self.engagement.save(update_fields=["status"])
         headers = self._auth_header(self.student)
         resp = self.client.patch(f"/api/internships/engagements/{self.engagement.sqid}/acknowledged", **headers)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.engagement.refresh_from_db()
-        self.assertEqual(self.engagement.status, BaseEngagement.EngagementStatus.ACKNOWLEDGED)
+        self.assertEqual(self.engagement.status, Engagement.EngagementStatus.ACKNOWLEDGED)
 
     def test_alumnus_cannot_acknowledge_engagement(self):
         headers = self._auth_header(self.alumnus)

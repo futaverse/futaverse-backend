@@ -5,7 +5,7 @@ from rest_framework.response import Response
 
 from drf_spectacular.utils import extend_schema
 
-from internships.models import InternshipApplication, InternshipEngagement
+from internships.models import InternshipApplication
 from internships.serializers import (
     InternshipApplicationSerializer,
     StudentManageInternshipApplicationSerializer,
@@ -16,6 +16,7 @@ from core.models import User
 
 from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
 
+from engagements.models import Engagement
 from engagements.helpers import queryset_by_role
 from engagements.views import AcceptApplicationView, RejectApplicationView, WithdrawApplicationView
 
@@ -71,8 +72,7 @@ class RetrieveInternshipApplicationView(generics.RetrieveAPIView):
 
 @extend_schema(tags=['Internship Applications'], summary='Accept an internship application (alumnus)')
 class AcceptInternshipApplicationView(AcceptApplicationView):
-    application_model = InternshipApplication
-    engagement_model = InternshipEngagement
+    engagement_type = Engagement.EngagementType.INTERNSHIP
     engagement_serializer_class = InternshipEngagementSerializer
     validation_serializer_class = AlumnusManageInternshipApplicationSerializer
     relation_name = "internship"

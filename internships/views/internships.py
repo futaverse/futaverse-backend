@@ -6,8 +6,9 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
 
 from engagements.mixins import MarkEngagementCompletedMixin, MarkEngagementAcknowledgedMixin
 from engagements.helpers import queryset_by_role
+from engagements.models import Engagement
 
-from internships.models import Internship, InternshipEngagement
+from internships.models import Internship
 from internships.serializers import InternshipSerializer, InternshipStatusSerializer, InternshipEngagementSerializer
 from core.models import User
 from feed.models import FeedEvent
@@ -96,10 +97,21 @@ class ListInternshipEngagementsView(generics.ListAPIView):
     def get_queryset(self):
         return queryset_by_role(
             self.request.user,
-            InternshipEngagement,
-            alumnus_filter=lambda: {"alumnus": self.request.user.alumni_profile},
-            student_filter=lambda: {"student": self.request.user.student_profile},
-            select_related=("internship", "student", "alumnus"),
+            Engagement,
+            alumnus_filter=lambda: {
+                "engagement_type": Engagement.EngagementType.INTERNSHIP,
+                "alumnus": self.request.user.alumni_profile,
+            },
+            student_filter=lambda: {
+                "engagement_type": Engagement.EngagementType.INTERNSHIP,
+                "student": self.request.user.student_profile,
+            },
+            select_related=(
+                "student", "alumnus",
+                "internship_detail__internship",
+                "internship_detail__application",
+                "internship_detail__offer",
+            ),
         )
 
 
@@ -112,22 +124,33 @@ class RetrieveInternshipEngagementView(generics.RetrieveAPIView):
     def get_queryset(self):
         return queryset_by_role(
             self.request.user,
-            InternshipEngagement,
-            alumnus_filter=lambda: {"alumnus": self.request.user.alumni_profile},
-            student_filter=lambda: {"student": self.request.user.student_profile},
-            select_related=("internship", "student", "alumnus"),
+            Engagement,
+            alumnus_filter=lambda: {
+                "engagement_type": Engagement.EngagementType.INTERNSHIP,
+                "alumnus": self.request.user.alumni_profile,
+            },
+            student_filter=lambda: {
+                "engagement_type": Engagement.EngagementType.INTERNSHIP,
+                "student": self.request.user.student_profile,
+            },
+            select_related=(
+                "student", "alumnus",
+                "internship_detail__internship",
+                "internship_detail__application",
+                "internship_detail__offer",
+            ),
         )
 
 
 @extend_schema(tags=['Internship Engagements'], summary='Mark an internship engagement as completed (alumnus)')
 class MarkInternshipCompletedView(MarkEngagementCompletedMixin, generics.UpdateAPIView):
-    queryset = InternshipEngagement.objects.all()
-    engagement_type = 'internship_engagement'
+    queryset = Engagement.objects.all()
+    engagement_type = Engagement.EngagementType.INTERNSHIP
     serializer_class = InternshipEngagementSerializer
 
 
 @extend_schema(tags=['Internship Engagements'], summary='Mark an internship engagement as acknowledged (student)')
 class MarkInternshipAcknowledgedView(MarkEngagementAcknowledgedMixin, generics.UpdateAPIView):
-    queryset = InternshipEngagement.objects.all()
-    engagement_type = 'internship_engagement'
+    queryset = Engagement.objects.all()
+    engagement_type = Engagement.EngagementType.INTERNSHIP
     serializer_class = InternshipEngagementSerializer

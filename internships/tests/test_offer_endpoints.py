@@ -1,7 +1,7 @@
 from rest_framework import status
 
-from internships.models import Internship, InternshipOffer, InternshipEngagement
-from engagements.models import EngagementLifecycleStatus
+from internships.models import Internship, InternshipOffer
+from engagements.models import Engagement, EngagementLifecycleStatus
 from futaverse.tests_helpers import BaseAPITestCase
 
 
@@ -59,9 +59,11 @@ class InternshipOfferEndpointTests(BaseAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_cannot_create_offer_for_already_engaged_student(self):
-        InternshipEngagement.objects.create(
-            internship=self.internship, student=self.student.student_profile,
-            alumnus=self.alumnus.alumni_profile, source="offer", source_id=1,
+        self.make_engagement(
+            Engagement.EngagementType.INTERNSHIP,
+            student_user=self.student,
+            alumnus_user=self.alumnus,
+            internship=self.internship,
         )
         headers = self._auth_header(self.alumnus)
         resp = self.client.post("/api/internships/offer", {
@@ -175,9 +177,11 @@ class InternshipOfferEndpointTests(BaseAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_already_engaged_student_cannot_accept(self):
-        InternshipEngagement.objects.create(
-            internship=self.internship, student=self.student.student_profile,
-            alumnus=self.alumnus.alumni_profile, source="offer", source_id=1,
+        self.make_engagement(
+            Engagement.EngagementType.INTERNSHIP,
+            student_user=self.student,
+            alumnus_user=self.alumnus,
+            internship=self.internship,
         )
         offer = self._create_offer()
         headers = self._auth_header(self.student)

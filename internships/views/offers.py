@@ -2,7 +2,7 @@ from drf_spectacular.utils import extend_schema
 
 from rest_framework import generics
 
-from internships.models import InternshipOffer, InternshipEngagement
+from internships.models import InternshipOffer
 from internships.serializers import (
     InternshipOfferSerializer,
     StudentManageInternshipOfferSerializer,
@@ -13,6 +13,7 @@ from core.models import User
 
 from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
 
+from engagements.models import Engagement
 from engagements.helpers import queryset_by_role
 from engagements.views import AcceptOfferView, RejectOfferView, WithdrawOfferView
 
@@ -63,8 +64,7 @@ class RetrieveInternshipOfferView(generics.RetrieveAPIView):
 
 @extend_schema(tags=['Internship Offers'], summary='Accept an internship offer (student)')
 class AcceptInternshipOfferView(AcceptOfferView):
-    offer_model = InternshipOffer
-    engagement_model = InternshipEngagement
+    engagement_type = Engagement.EngagementType.INTERNSHIP
     engagement_serializer_class = InternshipEngagementSerializer
     validation_serializer_class = StudentManageInternshipOfferSerializer
     relation_name = "internship"
