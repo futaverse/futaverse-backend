@@ -8,8 +8,9 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
 
 from engagements.mixins import MarkEngagementCompletedMixin, MarkEngagementAcknowledgedMixin
 from engagements.helpers import queryset_by_role
+from engagements.models import Engagement
 
-from mentorships.models import Mentorship, MentorshipEngagement, FocusArea, MentorshipCategory
+from mentorships.models import Mentorship, FocusArea, MentorshipCategory
 from mentorships.serializers import MentorshipSerializer, MentorshipStatusSerializer, MentorshipEngagementSerializer
 
 from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
@@ -93,10 +94,21 @@ class ListMentorshipEngagementsView(generics.ListAPIView):
     def get_queryset(self):
         return queryset_by_role(
             self.request.user,
-            MentorshipEngagement,
-            alumnus_filter=lambda: {"alumnus": self.request.user.alumni_profile},
-            student_filter=lambda: {"student": self.request.user.student_profile},
-            select_related=("mentorship", "student", "alumnus"),
+            Engagement,
+            alumnus_filter=lambda: {
+                "engagement_type": Engagement.EngagementType.MENTORSHIP,
+                "alumnus": self.request.user.alumni_profile,
+            },
+            student_filter=lambda: {
+                "engagement_type": Engagement.EngagementType.MENTORSHIP,
+                "student": self.request.user.student_profile,
+            },
+            select_related=(
+                "student", "alumnus",
+                "mentorship_detail__mentorship",
+                "mentorship_detail__application",
+                "mentorship_detail__offer",
+            ),
         )
 
 
@@ -109,10 +121,21 @@ class RetrieveMentorshipEngagementView(generics.RetrieveAPIView):
     def get_queryset(self):
         return queryset_by_role(
             self.request.user,
-            MentorshipEngagement,
-            alumnus_filter=lambda: {"alumnus": self.request.user.alumni_profile},
-            student_filter=lambda: {"student": self.request.user.student_profile},
-            select_related=("mentorship", "student", "alumnus"),
+            Engagement,
+            alumnus_filter=lambda: {
+                "engagement_type": Engagement.EngagementType.MENTORSHIP,
+                "alumnus": self.request.user.alumni_profile,
+            },
+            student_filter=lambda: {
+                "engagement_type": Engagement.EngagementType.MENTORSHIP,
+                "student": self.request.user.student_profile,
+            },
+            select_related=(
+                "student", "alumnus",
+                "mentorship_detail__mentorship",
+                "mentorship_detail__application",
+                "mentorship_detail__offer",
+            ),
         )
 
 
@@ -129,13 +152,13 @@ class MentorshipChoicesView(generics.GenericAPIView):
 
 @extend_schema(tags=['Mentorship Engagements'], summary='Mark a mentorship engagement as completed (alumnus)')
 class MarkMentorshipCompletedView(MarkEngagementCompletedMixin, generics.UpdateAPIView):
-    queryset = MentorshipEngagement.objects.all()
-    engagement_type = 'mentorship_engagement'
+    queryset = Engagement.objects.all()
+    engagement_type = Engagement.EngagementType.MENTORSHIP
     serializer_class = MentorshipEngagementSerializer
 
 
 @extend_schema(tags=['Mentorship Engagements'], summary='Mark a mentorship engagement as acknowledged (student)')
 class MarkMentorshipAcknowledgedView(MarkEngagementAcknowledgedMixin, generics.UpdateAPIView):
-    queryset = MentorshipEngagement.objects.all()
-    engagement_type = 'mentorship_engagement'
+    queryset = Engagement.objects.all()
+    engagement_type = Engagement.EngagementType.MENTORSHIP
     serializer_class = MentorshipEngagementSerializer
