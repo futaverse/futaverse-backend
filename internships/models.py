@@ -126,7 +126,6 @@ class InternshipEngagement(BaseModel):
                 check=(
                     models.Q(application__isnull=False, offer__isnull=True)
                     | models.Q(application__isnull=True, offer__isnull=False)
-                    | models.Q(is_deleted=True)
                 ),
                 name='internship_engagement_single_origin',
             )
