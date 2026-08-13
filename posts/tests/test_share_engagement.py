@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from posts.services import share_engagement, share_engagement_completion
 from futaverse.tests_helpers import BaseAPITestCase
-from internships.models import InternshipEngagement
+from engagements.models import Engagement
 
 
 class ShareEngagementImportTests(TestCase):
@@ -24,7 +24,7 @@ class ShareEngagementBehaviorTests(BaseAPITestCase):
         self.alumnus = self._create_alumnus("alum@test.com")
         self.internship = self.make_internship(alumnus_user=self.alumnus)
         self.engagement = self.make_engagement(
-            InternshipEngagement,
+            Engagement.EngagementType.INTERNSHIP,
             student_user=self.student,
             alumnus_user=self.alumnus,
             internship=self.internship,
