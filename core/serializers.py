@@ -94,6 +94,7 @@ class StudentProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentProfile
         exclude = ['user', 'id', 'is_deleted', 'deleted_at']
+        read_only_fields = ['avg_rating', 'total_reviews']
         
 class StudentInfoSerializer(serializers.ModelSerializer):
     # profile_img = serializers.SerializerMethodField()
@@ -138,7 +139,7 @@ class AlumniProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = AlumniProfile
         exclude = ['user', 'id', 'is_deleted', 'deleted_at']
-        
+        read_only_fields = ['avg_rating', 'total_reviews']
 
 class AlumniInfoSerializer(serializers.ModelSerializer):
     class Meta:
