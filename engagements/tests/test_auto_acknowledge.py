@@ -3,9 +3,8 @@ from unittest.mock import patch
 from django.test import TestCase
 
 from engagements.tasks import auto_acknowledge_engagement
-from engagements.models import BaseEngagement
+from engagements.models import Engagement
 from futaverse.tests_helpers import BaseAPITestCase
-from internships.models import InternshipEngagement
 
 
 class AutoAcknowledgeEngagementTests(BaseAPITestCase):
@@ -16,7 +15,7 @@ class AutoAcknowledgeEngagementTests(BaseAPITestCase):
         self.alumnus = self._create_alumnus("alum@test.com")
         self.internship = self.make_internship(alumnus_user=self.alumnus)
         self.engagement = self.make_engagement(
-            InternshipEngagement,
+            Engagement.EngagementType.INTERNSHIP,
             student_user=self.student,
             alumnus_user=self.alumnus,
             internship=self.internship,
@@ -24,29 +23,29 @@ class AutoAcknowledgeEngagementTests(BaseAPITestCase):
 
     @patch("engagements.tasks.async_task")
     def test_completed_engagement_is_acknowledged(self, mock_task):
-        self.engagement.status = BaseEngagement.EngagementStatus.COMPLETED
+        self.engagement.status = Engagement.EngagementStatus.COMPLETED
         self.engagement.save(update_fields=["status"])
 
         auto_acknowledge_engagement(self.engagement.sqid, "internship_engagement")
 
         self.engagement.refresh_from_db()
-        self.assertEqual(self.engagement.status, BaseEngagement.EngagementStatus.ACKNOWLEDGED)
+        self.assertEqual(self.engagement.status, Engagement.EngagementStatus.ACKNOWLEDGED)
 
     @patch("engagements.tasks.async_task")
     def test_active_engagement_is_not_acknowledged(self, mock_task):
-        self.engagement.status = BaseEngagement.EngagementStatus.ACTIVE
+        self.engagement.status = Engagement.EngagementStatus.ACTIVE
         self.engagement.save(update_fields=["status"])
 
         auto_acknowledge_engagement(self.engagement.sqid, "internship_engagement")
 
         self.engagement.refresh_from_db()
-        self.assertEqual(self.engagement.status, BaseEngagement.EngagementStatus.ACTIVE)
+        self.assertEqual(self.engagement.status, Engagement.EngagementStatus.ACTIVE)
         mock_task.assert_not_called()
 
     @patch("engagements.tasks.async_task")
     def test_notification_uses_plugin_domain_not_string_replace(self, mock_task):
         """Task 2 fix: notification content must use plugin['domain'], not replace()."""
-        self.engagement.status = BaseEngagement.EngagementStatus.COMPLETED
+        self.engagement.status = Engagement.EngagementStatus.COMPLETED
         self.engagement.save(update_fields=["status"])
 
         auto_acknowledge_engagement(self.engagement.sqid, "internship_engagement")

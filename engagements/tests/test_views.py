@@ -28,28 +28,32 @@ class GenericViewClassTests(TestCase):
 
     def test_accept_application_view_has_required_attributes(self):
         view = AcceptApplicationView()
-        self.assertIsNone(view.application_model)
-        self.assertIsNone(view.engagement_model)
+        self.assertIsNone(view.engagement_type)
         self.assertIsNone(view.engagement_serializer_class)
         self.assertIsNone(view.validation_serializer_class)
         self.assertIsNone(view.relation_name)
 
     def test_accept_application_view_can_be_subclassed(self):
         class Subclass(AcceptApplicationView):
-            application_model = "Fake"
-            engagement_model = "Fake"
+            engagement_type = "Fake"
             engagement_serializer_class = "Fake"
             validation_serializer_class = "Fake"
             relation_name = "test"
 
-        self.assertEqual(Subclass.application_model, "Fake")
+        self.assertEqual(Subclass.engagement_type, "Fake")
         self.assertEqual(Subclass.relation_name, "test")
         self.assertEqual(Subclass.permission_classes, [IsAuthenticatedAlumnus])
 
+    def test_accept_offer_view_has_required_attributes(self):
+        view = AcceptOfferView()
+        self.assertIsNone(view.engagement_type)
+        self.assertIsNone(view.engagement_serializer_class)
+        self.assertIsNone(view.validation_serializer_class)
+        self.assertIsNone(view.relation_name)
+
     def test_accept_offer_view_can_be_subclassed(self):
         class Subclass(AcceptOfferView):
-            offer_model = "Fake"
-            engagement_model = "Fake"
+            engagement_type = "Fake"
             engagement_serializer_class = "Fake"
             validation_serializer_class = "Fake"
             relation_name = "test"

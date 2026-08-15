@@ -82,7 +82,7 @@ def _create_internship(alumnus):
     )
 
 
-class BaseEngagementLifecycleTests(TestCase):
+class EngagementLifecycleTests(TestCase):
     def setUp(self):
         self.student = _create_student()
         self.alumnus = _create_alumnus()

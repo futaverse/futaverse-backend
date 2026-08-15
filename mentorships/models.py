@@ -3,7 +3,7 @@ from core.models import AlumniProfile, StudentProfile
 from futaverse.models import BaseModel
 from django.utils import timezone
 
-from engagements.models import BaseEngagement, BaseApplication, BaseOffer, EngagementLifecycleStatus
+from engagements.models import Engagement, BaseApplication, BaseOffer, EngagementLifecycleStatus
 
 
 class FocusArea(models.TextChoices):
@@ -114,13 +114,40 @@ class MentorshipOffer(BaseOffer):
         return f"Offer of {self.student.full_name} for {self.mentorship.title} (mentorship)"
 
 
-class MentorshipEngagement(BaseEngagement):
+class MentorshipEngagement(BaseModel):
     class Source(models.TextChoices):
         APPLICATION = "application", "Application"
         OFFER = "offer", "Offer"
         REQUEST = "request", "Request"
 
+    engagement = models.OneToOneField(
+        Engagement,
+        on_delete=models.CASCADE,
+        related_name='mentorship_detail',
+    )
     mentorship = models.ForeignKey(Mentorship, on_delete=models.CASCADE, related_name='engagements')
+    application = models.ForeignKey(
+        MentorshipApplication, on_delete=models.PROTECT,
+        null=True, blank=True, related_name='engagements',
+    )
+    offer = models.ForeignKey(
+        MentorshipOffer, on_delete=models.PROTECT,
+        null=True, blank=True, related_name='engagements',
+    )
+    # Deferred: the Request origin is specified in Decision 4 of the spec. The
+    # MentorshipRequest model was removed in migration 0004 and will be
+    # reintroduced later; add the typed FK and extend the origin constraint then.
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    models.Q(application__isnull=False, offer__isnull=True)
+                    | models.Q(application__isnull=True, offer__isnull=False)
+                ),
+                name='mentorship_engagement_single_origin',
+            )
+        ]
 
     @property
     def post_context(self):
@@ -132,4 +159,4 @@ class MentorshipEngagement(BaseEngagement):
         }
 
     def __str__(self):
-        return f"Engagement of {self.student.full_name} in {self.mentorship.title}"
+        return f"Engagement of {self.engagement.student.full_name} in {self.mentorship.title}"

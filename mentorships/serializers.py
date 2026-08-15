@@ -6,7 +6,8 @@ from core.serializers import StudentInfoSerializer, AlumniInfoSerializer
 from core.models import StudentProfile
 
 from .models import Mentorship, MentorshipOffer, MentorshipApplication, MentorshipEngagement, FocusArea, MentorshipCategory
-from engagements.models import EngagementLifecycleStatus
+from engagements.models import Engagement, EngagementLifecycleStatus
+from engagements.services import get_engagement_detail
 
 from futaverse.serializers import StrictFieldsMixin
 
@@ -63,7 +64,12 @@ class MentorshipOfferSerializer(serializers.ModelSerializer):
         if MentorshipOffer.objects.filter(mentorship=mentorship, student=student, status=EngagementLifecycleStatus.PENDING).exists():
             raise serializers.ValidationError({"detail": "You have already offered this mentorship to this student."})
 
-        if MentorshipEngagement.objects.filter(mentorship=mentorship, student=student, status=MentorshipEngagement.EngagementStatus.ACTIVE).exists():
+        if Engagement.objects.filter(
+            engagement_type=Engagement.EngagementType.MENTORSHIP,
+            student=student,
+            status=Engagement.EngagementStatus.ACTIVE,
+            mentorship_detail__mentorship=mentorship,
+        ).exists():
             raise serializers.ValidationError({"detail": "You are already engaged in this mentorship."})
 
         return validated_data
@@ -101,37 +107,59 @@ class MentorshipApplicationSerializer(serializers.ModelSerializer):
 
 
 class MentorshipEngagementSerializer(serializers.ModelSerializer):
-    mentorship_info = MentorshipSerializer(source='mentorship', read_only=True)
+    mentorship_info = MentorshipSerializer(read_only=True, source='mentorship_detail.mentorship')
     student_info = StudentInfoSerializer(read_only=True, source='student')
     alumnus_info = AlumniInfoSerializer(read_only=True, source='alumnus')
+    source = serializers.SerializerMethodField()
+    source_id = serializers.SerializerMethodField()
 
     class Meta:
-        model = MentorshipEngagement
-        exclude = ['deleted_at', 'is_deleted', 'id', 'mentorship', 'student', 'alumnus']
-        read_only_fields = ['sqid', 'created_at']
+        model = Engagement
+        fields = [
+            'sqid', 'status', 'source', 'source_id',
+            'mentorship_info', 'student_info', 'alumnus_info',
+            'created_at', 'updated_at',
+        ]
+        read_only_fields = fields
+
+    def get_source(self, obj):
+        detail = get_engagement_detail(obj)
+        if detail is None:
+            return None
+        if detail.application_id is not None:
+            return MentorshipEngagement.Source.APPLICATION
+        if detail.offer_id is not None:
+            return MentorshipEngagement.Source.OFFER
+        return None
+
+    def get_source_id(self, obj):
+        detail = get_engagement_detail(obj)
+        if detail is None:
+            return None
+        return detail.application_id or detail.offer_id
 
 
 StudentManageMentorshipOfferSerializer = make_student_manage_offer_serializer(
-    MentorshipOffer, MentorshipEngagement, "mentorship"
+    MentorshipOffer, "mentorship", Engagement.EngagementType.MENTORSHIP
 )
 
 AlumnusManageMentorshipOfferSerializer = make_alumnus_manage_offer_serializer(
-    MentorshipOffer, "mentorship"
+    MentorshipOffer, "mentorship", Engagement.EngagementType.MENTORSHIP
 )
 
 StudentManageMentorshipApplicationSerializer = make_student_manage_application_serializer(
-    MentorshipApplication, MentorshipEngagement, "mentorship"
+    MentorshipApplication, "mentorship", Engagement.EngagementType.MENTORSHIP
 )
 
 AlumnusManageMentorshipApplicationSerializer = make_alumnus_manage_application_serializer(
-    MentorshipApplication, MentorshipEngagement, "mentorship"
+    MentorshipApplication, "mentorship", Engagement.EngagementType.MENTORSHIP
 )
 
 
 class MentorshipEngagementFeedSerializer(serializers.ModelSerializer):
-    mentorship_title = serializers.CharField(source='mentorship.title')
+    mentorship_title = serializers.CharField(source='mentorship_detail.mentorship.title')
     mentor_name = serializers.CharField(source='alumnus.full_name')
 
     class Meta:
-        model = MentorshipEngagement
+        model = Engagement
         fields = ['sqid', 'mentorship_title', 'mentor_name', 'status']

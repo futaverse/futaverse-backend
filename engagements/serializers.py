@@ -1,10 +1,12 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
-from engagements.models import EngagementLifecycleStatus
+from engagements.models import Engagement, EngagementLifecycleStatus
 
 
-def make_student_manage_offer_serializer(offer_model, engagement_model, relation_name):
+def make_student_manage_offer_serializer(offer_model, relation_name, engagement_type):
+    detail_related = f"{engagement_type.removesuffix('_engagement')}_detail"
+
     class StudentManageOfferSerializer(serializers.Serializer):
         offer_id = serializers.CharField()
 
@@ -38,10 +40,11 @@ def make_student_manage_offer_serializer(offer_model, engagement_model, relation
                     {"detail": "This opportunity is not active."}
                 )
 
-            if engagement_model.objects.filter(
-                **{relation_name: parent},
+            if Engagement.objects.filter(
+                engagement_type=engagement_type,
                 student=offer.student,
-                status="active",
+                status=Engagement.EngagementStatus.ACTIVE,
+                **{f"{detail_related}__{relation_name}": parent},
             ).exists():
                 raise serializers.ValidationError(
                     {"detail": "You are already engaged in this opportunity."}
@@ -53,7 +56,9 @@ def make_student_manage_offer_serializer(offer_model, engagement_model, relation
     return StudentManageOfferSerializer
 
 
-def make_alumnus_manage_offer_serializer(offer_model, relation_name):
+def make_alumnus_manage_offer_serializer(offer_model, relation_name, engagement_type):
+    detail_related = f"{engagement_type.removesuffix('_engagement')}_detail"
+
     class AlumnusManageOfferSerializer(serializers.Serializer):
         offer_id = serializers.CharField()
 
@@ -93,9 +98,9 @@ def make_alumnus_manage_offer_serializer(offer_model, relation_name):
     return AlumnusManageOfferSerializer
 
 
-def make_student_manage_application_serializer(
-    application_model, engagement_model, relation_name
-):
+def make_student_manage_application_serializer(application_model, relation_name, engagement_type):
+    detail_related = f"{engagement_type.removesuffix('_engagement')}_detail"
+
     class StudentManageApplicationSerializer(serializers.Serializer):
         application_id = serializers.CharField()
 
@@ -129,9 +134,11 @@ def make_student_manage_application_serializer(
                     {"detail": "This opportunity is not active."}
                 )
 
-            if engagement_model.objects.filter(
-                **{relation_name: parent},
+            if Engagement.objects.filter(
+                engagement_type=engagement_type,
                 student=application.student,
+                status=Engagement.EngagementStatus.ACTIVE,
+                **{f"{detail_related}__{relation_name}": parent},
             ).exists():
                 raise serializers.ValidationError(
                     {"detail": "You are already engaged in this opportunity."}
@@ -143,9 +150,9 @@ def make_student_manage_application_serializer(
     return StudentManageApplicationSerializer
 
 
-def make_alumnus_manage_application_serializer(
-    application_model, engagement_model, relation_name
-):
+def make_alumnus_manage_application_serializer(application_model, relation_name, engagement_type):
+    detail_related = f"{engagement_type.removesuffix('_engagement')}_detail"
+
     class AlumnusManageApplicationSerializer(serializers.Serializer):
         application_id = serializers.CharField()
 
@@ -179,9 +186,11 @@ def make_alumnus_manage_application_serializer(
                     {"detail": "This opportunity is not active."}
                 )
 
-            if engagement_model.objects.filter(
-                **{relation_name: parent},
+            if Engagement.objects.filter(
+                engagement_type=engagement_type,
                 student=application.student,
+                status=Engagement.EngagementStatus.ACTIVE,
+                **{f"{detail_related}__{relation_name}": parent},
             ).exists():
                 raise serializers.ValidationError(
                     {"detail": "This student is already engaged in this opportunity."}

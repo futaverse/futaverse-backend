@@ -5,8 +5,7 @@ from pytz import timezone
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from engagements.models import BaseEngagement
-from futaverse.lib import MODELS
+from engagements.models import Engagement
 from reviews.models import Review
 from core.serializers import StudentInfoSerializer, AlumniInfoSerializer
 from core.models import User
@@ -54,7 +53,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only_fields = fields      
         
 class CreateReviewSerializer(serializers.Serializer):
-    engagement_type = serializers.ChoiceField(choices=['internship_engagement', 'mentorship_engagement'], required=True)
+    engagement_type = serializers.ChoiceField(choices=Engagement.EngagementType.choices, required=True)
     engagement = serializers.SlugField(required=True)
     
     metrics = serializers.JSONField(required=False, default=dict)
@@ -68,14 +67,16 @@ class CreateReviewSerializer(serializers.Serializer):
         engagement_id = validated_data.pop('engagement')
         metrics = validated_data.get("metrics", {})
         
-        engagement_model = MODELS.get(engagement_type)
-
-        engagement = get_object_or_404(engagement_model, sqid=engagement_id)
+        engagement = get_object_or_404(
+            Engagement.objects.select_related("student", "alumnus"),
+            sqid=engagement_id,
+            engagement_type=engagement_type,
+        )
         
-        if engagement.status != BaseEngagement.EngagementStatus.ACKNOWLEDGED:
+        if engagement.status != Engagement.EngagementStatus.ACKNOWLEDGED:
             raise ValidationError("Engagement has not been acknowledged by one or both parties.")
 
-        content_type = ContentType.objects.get_for_model(engagement_model)
+        content_type = ContentType.objects.get_for_model(Engagement)
         
         if reviewer == engagement.student.user:
             reviewee = engagement.alumnus.user

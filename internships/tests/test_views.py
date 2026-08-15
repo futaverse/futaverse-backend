@@ -1,9 +1,9 @@
 from rest_framework import status
 
-from internships.models import (
-    Internship, InternshipEngagement,
-)
-from engagements.models import BaseEngagement
+from django.core.cache import cache
+
+from internships.models import Internship
+from engagements.models import Engagement
 from futaverse.tests_helpers import BaseAPITestCase
 
 
@@ -11,6 +11,7 @@ class EngagementViewTests(BaseAPITestCase):
     """B2 + B3: Engagement ownership and stale response tests."""
 
     def setUp(self):
+        cache.clear()
         self.alumnus = self._create_alumnus("alumnus@test.com")
         self.other_alumnus = self._create_alumnus("other@test.com", firstname="Other")
         self.student = self._create_student("student@test.com")
@@ -36,13 +37,11 @@ class EngagementViewTests(BaseAPITestCase):
             remaining_slots=5,
         )
 
-        self.engagement = InternshipEngagement.objects.create(
+        self.engagement = self.make_engagement(
+            Engagement.EngagementType.INTERNSHIP,
+            student_user=self.student,
+            alumnus_user=self.alumnus,
             internship=self.internship,
-            student=self.student.student_profile,
-            alumnus=self.alumnus.alumni_profile,
-            source=InternshipEngagement.Source.APPLICATION,
-            source_id=1,
-            status=BaseEngagement.EngagementStatus.ACTIVE,
         )
 
     def test_other_alumnus_cannot_complete_engagement(self):
@@ -71,4 +70,4 @@ class EngagementViewTests(BaseAPITestCase):
             **headers,
         )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(resp.data["status"], BaseEngagement.EngagementStatus.COMPLETED)
+        self.assertEqual(resp.data["status"], Engagement.EngagementStatus.COMPLETED)

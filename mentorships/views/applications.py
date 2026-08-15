@@ -2,7 +2,7 @@ from rest_framework import generics
 
 from drf_spectacular.utils import extend_schema
 
-from mentorships.models import MentorshipApplication, MentorshipEngagement
+from mentorships.models import MentorshipApplication
 from mentorships.serializers import (
     MentorshipApplicationSerializer,
     StudentManageMentorshipApplicationSerializer,
@@ -14,6 +14,7 @@ from core.models import User
 from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
 
 from engagements.helpers import queryset_by_role
+from engagements.models import Engagement
 from engagements.views import AcceptApplicationView, RejectApplicationView, WithdrawApplicationView
 
 
@@ -67,8 +68,7 @@ class RetrieveMentorshipApplicationView(generics.RetrieveAPIView):
 
 @extend_schema(tags=['Mentorship Applications'], summary='Accept a mentorship application (alumnus)')
 class AcceptMentorshipApplicationView(AcceptApplicationView):
-    application_model = MentorshipApplication
-    engagement_model = MentorshipEngagement
+    engagement_type = Engagement.EngagementType.MENTORSHIP
     engagement_serializer_class = MentorshipEngagementSerializer
     validation_serializer_class = AlumnusManageMentorshipApplicationSerializer
     relation_name = "mentorship"

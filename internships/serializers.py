@@ -3,7 +3,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from .models import Internship, InternshipApplication, InternshipOffer, InternshipEngagement
-from engagements.models import EngagementLifecycleStatus
+from engagements.models import Engagement, EngagementLifecycleStatus
+from engagements.services import get_engagement_detail
 
 from core.models import StudentProfile, LevelChoices, StudentResume
 from core.serializers import StudentInfoSerializer, AlumniInfoSerializer, StudentResumeSerializer
@@ -85,7 +86,12 @@ class InternshipOfferSerializer(serializers.ModelSerializer):
         if InternshipOffer.objects.filter(internship=internship, student=student).exists():
             raise serializers.ValidationError({"detail": "You have already offered this internship."})
 
-        if InternshipEngagement.objects.filter(internship=internship, student=student, status=InternshipEngagement.EngagementStatus.ACTIVE).exists():
+        if Engagement.objects.filter(
+            engagement_type=Engagement.EngagementType.INTERNSHIP,
+            student=student,
+            status=Engagement.EngagementStatus.ACTIVE,
+            internship_detail__internship=internship,
+        ).exists():
             raise serializers.ValidationError({"detail": "This student is already engaged in this internship."})
 
         return validated_data
@@ -131,38 +137,60 @@ class InternshipApplicationSerializer(serializers.ModelSerializer):
 
 
 class InternshipEngagementSerializer(serializers.ModelSerializer):
-    internship_info = InternshipSerializer(read_only=True, source='internship')
+    internship_info = InternshipSerializer(read_only=True, source='internship_detail.internship')
     student_info = StudentInfoSerializer(read_only=True, source='student')
     alumnus_info = AlumniInfoSerializer(read_only=True, source='alumnus')
+    source = serializers.SerializerMethodField()
+    source_id = serializers.SerializerMethodField()
 
     class Meta:
-        model = InternshipEngagement
-        exclude = ['deleted_at', 'is_deleted', 'id', 'internship', 'student', 'alumnus']
-        read_only_fields = ['sqid', 'created_at', 'updated_at']
+        model = Engagement
+        fields = [
+            'sqid', 'status', 'source', 'source_id',
+            'internship_info', 'student_info', 'alumnus_info',
+            'created_at', 'updated_at',
+        ]
+        read_only_fields = fields
+
+    def get_source(self, obj):
+        detail = get_engagement_detail(obj)
+        if detail is None:
+            return None
+        if detail.application_id is not None:
+            return InternshipEngagement.Source.APPLICATION
+        if detail.offer_id is not None:
+            return InternshipEngagement.Source.OFFER
+        return None
+
+    def get_source_id(self, obj):
+        detail = get_engagement_detail(obj)
+        if detail is None:
+            return None
+        return detail.application_id or detail.offer_id
 
 
 StudentManageInternshipOfferSerializer = make_student_manage_offer_serializer(
-    InternshipOffer, InternshipEngagement, "internship"
+    InternshipOffer, "internship", Engagement.EngagementType.INTERNSHIP
 )
 
 AlumnusManageInternshipOfferSerializer = make_alumnus_manage_offer_serializer(
-    InternshipOffer, "internship"
+    InternshipOffer, "internship", Engagement.EngagementType.INTERNSHIP
 )
 
 StudentManageInternshipApplicationSerializer = make_student_manage_application_serializer(
-    InternshipApplication, InternshipEngagement, "internship"
+    InternshipApplication, "internship", Engagement.EngagementType.INTERNSHIP
 )
 
 AlumnusManageInternshipApplicationSerializer = make_alumnus_manage_application_serializer(
-    InternshipApplication, InternshipEngagement, "internship"
+    InternshipApplication, "internship", Engagement.EngagementType.INTERNSHIP
 )
 
 
 class InternshipEngagementFeedSerializer(serializers.ModelSerializer):
-    internship_title = serializers.CharField(source='internship.title')
-    company = serializers.CharField(source='internship.company')
+    internship_title = serializers.CharField(source='internship_detail.internship.title')
+    company = serializers.CharField(source='internship_detail.internship.company')
     alumnus_name = serializers.CharField(source='alumnus.full_name')
 
     class Meta:
-        model = InternshipEngagement
+        model = Engagement
         fields = ['sqid', 'internship_title', 'company', 'alumnus_name', 'status']

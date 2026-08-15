@@ -2,6 +2,7 @@ from django.contrib.auth import authenticate
 
 from rest_framework import serializers, exceptions
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from drf_spectacular.utils import extend_schema_field
 
 from .models import UserProfileImage, User, OTP, StudentProfile, StudentResume, AlumniProfile
 
@@ -94,6 +95,7 @@ class StudentProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentProfile
         exclude = ['user', 'id', 'is_deleted', 'deleted_at']
+        read_only_fields = ['avg_rating', 'total_reviews']
         
 class StudentInfoSerializer(serializers.ModelSerializer):
     # profile_img = serializers.SerializerMethodField()
@@ -138,7 +140,7 @@ class AlumniProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = AlumniProfile
         exclude = ['user', 'id', 'is_deleted', 'deleted_at']
-        
+        read_only_fields = ['avg_rating', 'total_reviews']
 
 class AlumniInfoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -168,4 +170,52 @@ class CreateAlumnusSerializer(serializers.ModelSerializer):
             profile_img.save()
         
         return user
+
+class StudentMeProfileSerializer(StudentProfileSerializer):
+    profile_img_url = serializers.SerializerMethodField()
+    resumes = StudentResumeSerializer(many=True, read_only=True)
+
+    @extend_schema_field(serializers.URLField(allow_null=True))
+    def get_profile_img_url(self, obj):
+        image = obj.user.profile_img.order_by('-uploaded_at').first()
+        return image.image.url if image else None
+
+class AlumniMeProfileSerializer(AlumniProfileSerializer):
+    profile_img_url = serializers.SerializerMethodField()
+
+    @extend_schema_field(serializers.URLField(allow_null=True))
+    def get_profile_img_url(self, obj):
+        image = obj.user.profile_img.order_by('-uploaded_at').first()
+        return image.image.url if image else None
+
+class StudentMeResponseSerializer(serializers.ModelSerializer):
+    profile = StudentMeProfileSerializer(read_only=True, source='student_profile')
+
+    class Meta:
+        model = User
+        fields = ['sqid', 'email', 'role', 'created_at', 'profile']
+        read_only_fields = fields
+
+class AlumniMeResponseSerializer(serializers.ModelSerializer):
+    profile = AlumniMeProfileSerializer(read_only=True, source='alumni_profile')
+
+    class Meta:
+        model = User
+        fields = ['sqid', 'email', 'role', 'created_at', 'profile']
+        read_only_fields = fields
+
+class MeSerializer(serializers.ModelSerializer):
+    profile = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['sqid', 'email', 'role', 'created_at', 'profile']
+        read_only_fields = fields
+
+    def get_profile(self, user):
+        if user.role == User.Role.STUDENT:
+            return StudentMeProfileSerializer(user.student_profile).data
+        if user.role == User.Role.ALUMNI:
+            return AlumniMeProfileSerializer(user.alumni_profile).data
+        return None
 

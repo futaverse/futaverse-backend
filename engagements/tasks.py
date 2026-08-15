@@ -6,31 +6,31 @@ from django_q.tasks import async_task, schedule, Schedule
 
 import logging
 
-from engagements.models import BaseEngagement
+from engagements.models import Engagement
+from engagements.services import engagement_domain
 
 from futaverse.lib import MODELS
-from engagements.plugins import get_engagement_plugin
 
 logger = logging.getLogger(__name__)
 
+
 def auto_acknowledge_engagement(engagement_sqid, engagement_type):
     model = MODELS.get(engagement_type)
-    
+
     if not model:
         raise ValueError(f"Invalid engagement type: {engagement_type}")
-    
+
     try:
         engagement = model.objects.get(sqid=engagement_sqid)
     except model.DoesNotExist:
-        return  
-    
-    engagement.refresh_from_db()
-    
-    if engagement.status == BaseEngagement.EngagementStatus.COMPLETED:
-        engagement.update_status(BaseEngagement.EngagementStatus.ACKNOWLEDGED)
+        return
 
-        plugin = get_engagement_plugin(engagement_type)
-        domain = plugin.get("domain", engagement_type) if plugin else engagement_type
+    engagement.refresh_from_db()
+
+    if engagement.status == Engagement.EngagementStatus.COMPLETED:
+        engagement.update_status(Engagement.EngagementStatus.ACKNOWLEDGED)
+
+        domain = engagement_domain(engagement)
 
         async_task(
             "notifications.tasks.send_notifications_task",
@@ -43,8 +43,6 @@ def auto_acknowledge_engagement(engagement_sqid, engagement_type):
 def schedule_auto_acknowledgement_task(engagement_data):
     engagement_type = engagement_data.get("engagement_type")
     sqid = engagement_data.get("sqid")
-    engagement_plugin = get_engagement_plugin(engagement_type)
-    domain = engagement_plugin.get("domain") if engagement_plugin else engagement_type
 
     model = MODELS.get(engagement_type)
 
@@ -60,6 +58,7 @@ def schedule_auto_acknowledgement_task(engagement_data):
     engagement.refresh_from_db()
     student_id = engagement.student.user.id
     alumnus_name = engagement.alumnus.full_name
+    domain = engagement_domain(engagement)
 
     try:
         async_task(
@@ -70,7 +69,7 @@ def schedule_auto_acknowledgement_task(engagement_data):
         )
     except Exception as e:
         logger.warning("Notification task dispatch failed for engagement %s: %s", sqid, e)
-    
+
     schedule(
         "notifications.tasks.send_notifications_task",
         user_ids=[student_id],
@@ -80,7 +79,7 @@ def schedule_auto_acknowledgement_task(engagement_data):
         next_run=timezone.now() + timedelta(hours=settings.ENGAGEMENT_ACKNOWLEDGEMENT_REMINDER_HOURS),
         name=f'acknowledgement_reminder_{domain}_{sqid}'
     )
-    
+
     schedule(
         "engagements.tasks.auto_acknowledge_engagement",
         engagement_sqid=sqid,

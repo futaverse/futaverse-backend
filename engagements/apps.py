@@ -6,12 +6,12 @@ class EngagementsConfig(AppConfig):
     name = 'engagements'
 
     def ready(self):
-        from engagements.models import BaseEngagement
+        from engagements.models import Engagement
         from engagements.plugins import ENGAGEMENT_PLUGIN
 
-        for subclass in BaseEngagement.__subclasses__():
-            if subclass not in ENGAGEMENT_PLUGIN:
+        for engagement_type in Engagement.EngagementType.values:
+            if engagement_type not in ENGAGEMENT_PLUGIN:
                 raise RuntimeError(
-                    f"Engagement model '{subclass.__name__}' is not registered in "
+                    f"Engagement type '{engagement_type}' is not registered in "
                     f"engagements.plugins.ENGAGEMENT_PLUGIN. Add it to enable feed events and notifications."
                 )

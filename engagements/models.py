@@ -1,14 +1,18 @@
 from django.db import models
 from django.utils import timezone
-from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
-from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericRelation
 
 from core.models import StudentProfile, AlumniProfile
 from futaverse.models import BaseModel
 
 from reviews.models import Review
 
-class BaseEngagement(BaseModel):
+
+class Engagement(BaseModel):
+    class EngagementType(models.TextChoices):
+        INTERNSHIP = "internship_engagement", "Internship"
+        MENTORSHIP = "mentorship_engagement", "Mentorship"
+
     class EngagementStatus(models.TextChoices):
         ACTIVE = "active", "Active"
         COMPLETED = "completed", "Completed"
@@ -16,15 +20,14 @@ class BaseEngagement(BaseModel):
         TERMINATED = "terminated", "Terminated"
         ARCHIVED = "archived", "Archived"
 
-    student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, related_name='%(app_label)s_engagements')
-    alumnus = models.ForeignKey(AlumniProfile, on_delete=models.CASCADE, related_name='%(app_label)s_engagements')
-    
-    source = models.CharField(max_length=20)
-    source_id = models.PositiveIntegerField()
+    engagement_type = models.CharField(choices=EngagementType.choices, max_length=30)
+    student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, related_name='engagements')
+    alumnus = models.ForeignKey(AlumniProfile, on_delete=models.CASCADE, related_name='engagements')
+
     status = models.CharField(choices=EngagementStatus.choices, max_length=20, default=EngagementStatus.ACTIVE)
-    
+
     reviews = GenericRelation(Review, related_query_name='engagement')
-    
+
     updated_at = models.DateTimeField(auto_now=True)
 
     @property
@@ -32,21 +35,16 @@ class BaseEngagement(BaseModel):
         return self.status == self.EngagementStatus.ACTIVE
 
     @property
-    def engagement(self):
-        internship = getattr(self, 'internship', None)
-        if internship is not None:
-            return internship
-        mentorship = getattr(self, 'mentorship', None)
-        if mentorship is not None:
-            return mentorship
-        return None
-    
+    def detail(self):
+        related_name = f"{self.engagement_type.removesuffix('_engagement')}_detail"
+        return getattr(self, related_name, None)
+
     def update_status(self, status):
         self.status = status
         self.save(update_fields=['status', 'updated_at'])
-        
-    class Meta:
-        abstract = True
+
+    def __str__(self):
+        return f"Engagement of {self.student.full_name} with {self.alumnus.full_name} ({self.engagement_type})"
 
 
 class EngagementLifecycleStatus(models.TextChoices):

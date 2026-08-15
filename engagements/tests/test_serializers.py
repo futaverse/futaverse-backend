@@ -2,7 +2,9 @@ from django.test import TestCase
 from django.test.client import RequestFactory
 
 from core.models import User, StudentProfile, AlumniProfile
-from internships.models import Internship, InternshipApplication, InternshipOffer, InternshipEngagement
+from internships.models import Internship, InternshipApplication, InternshipOffer
+from engagements.models import Engagement
+from engagements.services import create_engagement
 
 from engagements.serializers import (
     make_student_manage_offer_serializer,
@@ -62,7 +64,7 @@ class StudentManageOfferSerializerFactoryTests(TestCase):
         offer = InternshipOffer.objects.create(
             internship=self.internship, student=self.student_profile
         )
-        Serializer = make_student_manage_offer_serializer(InternshipOffer, InternshipEngagement, "internship")
+        Serializer = make_student_manage_offer_serializer(InternshipOffer, "internship", Engagement.EngagementType.INTERNSHIP)
         serializer = Serializer(
             data={"offer_id": offer.sqid},
             context={"request": self._make_request(self.student_user)},
@@ -73,7 +75,7 @@ class StudentManageOfferSerializerFactoryTests(TestCase):
         offer = InternshipOffer.objects.create(
             internship=self.internship, student=self.student_profile
         )
-        Serializer = make_student_manage_offer_serializer(InternshipOffer, InternshipEngagement, "internship")
+        Serializer = make_student_manage_offer_serializer(InternshipOffer, "internship", Engagement.EngagementType.INTERNSHIP)
         serializer = Serializer(
             data={"offer_id": offer.sqid},
             context={"request": self._make_request(self.wrong_student_user)},
@@ -85,7 +87,7 @@ class StudentManageOfferSerializerFactoryTests(TestCase):
             internship=self.internship, student=self.student_profile
         )
         offer.accept()
-        Serializer = make_student_manage_offer_serializer(InternshipOffer, InternshipEngagement, "internship")
+        Serializer = make_student_manage_offer_serializer(InternshipOffer, "internship", Engagement.EngagementType.INTERNSHIP)
         serializer = Serializer(
             data={"offer_id": offer.sqid},
             context={"request": self._make_request(self.student_user)},
@@ -98,7 +100,7 @@ class StudentManageOfferSerializerFactoryTests(TestCase):
         offer = InternshipOffer.objects.create(
             internship=self.internship, student=self.student_profile
         )
-        Serializer = make_student_manage_offer_serializer(InternshipOffer, InternshipEngagement, "internship")
+        Serializer = make_student_manage_offer_serializer(InternshipOffer, "internship", Engagement.EngagementType.INTERNSHIP)
         serializer = Serializer(
             data={"offer_id": offer.sqid},
             context={"request": self._make_request(self.student_user)},
@@ -108,14 +110,19 @@ class StudentManageOfferSerializerFactoryTests(TestCase):
         self.internship.save(update_fields=["is_active"])
 
     def test_already_engaged_student_cannot_accept(self):
-        InternshipEngagement.objects.create(
-            internship=self.internship, student=self.student_profile,
-            alumnus=self.alumnus_profile, source="offer", source_id=1,
+        app = InternshipApplication.objects.create(
+            internship=self.internship, student=self.student_profile
+        )
+        create_engagement(
+            engagement_type=Engagement.EngagementType.INTERNSHIP,
+            student=self.student_profile,
+            alumnus=self.alumnus_profile,
+            application=app,
         )
         offer = InternshipOffer.objects.create(
             internship=self.internship, student=self.student_profile
         )
-        Serializer = make_student_manage_offer_serializer(InternshipOffer, InternshipEngagement, "internship")
+        Serializer = make_student_manage_offer_serializer(InternshipOffer, "internship", Engagement.EngagementType.INTERNSHIP)
         serializer = Serializer(
             data={"offer_id": offer.sqid},
             context={"request": self._make_request(self.student_user)},
@@ -173,7 +180,7 @@ class AlumnusManageOfferSerializerFactoryTests(TestCase):
         offer = InternshipOffer.objects.create(
             internship=self.internship, student=self.student_profile
         )
-        Serializer = make_alumnus_manage_offer_serializer(InternshipOffer, "internship")
+        Serializer = make_alumnus_manage_offer_serializer(InternshipOffer, "internship", Engagement.EngagementType.INTERNSHIP)
         serializer = Serializer(
             data={"offer_id": offer.sqid},
             context={"request": self._make_request(self.alumnus_user)},
@@ -184,7 +191,7 @@ class AlumnusManageOfferSerializerFactoryTests(TestCase):
         offer = InternshipOffer.objects.create(
             internship=self.internship, student=self.student_profile
         )
-        Serializer = make_alumnus_manage_offer_serializer(InternshipOffer, "internship")
+        Serializer = make_alumnus_manage_offer_serializer(InternshipOffer, "internship", Engagement.EngagementType.INTERNSHIP)
         serializer = Serializer(
             data={"offer_id": offer.sqid},
             context={"request": self._make_request(self.other_alumnus_user)},
@@ -234,7 +241,7 @@ class StudentManageApplicationSerializerFactoryTests(TestCase):
             internship=self.internship, student=self.student_profile
         )
         Serializer = make_student_manage_application_serializer(
-            InternshipApplication, InternshipEngagement, "internship"
+            InternshipApplication, "internship", Engagement.EngagementType.INTERNSHIP
         )
         serializer = Serializer(
             data={"application_id": app.sqid},
@@ -248,7 +255,7 @@ class StudentManageApplicationSerializerFactoryTests(TestCase):
         )
         app.accept()
         Serializer = make_student_manage_application_serializer(
-            InternshipApplication, InternshipEngagement, "internship"
+            InternshipApplication, "internship", Engagement.EngagementType.INTERNSHIP
         )
         serializer = Serializer(
             data={"application_id": app.sqid},
@@ -308,7 +315,7 @@ class AlumnusManageApplicationSerializerFactoryTests(TestCase):
             internship=self.internship, student=self.student_profile
         )
         Serializer = make_alumnus_manage_application_serializer(
-            InternshipApplication, InternshipEngagement, "internship"
+            InternshipApplication, "internship", Engagement.EngagementType.INTERNSHIP
         )
         serializer = Serializer(
             data={"application_id": app.sqid},
@@ -321,7 +328,7 @@ class AlumnusManageApplicationSerializerFactoryTests(TestCase):
             internship=self.internship, student=self.student_profile
         )
         Serializer = make_alumnus_manage_application_serializer(
-            InternshipApplication, InternshipEngagement, "internship"
+            InternshipApplication, "internship", Engagement.EngagementType.INTERNSHIP
         )
         serializer = Serializer(
             data={"application_id": app.sqid},

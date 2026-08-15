@@ -4,7 +4,7 @@ from core.models import StudentProfile, AlumniProfile, StudentResume
 from futaverse.models import BaseModel
 from django.utils import timezone
 
-from engagements.models import BaseEngagement, BaseApplication, BaseOffer, EngagementLifecycleStatus
+from engagements.models import Engagement, BaseApplication, BaseOffer, EngagementLifecycleStatus
 
 
 class Internship(BaseModel):
@@ -100,12 +100,36 @@ class InternshipOffer(BaseOffer):
         return f"Offer to {self.student.full_name} for {self.internship.title}"
 
 
-class InternshipEngagement(BaseEngagement):
+class InternshipEngagement(BaseModel):
     class Source(models.TextChoices):
         APPLICATION = "application", "Application"
         OFFER = "offer", "Offer"
 
+    engagement = models.OneToOneField(
+        Engagement,
+        on_delete=models.CASCADE,
+        related_name='internship_detail',
+    )
     internship = models.ForeignKey(Internship, on_delete=models.CASCADE, related_name='engagements')
+    application = models.ForeignKey(
+        InternshipApplication, on_delete=models.PROTECT,
+        null=True, blank=True, related_name='engagements',
+    )
+    offer = models.ForeignKey(
+        InternshipOffer, on_delete=models.PROTECT,
+        null=True, blank=True, related_name='engagements',
+    )
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    models.Q(application__isnull=False, offer__isnull=True)
+                    | models.Q(application__isnull=True, offer__isnull=False)
+                ),
+                name='internship_engagement_single_origin',
+            )
+        ]
 
     @property
     def post_context(self):
@@ -116,4 +140,4 @@ class InternshipEngagement(BaseEngagement):
         }
 
     def __str__(self):
-        return f"Engagement of {self.student.full_name} in {self.internship.title}"
+        return f"Engagement of {self.engagement.student.full_name} in {self.internship.title}"
