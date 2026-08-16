@@ -1,9 +1,10 @@
 import os
+import ssl
 from datetime import timedelta
 from pathlib import Path
+from urllib.parse import parse_qsl, urlparse
+
 from dotenv import load_dotenv
-import ssl
-from urllib.parse import urlparse, parse_qsl
 
 load_dotenv()
 
@@ -13,118 +14,120 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development").strip().lower()
 DEBUG = ENVIRONMENT == "development"
 
-ALLOWED_HOSTS = ["futaverse-backend.onrender.com", "futaverse-backend-xfcs.onrender.com", "localhost", "127.0.0.1", "0.0.0.0", "futaverse-backend-3.onrender.com"]
+ALLOWED_HOSTS = [
+    "futaverse-backend.onrender.com",
+    "futaverse-backend-xfcs.onrender.com",
+    "localhost",
+    "127.0.0.1",
+    "0.0.0.0",
+    "futaverse-backend-3.onrender.com",
+]
 
 INSTALLED_APPS = [
     "daphne",
     "django_eventstream",
-    
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    
-    'rest_framework',
-    'rest_framework_simplejwt',
-    'drf_spectacular',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "rest_framework",
+    "rest_framework_simplejwt",
+    "drf_spectacular",
     "corsheaders",
-    'django_q',
-    
-    'core',
-    'internships',
-    'mentorships',
-    'events',
-    'payments',
-    'feed',
-    'posts',
-    'notifications',
-    'engagements',
-    'reviews',
+    "django_q",
+    "core",
+    "internships",
+    "mentorships",
+    "events",
+    "payments",
+    "feed",
+    "posts",
+    "notifications",
+    "engagements",
+    "reviews",
 ]
 
 AUTH_USER_MODEL = "core.User"
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware", 
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'futaverse.urls'
+ROOT_URLCONF = "futaverse.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [os.path.join(BASE_DIR, "templates")],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'futaverse.wsgi.application'
+WSGI_APPLICATION = "futaverse.wsgi.application"
 ASGI_APPLICATION = "futaverse.asgi.application"
 
 tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': tmpPostgres.path.replace('/', ''),
-        'USER': tmpPostgres.username,
-        'PASSWORD': tmpPostgres.password,
-        'HOST': tmpPostgres.hostname,
-        'PORT': 5432,
-        'OPTIONS': dict(parse_qsl(tmpPostgres.query)),
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": tmpPostgres.path.replace("/", ""),
+        "USER": tmpPostgres.username,
+        "PASSWORD": tmpPostgres.password,
+        "HOST": tmpPostgres.hostname,
+        "PORT": 5432,
+        "OPTIONS": dict(parse_qsl(tmpPostgres.query)),
     }
 }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
 USE_TZ = True
 
-STATIC_URL = 'static/'
+STATIC_URL = "static/"
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.IsAuthenticated"
-    ],
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
     "PAGE_SIZE_QUERY_PARAM": "size",
@@ -133,8 +136,8 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
-    "ROTATE_REFRESH_TOKENS": True,            
-    "BLACKLIST_AFTER_ROTATION": True,        
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": True,
     "SIGNING_KEY": os.environ.get("DJANGO_SECRET_KEY"),
     "ALGORITHM": "HS256",
@@ -143,12 +146,12 @@ SIMPLE_JWT = {
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'FutaVerse API',
-    'DESCRIPTION': 'FutaVerse API Documentation',
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
-    'POSTPROCESSING_ALGORITHMS': [
-        'drf_spectacular.contrib.hashid_field.hashid_field_fix', 
+    "TITLE": "FutaVerse API",
+    "DESCRIPTION": "FutaVerse API Documentation",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "POSTPROCESSING_ALGORITHMS": [
+        "drf_spectacular.contrib.hashid_field.hashid_field_fix",
     ],
 }
 
@@ -156,39 +159,39 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp-relay.brevo.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.environ.get("MAIL_USERNAME")         
-EMAIL_HOST_PASSWORD = os.environ.get("MAIL_PASSWORD") 
+EMAIL_HOST_USER = os.environ.get("MAIL_USERNAME")
+EMAIL_HOST_PASSWORD = os.environ.get("MAIL_PASSWORD")
 DEFAULT_FROM_EMAIL = "Futaverse Support <covenantcrackslord03@gmail.com>"
 FRONTEND_BASE_URL = os.environ.get("FRONTEND_BASE_URL", "http://localhost:5173")
-# SERVER_EMAIL = DEFAULT_FROM_EMAIL        
-EMAIL_TIMEOUT = 20  
+# SERVER_EMAIL = DEFAULT_FROM_EMAIL
+EMAIL_TIMEOUT = 20
 
 # CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:5173",  
+#     "http://localhost:5173",
 #     "http://127.0.0.1:5173",
-#     "http://localhost:5174",  
+#     "http://localhost:5174",
 #     "http://127.0.0.1:5174",
-#     "http://localhost:3000",  
+#     "http://localhost:3000",
 #     "http://127.0.0.1:3000",
 #     "*",
-# ] 
+# ]
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = True
 
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
-    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
-    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET')
+    "CLOUD_NAME": os.environ.get("CLOUDINARY_CLOUD_NAME"),
+    "API_KEY": os.environ.get("CLOUDINARY_API_KEY"),
+    "API_SECRET": os.environ.get("CLOUDINARY_API_SECRET"),
 }
 
-DEFAULT_FILE_STORAGE = 'storages.backends.s3.S3Storage'
+DEFAULT_FILE_STORAGE = "storages.backends.s3.S3Storage"
 
-SUPABASE_SERVICE_KEY = os.environ.get('SUPABASE_SERVICE_KEY')
-SUPABASE_URL = os.environ.get('SUPABASE_URL')
-SUPABASE_BUCKET_NAME = os.environ.get('SUPABASE_BUCKET_NAME', 'futaverse-bucket')
+SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_BUCKET_NAME = os.environ.get("SUPABASE_BUCKET_NAME", "futaverse-bucket")
 
-APPEND_SLASH=False 
+APPEND_SLASH = False
 
 REDIS_URL = os.environ.get("REDIS_URL", "redis://127.0.0.1:6379/1")
 
@@ -199,7 +202,7 @@ CACHES = {
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "CONNECTION_POOL_KWARGS": {"max_connections": 10},
-        }
+        },
     }
 }
 
@@ -207,11 +210,11 @@ if ENVIRONMENT != "development":
     CACHES["default"]["OPTIONS"]["REDIS_CLIENT_KWARGS"] = {
         "ssl_cert_reqs": ssl.CERT_NONE
     }
-    
+
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
 
-    
+
 _eventstream_redis = urlparse(REDIS_URL)
 EVENTSTREAM_REDIS = {
     "host": _eventstream_redis.hostname or "redis",
@@ -220,13 +223,13 @@ EVENTSTREAM_REDIS = {
 }
 
 Q_CLUSTER = {
-    'name': 'futaverse',      
-    'workers': 2,             
-    'timeout': 60,            
-    'retry': 120,             
-    'orm': 'default', 
-    'max_attempts': 3,
-    'poll': 5,                
+    "name": "futaverse",
+    "workers": 2,
+    "timeout": 60,
+    "retry": 120,
+    "orm": "default",
+    "max_attempts": 3,
+    "poll": 5,
 }
 
 # Engagement auto-acknowledgement delays

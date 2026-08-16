@@ -100,7 +100,7 @@ class MentorshipApplicationSerializer(serializers.ModelSerializer):
         if not mentorship.is_active:
             raise serializers.ValidationError({"detail": "This mentorship is not active."})
 
-        if MentorshipApplication.objects.filter(mentorship=mentorship, student=student).exists():
+        if MentorshipApplication.objects.filter(mentorship=mentorship, student=student, status__in=[EngagementLifecycleStatus.ACCEPTED, EngagementLifecycleStatus.PENDING]).exists():
             raise serializers.ValidationError({"detail": "You have already applied for this mentorship."})
 
         return validated_data

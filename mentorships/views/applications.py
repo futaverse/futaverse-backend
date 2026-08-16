@@ -1,24 +1,26 @@
-from rest_framework import generics
-
 from drf_spectacular.utils import extend_schema
-
-from mentorships.models import MentorshipApplication
-from mentorships.serializers import (
-    MentorshipApplicationSerializer,
-    StudentManageMentorshipApplicationSerializer,
-    AlumnusManageMentorshipApplicationSerializer,
-    MentorshipEngagementSerializer,
-)
-from core.models import User
-
-from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
+from rest_framework import generics
 
 from engagements.helpers import queryset_by_role
 from engagements.models import Engagement
-from engagements.views import AcceptApplicationView, RejectApplicationView, WithdrawApplicationView
+from engagements.views import (
+    AcceptApplicationView,
+    RejectApplicationView,
+    WithdrawApplicationView,
+)
+from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
+from mentorships.models import MentorshipApplication
+from mentorships.serializers import (
+    AlumnusManageMentorshipApplicationSerializer,
+    MentorshipApplicationSerializer,
+    MentorshipEngagementSerializer,
+    StudentManageMentorshipApplicationSerializer,
+)
 
 
-@extend_schema(tags=['Mentorship Applications'], summary='Apply for a mentorship (student)')
+@extend_schema(
+    tags=["Mentorship Applications"], summary="Apply for a mentorship (student)"
+)
 class CreateMentorshipApplicationView(generics.CreateAPIView):
     permission_classes = [IsAuthenticatedStudent]
     serializer_class = MentorshipApplicationSerializer
@@ -28,7 +30,10 @@ class CreateMentorshipApplicationView(generics.CreateAPIView):
         serializer.save(student=student)
 
 
-@extend_schema(tags=['Mentorship Applications'], summary='List mentorship applications (alumnus and student)')
+@extend_schema(
+    tags=["Mentorship Applications"],
+    summary="List mentorship applications (alumnus and student)",
+)
 class ListMentorshipApplicationsView(generics.ListAPIView):
     permission_classes = [IsAuthenticatedAlumnus | IsAuthenticatedStudent]
     serializer_class = MentorshipApplicationSerializer
@@ -50,23 +55,31 @@ class ListMentorshipApplicationsView(generics.ListAPIView):
         )
 
 
-@extend_schema(tags=['Mentorship Applications'], summary='Retrieve a mentorship application by id (alumnus and student)')
+@extend_schema(
+    tags=["Mentorship Applications"],
+    summary="Retrieve a mentorship application by id (alumnus and student)",
+)
 class RetrieveMentorshipApplicationView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticatedAlumnus | IsAuthenticatedStudent]
     serializer_class = MentorshipApplicationSerializer
-    lookup_field = 'sqid'
+    lookup_field = "sqid"
 
     def get_queryset(self):
         return queryset_by_role(
             self.request.user,
             MentorshipApplication,
-            alumnus_filter=lambda: {"mentorship__alumnus": self.request.user.alumni_profile},
+            alumnus_filter=lambda: {
+                "mentorship__alumnus": self.request.user.alumni_profile
+            },
             student_filter=lambda: {"student": self.request.user.student_profile},
             select_related=("mentorship", "student", "mentorship__alumnus"),
         )
 
 
-@extend_schema(tags=['Mentorship Applications'], summary='Accept a mentorship application (alumnus)')
+@extend_schema(
+    tags=["Mentorship Applications"],
+    summary="Accept a mentorship application (alumnus)",
+)
 class AcceptMentorshipApplicationView(AcceptApplicationView):
     engagement_type = Engagement.EngagementType.MENTORSHIP
     engagement_serializer_class = MentorshipEngagementSerializer
@@ -74,11 +87,17 @@ class AcceptMentorshipApplicationView(AcceptApplicationView):
     relation_name = "mentorship"
 
 
-@extend_schema(tags=['Mentorship Applications'], summary='Reject a mentorship application (alumnus)')
+@extend_schema(
+    tags=["Mentorship Applications"],
+    summary="Reject a mentorship application (alumnus)",
+)
 class RejectMentorshipApplicationView(RejectApplicationView):
     validation_serializer_class = AlumnusManageMentorshipApplicationSerializer
 
 
-@extend_schema(tags=['Mentorship Applications'], summary='Withdraw a mentorship application (student)')
+@extend_schema(
+    tags=["Mentorship Applications"],
+    summary="Withdraw a mentorship application (student)",
+)
 class WithdrawMentorshipApplicationView(WithdrawApplicationView):
     validation_serializer_class = StudentManageMentorshipApplicationSerializer

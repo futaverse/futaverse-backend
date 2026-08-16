@@ -1,27 +1,27 @@
 from django.db import transaction
-
-from rest_framework import generics, status
-from rest_framework.response import Response
-
 from drf_spectacular.utils import extend_schema
+from rest_framework import generics
 
+from engagements.helpers import queryset_by_role
+from engagements.models import Engagement
+from engagements.views import (
+    AcceptApplicationView,
+    RejectApplicationView,
+    WithdrawApplicationView,
+)
+from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
 from internships.models import InternshipApplication
 from internships.serializers import (
-    InternshipApplicationSerializer,
-    StudentManageInternshipApplicationSerializer,
     AlumnusManageInternshipApplicationSerializer,
+    InternshipApplicationSerializer,
     InternshipEngagementSerializer,
+    StudentManageInternshipApplicationSerializer,
 )
-from core.models import User
-
-from futaverse.permissions import IsAuthenticatedAlumnus, IsAuthenticatedStudent
-
-from engagements.models import Engagement
-from engagements.helpers import queryset_by_role
-from engagements.views import AcceptApplicationView, RejectApplicationView, WithdrawApplicationView
 
 
-@extend_schema(tags=['Internship Applications'], summary='Apply for an internship (student)')
+@extend_schema(
+    tags=["Internship Applications"], summary="Apply for an internship (student)"
+)
 class CreateInternshipApplicationView(generics.CreateAPIView):
     serializer_class = InternshipApplicationSerializer
     permission_classes = [IsAuthenticatedStudent]
@@ -32,7 +32,10 @@ class CreateInternshipApplicationView(generics.CreateAPIView):
         serializer.save(student=student)
 
 
-@extend_schema(tags=['Internship Applications'], summary='List all internship applications (alumnus and student)')
+@extend_schema(
+    tags=["Internship Applications"],
+    summary="List all internship applications (alumnus and student)",
+)
 class ListInternshipApplicationsView(generics.ListAPIView):
     serializer_class = InternshipApplicationSerializer
     permission_classes = [IsAuthenticatedAlumnus | IsAuthenticatedStudent]
@@ -54,23 +57,31 @@ class ListInternshipApplicationsView(generics.ListAPIView):
         )
 
 
-@extend_schema(tags=['Internship Applications'], summary='Retrieve an internship application by id (alumnus and student)')
+@extend_schema(
+    tags=["Internship Applications"],
+    summary="Retrieve an internship application by id (alumnus and student)",
+)
 class RetrieveInternshipApplicationView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticatedAlumnus | IsAuthenticatedStudent]
     serializer_class = InternshipApplicationSerializer
-    lookup_field = 'sqid'
+    lookup_field = "sqid"
 
     def get_queryset(self):
         return queryset_by_role(
             self.request.user,
             InternshipApplication,
-            alumnus_filter=lambda: {"internship__alumnus": self.request.user.alumni_profile},
+            alumnus_filter=lambda: {
+                "internship__alumnus": self.request.user.alumni_profile
+            },
             student_filter=lambda: {"student": self.request.user.student_profile},
             select_related=("internship", "student", "internship__alumnus"),
         )
 
 
-@extend_schema(tags=['Internship Applications'], summary='Accept an internship application (alumnus)')
+@extend_schema(
+    tags=["Internship Applications"],
+    summary="Accept an internship application (alumnus)",
+)
 class AcceptInternshipApplicationView(AcceptApplicationView):
     engagement_type = Engagement.EngagementType.INTERNSHIP
     engagement_serializer_class = InternshipEngagementSerializer
@@ -78,11 +89,17 @@ class AcceptInternshipApplicationView(AcceptApplicationView):
     relation_name = "internship"
 
 
-@extend_schema(tags=['Internship Applications'], summary='Reject an internship application (alumnus)')
+@extend_schema(
+    tags=["Internship Applications"],
+    summary="Reject an internship application (alumnus)",
+)
 class RejectInternshipApplicationView(RejectApplicationView):
     validation_serializer_class = AlumnusManageInternshipApplicationSerializer
 
 
-@extend_schema(tags=['Internship Applications'], summary='Withdraw an internship application (student)')
+@extend_schema(
+    tags=["Internship Applications"],
+    summary="Withdraw an internship application (student)",
+)
 class WithdrawInternshipApplicationView(WithdrawApplicationView):
     validation_serializer_class = StudentManageInternshipApplicationSerializer
