@@ -215,11 +215,11 @@ SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
 
 
-_eventstream_redis = urlparse(REDIS_URL)
+eventstream_redis = urlparse(REDIS_URL)
 EVENTSTREAM_REDIS = {
-    "host": _eventstream_redis.hostname or "redis",
-    "port": _eventstream_redis.port or 6379,
-    "db": int(_eventstream_redis.path.lstrip("/") or 0),
+    "host": eventstream_redis.hostname or "redis",
+    "port": eventstream_redis.port or 6379,
+    "db": int(eventstream_redis.path.lstrip("/") or 0),
 }
 
 Q_CLUSTER = {
