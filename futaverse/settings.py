@@ -224,12 +224,14 @@ EVENTSTREAM_REDIS = {
 
 Q_CLUSTER = {
     "name": "futaverse",
-    "workers": 2,
+    "workers": 1,
     "timeout": 60,
-    "retry": 120,
+    "retry": 90,
     "orm": "default",
     "max_attempts": 3,
     "poll": 5,
+    "queue_limit": 50,
+    "bulk": 10,
 }
 
 # Engagement auto-acknowledgement delays

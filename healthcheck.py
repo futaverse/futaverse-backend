@@ -56,7 +56,7 @@ class HealthHandler(BaseHTTPRequestHandler):
         pid = read_qcluster_pid()
         alive = qcluster_is_alive(pid)
         body = b"ok\n" if alive else b"qcluster down\n"
-        self.send_response(200)
+        self.send_response(503 if not alive else 200)
         self.send_header("Content-Type", "text/plain")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
@@ -74,7 +74,7 @@ class HealthHandler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    # threading.Thread(target=watchdog, daemon=True).start()
+    threading.Thread(target=watchdog, daemon=True).start()
     server = ThreadingHTTPServer(("0.0.0.0", PORT), HealthHandler)
     log.info(
         "healthcheck listening on 0.0.0.0:%s, watching pid file %s",
