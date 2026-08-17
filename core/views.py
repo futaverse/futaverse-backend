@@ -1,28 +1,45 @@
-from django.db import transaction
 import logging
 
+from django.db import transaction
+from django_filters import rest_framework as filters
+from drf_spectacular.utils import (
+    OpenApiExample,
+    PolymorphicProxySerializer,
+    extend_schema,
+)
 from rest_framework import generics, status
+from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from drf_spectacular.utils import extend_schema, PolymorphicProxySerializer, OpenApiExample
-
-from .models import User, OTP, UserProfileImage, StudentResume
-from .serializers import UserProfileImageSerializer, VerifyOTPSerializer, ForgotPasswordSerializer, ResetPasswordSerializer, CreateStudentSerializer, StudentResumeSerializer, CreateAlumnusSerializer, MeSerializer, StudentMeResponseSerializer, AlumniMeResponseSerializer
-
-from futaverse.views import PublicGenericAPIView
 from futaverse.permissions import IsAuthenticatedStudent
 from futaverse.utils.email_service import BrevoEmailService
 from futaverse.utils.supabase import upload_file_to_supabase
+from futaverse.views import PublicGenericAPIView
 
-from rest_framework.permissions import IsAuthenticated
+from .filters import UserSearchFilter
+from .models import OTP, StudentResume, User, UserProfileImage
+from .serializers import (
+    AlumniMeResponseSerializer,
+    CreateAlumnusSerializer,
+    CreateStudentSerializer,
+    ForgotPasswordSerializer,
+    MeSerializer,
+    PersonSearchResultSerializer,
+    ResetPasswordSerializer,
+    StudentMeResponseSerializer,
+    StudentResumeSerializer,
+    UserProfileImageSerializer,
+    VerifyOTPSerializer,
+)
 
 mailer = BrevoEmailService()
 logger = logging.getLogger(__name__)
 
 MAX_RESUME_SIZE = 5 * 1024 * 1024
+
 
 def set_refresh_cookie(response):
     data = response.data
@@ -30,54 +47,63 @@ def set_refresh_cookie(response):
     access = data.get("access")
 
     response.set_cookie(
-        key="refresh_token",
-        value=refresh,
-        httponly=True,    
-        secure=True,      
-        samesite="None"
+        key="refresh_token", value=refresh, httponly=True, secure=True, samesite="None"
     )
 
-    response.data = {"data": {"access_token": access}, "detail": "Access granted", "status": "success"}
-            
+    response.data = {
+        "data": {"access_token": access},
+        "detail": "Access granted",
+        "status": "success",
+    }
+
     return response
 
-@extend_schema(tags=['Users'])
+
+@extend_schema(tags=["Users"])
 class UploadUserProfileImageView(generics.CreateAPIView, PublicGenericAPIView):
     queryset = UserProfileImage.objects.all()
     serializer_class = UserProfileImageSerializer
     parser_classes = [MultiPartParser, FormParser]
-    
-@extend_schema(tags=['Auth'])
-class VerifySignupOTPView(PublicGenericAPIView):  
+
+
+@extend_schema(tags=["Auth"])
+class VerifySignupOTPView(PublicGenericAPIView):
     serializer_class = VerifyOTPSerializer
-    
+
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         valid, message = serializer.otp_instance.verify(serializer.otp)
         if not valid:
-            return Response({"detail": message, "status": "error"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        serializer.user.is_active = True
-        serializer.user.save(update_fields=['is_active'])
-        
-        return Response({"detail": f"Email verified successfully, proceed to login"}, status=status.HTTP_200_OK)
+            return Response(
+                {"detail": message, "status": "error"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-@extend_schema(tags=['Auth'])
+        serializer.user.is_active = True
+        serializer.user.save(update_fields=["is_active"])
+
+        return Response(
+            {"detail": "Email verified successfully, proceed to login"},
+            status=status.HTTP_200_OK,
+        )
+
+
+@extend_schema(tags=["Auth"])
 class LoginView(TokenObtainPairView, PublicGenericAPIView):
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
-        
+
         mailer.send(
             subject="New Login Alert",
-            body = "There was a login attempt on your FutaVerse account. If this was you, you can ignore this message. \n\nIf this was not you, please contact our support team at futaverseedu@gmail.com \n\n\nFrom the FutaVerse Team",
-            recipient=request.data.get("email"),         
+            body="There was a login attempt on your FutaVerse account. If this was you, you can ignore this message. \n\nIf this was not you, please contact our support team at futaverseedu@gmail.com \n\n\nFrom the FutaVerse Team",
+            recipient=request.data.get("email"),
         )
-        
+
         if response.status_code == status.HTTP_200_OK:
             set_refresh_cookie(response)
-            
+
             user = User.objects.get(email=request.data.get("email"))
             role = user.role
             user_sqid = user.sqid
@@ -86,20 +112,21 @@ class LoginView(TokenObtainPairView, PublicGenericAPIView):
             response.data["data"]["role"] = role
             response.data["data"]["user_sqid"] = user_sqid
             response.data["data"]["sqid"] = sqid
-            
+
         return response
+
 
 ME_RESPONSES = {
     200: PolymorphicProxySerializer(
-        component_name='MeResponse',
+        component_name="MeResponse",
         serializers=[StudentMeResponseSerializer, AlumniMeResponseSerializer],
-        resource_type_field_name='role',
+        resource_type_field_name="role",
     )
 }
 
 ME_EXAMPLES = [
     OpenApiExample(
-        name='Student response',
+        name="Student response",
         response_only=True,
         value={
             "data": {
@@ -152,7 +179,7 @@ ME_EXAMPLES = [
         },
     ),
     OpenApiExample(
-        name='Alumni response',
+        name="Alumni response",
         response_only=True,
         value={
             "data": {
@@ -199,9 +226,10 @@ ME_EXAMPLES = [
     ),
 ]
 
+
 @extend_schema(
-    tags=['Auth'],
-    summary='Get current user profile',
+    tags=["Auth"],
+    summary="Get current user profile",
     description="Returns the authenticated user's information including their role-specific profile.",
     responses=ME_RESPONSES,
     examples=ME_EXAMPLES,
@@ -214,30 +242,34 @@ class MeView(generics.GenericAPIView):
         serializer = self.get_serializer(request.user)
         return Response({"data": serializer.data, "status": "success"})
 
-@extend_schema(tags=['Auth'])
+
+@extend_schema(tags=["Auth"])
 class CustomTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get("refresh_token")
-        
+
         if not refresh_token:
-            return Response({"detail": "Session timeout, please login again"}, status=400)
+            return Response(
+                {"detail": "Session timeout, please login again"}, status=400
+            )
 
         request.data["refresh"] = refresh_token
         response = super().post(request, *args, **kwargs)
-        
+
         if response.status_code == status.HTTP_200_OK:
             set_refresh_cookie(response)
-        
+
         return response
-    
-@extend_schema(tags=['Auth'])
+
+
+@extend_schema(tags=["Auth"])
 class ForgotPasswordView(PublicGenericAPIView):
     serializer_class = ForgotPasswordSerializer
-    
+
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         otp = OTP.generate_otp(serializer.user)
 
         try:
@@ -253,55 +285,80 @@ class ForgotPasswordView(PublicGenericAPIView):
                 recipient=serializer.email,
             )
         except Exception as e:
-            logger.warning("Email send failed during forgot-password for %s: %s", serializer.email, e)
-        
-        return Response({"detail": f"OTP sent successfully"}, status=status.HTTP_200_OK)
-    
-@extend_schema(tags=['Auth'])
+            logger.warning(
+                "Email send failed during forgot-password for %s: %s",
+                serializer.email,
+                e,
+            )
+
+        return Response({"detail": "OTP sent successfully"}, status=status.HTTP_200_OK)
+
+
+@extend_schema(tags=["Auth"])
 class VerifyForgotPasswordOTPView(PublicGenericAPIView):
     serializer_class = VerifyOTPSerializer
-    
+
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         valid, message = serializer.otp_instance.verify(serializer.otp)
         if not valid:
-            return Response({"detail": message, "status": "error"}, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response(
+                {"detail": message, "status": "error"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         access = AccessToken.for_user(serializer.user)
 
-        return Response({"data": {"access_token": str(access)}, "detail": "Access granted to reset password", "status": "success"}, status=status.HTTP_200_OK,)
+        return Response(
+            {
+                "data": {"access_token": str(access)},
+                "detail": "Access granted to reset password",
+                "status": "success",
+            },
+            status=status.HTTP_200_OK,
+        )
 
-@extend_schema(tags=['Auth'])  
+
+@extend_schema(tags=["Auth"])
 class ResetPasswordView(generics.GenericAPIView):
     serializer_class = ResetPasswordSerializer
-    
+
     def patch(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         new_password = serializer.validated_data["new_password"]
 
         user = request.user
         user.set_password(new_password)
         user.save()
 
-        return Response({"detail": "Password reset successfully. Please log in with your new credentials.", "status": "success"}, status=200)
-    
-@extend_schema(tags=['Auth'])
+        return Response(
+            {
+                "detail": "Password reset successfully. Please log in with your new credentials.",
+                "status": "success",
+            },
+            status=200,
+        )
+
+
+@extend_schema(tags=["Auth"])
 class CreateStudentView(generics.CreateAPIView, PublicGenericAPIView):
     serializer_class = CreateStudentSerializer
-    
+
     def post(self, request, *args, **kwargs):
-        email = request.data.get('email')
-        
-        existing_inactive_user = User.objects.filter(email=email, is_active=False).first()
+        email = request.data.get("email")
+
+        existing_inactive_user = User.objects.filter(
+            email=email, is_active=False
+        ).first()
         if existing_inactive_user:
-            existing_inactive_user.delete()  
+            existing_inactive_user.delete()
 
         return super().post(request, *args, **kwargs)
-    
+
     def perform_create(self, serializer):
         with transaction.atomic():
             user = serializer.save()
@@ -321,16 +378,20 @@ class CreateStudentView(generics.CreateAPIView, PublicGenericAPIView):
             )
         except Exception as e:
             logger.warning("Email send failed during signup for %s: %s", user.email, e)
-            
-@extend_schema(tags=['Students'])
+
+
+@extend_schema(tags=["Students"])
 class ListStudentResumesView(generics.ListAPIView):
     serializer_class = StudentResumeSerializer
     permission_classes = [IsAuthenticatedStudent]
 
     def get_queryset(self):
-        return StudentResume.objects.filter(student=self.request.user.student_profile).order_by('-uploaded_at')
+        return StudentResume.objects.filter(
+            student=self.request.user.student_profile
+        ).order_by("-uploaded_at")
 
-@extend_schema(tags=['Students'])
+
+@extend_schema(tags=["Students"])
 class UploadStudentResumeView(generics.CreateAPIView):
     queryset = StudentResume.objects.all()
     serializer_class = StudentResumeSerializer
@@ -339,54 +400,69 @@ class UploadStudentResumeView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         student = request.user.student_profile
-        resume = request.FILES.get('resume')
+        resume = request.FILES.get("resume")
 
         if not resume:
-            return Response({"detail": "Resume not provided", "status": "error"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Resume not provided", "status": "error"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        if not resume.name.lower().endswith('.pdf'):
-            return Response({"detail": "Only PDF files are allowed", "status": "error"}, status=status.HTTP_400_BAD_REQUEST)
+        if not resume.name.lower().endswith(".pdf"):
+            return Response(
+                {"detail": "Only PDF files are allowed", "status": "error"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         if resume.size > MAX_RESUME_SIZE:
-            return Response({"detail": "Resume must be 5MB or less", "status": "error"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Resume must be 5MB or less", "status": "error"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        public_url = upload_file_to_supabase(resume, f'resumes/{student.id}')
+        public_url = upload_file_to_supabase(resume, f"resumes/{student.id}")
 
-        serializer = self.get_serializer(data={"resume": public_url, "filename": resume.name})
+        serializer = self.get_serializer(
+            data={"resume": public_url, "filename": resume.name}
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save(student=student)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-@extend_schema(tags=['Students'])
+
+@extend_schema(tags=["Students"])
 class DeleteStudentResumeView(generics.DestroyAPIView):
     serializer_class = StudentResumeSerializer
     permission_classes = [IsAuthenticatedStudent]
-    lookup_field = 'sqid'
+    lookup_field = "sqid"
 
     def get_queryset(self):
         return StudentResume.objects.filter(student=self.request.user.student_profile)
 
     def perform_destroy(self, instance):
         instance.soft_delete()
-    
-@extend_schema(tags=['Auth'])
+
+
+@extend_schema(tags=["Auth"])
 class CreateAlumnusView(generics.CreateAPIView, PublicGenericAPIView):
     serializer_class = CreateAlumnusSerializer
-    
+
     def post(self, request, *args, **kwargs):
-        email = request.data.get('email')
-        
-        existing_inactive_user = User.objects.filter(email=email, is_active=False).first()
+        email = request.data.get("email")
+
+        existing_inactive_user = User.objects.filter(
+            email=email, is_active=False
+        ).first()
         if existing_inactive_user:
-            existing_inactive_user.delete()  
+            existing_inactive_user.delete()
 
         return super().post(request, *args, **kwargs)
-    
+
     def perform_create(self, serializer):
         user = serializer.save()
         otp = OTP.generate_otp(user)
-        
+
         mailer.send(
             subject="Verify your email",
             body=(
@@ -398,3 +474,20 @@ class CreateAlumnusView(generics.CreateAPIView, PublicGenericAPIView):
             ),
             recipient=user.email,
         )
+
+
+@extend_schema(tags=["Core"], summary="Search people by name and role")
+class SearchPeopleView(generics.ListAPIView):
+    serializer_class = PersonSearchResultSerializer
+    permission_classes = [IsAuthenticated]
+    filterset_class = UserSearchFilter
+
+    filter_backends = [filters.DjangoFilterBackend]
+
+    def get_queryset(self):
+        role = self.request.query_params.get("role")
+
+        if role == User.Role.ALUMNI:
+            return User.objects.filter(role=role).select_related("alumni_profile")
+
+        return User.objects.filter(role=role).select_related("student_profile")
