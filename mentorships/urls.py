@@ -3,32 +3,30 @@ from django.urls import path
 from engagements.helpers import generate_engagement_urls
 
 from .views.applications import (
-    ListMentorshipApplicationsView,
-    CreateMentorshipApplicationView,
     AcceptMentorshipApplicationView,
+    CreateMentorshipApplicationView,
+    ListMentorshipApplicationsView,
     RejectMentorshipApplicationView,
-    WithdrawMentorshipApplicationView,
     RetrieveMentorshipApplicationView,
+    WithdrawMentorshipApplicationView,
 )
-
-from .views.offers import (
-    ListMentorshipOfferView,
-    CreateMentorshipOfferView,
-    AcceptMentorshipOfferView,
-    RejectMentorshipOfferView,
-    WithdrawMentorshipOfferView,
-    RetrieveMentorshipOfferView,
-)
-
 from .views.mentorships import (
     ListCreateMentorshipView,
-    ToggleMentorshipActiveView,
-    RetrieveMentorshipEngagementView,
     ListMentorshipEngagementsView,
-    RetrieveUpdateDestroyMentorshipView,
-    MentorshipChoicesView,
     MarkMentorshipAcknowledgedView,
     MarkMentorshipCompletedView,
+    MentorshipChoicesView,
+    RetrieveMentorshipEngagementView,
+    RetrieveUpdateDestroyMentorshipView,
+    ToggleMentorshipActiveView,
+)
+from .views.offers import (
+    AcceptMentorshipOfferView,
+    CreateMentorshipOfferView,
+    ListMentorshipOfferView,
+    RejectMentorshipOfferView,
+    RetrieveMentorshipOfferView,
+    WithdrawMentorshipOfferView,
 )
 
 urlpatterns = generate_engagement_urls(
@@ -61,6 +59,6 @@ urlpatterns = generate_engagement_urls(
         "acknowledged": MarkMentorshipAcknowledgedView,
     },
     extra=[
-        path('/choices', MentorshipChoicesView.as_view(), name='mentorship-choices'),
+        path("/choices", MentorshipChoicesView.as_view(), name="mentorship-choices"),
     ],
 )

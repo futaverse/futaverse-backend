@@ -3,6 +3,7 @@ from django_q.tasks import async_task
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import generics
 from rest_framework.response import Response
+from rest_framework.permissions import OR
 
 from engagements.helpers import queryset_by_role
 from engagements.mixins import (
@@ -72,6 +73,11 @@ class RetrieveUpdateDestroyMentorshipView(generics.RetrieveUpdateDestroyAPIView)
     permission_classes = [IsAuthenticatedAlumnus]
     http_method_names = ["get", "patch", "delete"]
     lookup_field = "sqid"
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [OR(IsAuthenticatedAlumnus(), IsAuthenticatedStudent())]
+        return [IsAuthenticatedAlumnus()]
 
     def get_queryset(self):
         user = self.request.user

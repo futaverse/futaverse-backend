@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "corsheaders",
     "django_q",
+    
     "core",
     "internships",
     "mentorships",

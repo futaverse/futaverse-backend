@@ -1,31 +1,29 @@
 from engagements.helpers import generate_engagement_urls
 
 from .views.applications import (
-    ListInternshipApplicationsView,
-    CreateInternshipApplicationView,
     AcceptInternshipApplicationView,
+    CreateInternshipApplicationView,
+    ListInternshipApplicationsView,
     RejectInternshipApplicationView,
-    WithdrawInternshipApplicationView,
     RetrieveInternshipApplicationView,
+    WithdrawInternshipApplicationView,
 )
- 
-from .views.offers import (
-    ListInternshipOfferView,
-    CreateInternshipOfferView,
-    AcceptInternshipOfferView,
-    RejectInternshipOfferView,
-    WithdrawInternshipOfferView,
-    RetrieveInternshipOfferView,
-)
-
 from .views.internships import (
-    ListCreateInternshipView,
-    ToggleInternshipActiveView,
-    RetrieveInternshipEngagementView,
-    ListInternshipEngagementsView,
     InternshipDetailView,
+    ListCreateInternshipView,
+    ListInternshipEngagementsView,
     MarkInternshipAcknowledgedView,
     MarkInternshipCompletedView,
+    RetrieveInternshipEngagementView,
+    ToggleInternshipActiveView,
+)
+from .views.offers import (
+    AcceptInternshipOfferView,
+    CreateInternshipOfferView,
+    ListInternshipOfferView,
+    RejectInternshipOfferView,
+    RetrieveInternshipOfferView,
+    WithdrawInternshipOfferView,
 )
 
 urlpatterns = generate_engagement_urls(
