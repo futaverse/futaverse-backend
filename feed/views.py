@@ -1,38 +1,37 @@
-from django.db.models import Count, Value, IntegerField
-
+from django.db.models import Count, IntegerField, Value
+from django_q.tasks import async_task
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
-from drf_spectacular.utils import extend_schema
-
 from .models import FeedEvent
 from .serializers import FeedCursorPagination, FeedEventSerializer
-from django_q.tasks import async_task
 
-@extend_schema(tags=['Feed'], summary='Get feed for user (student, alumnus)')
+
+@extend_schema(tags=["Feed"], summary="Get feed for user (student, alumnus)")
 class FeedView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     pagination_class = FeedCursorPagination
     serializer_class = FeedEventSerializer
-    
+
     def get_queryset(self):
         user = self.request.user
         profile = user.profile
 
         match_filter = profile.feed_match_filter if profile else None
-        queryset = FeedEvent.objects.filter(is_active=True, audience__in=[user.role, FeedEvent.Audience.PUBLIC])
-
-        # .exclude(
-        #     impressions__user=self.request.user
-        # )
+        queryset = FeedEvent.objects.filter(
+            is_active=True, audience__in=[user.role, FeedEvent.Audience.PUBLIC]
+        ).exclude(impressions__user=self.request.user)
 
         # Ranking based on number of matched filters
         if match_filter:
-            queryset = queryset.annotate(score=Count('targets', filter=match_filter))
+            queryset = queryset.annotate(score=Count("targets", filter=match_filter))
         else:
-            queryset = queryset.annotate(score=Value(0, output_field=IntegerField()))  # score=0 for everyone
+            queryset = queryset.annotate(
+                score=Value(0, output_field=IntegerField())
+            )  # score=0 for everyone
 
-        return queryset.order_by('-score', '-created_at', 'id')
+        return queryset.order_by("-score", "-created_at", "id")
 
     # def list(self, request, *args, **kwargs):
     #     response = super().list(request, *args, **kwargs)
@@ -49,7 +48,7 @@ class FeedView(generics.ListAPIView):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
 
-        ids = [event.id for event in page] 
+        ids = [event.id for event in page]
         if ids:
             async_task("feed.tasks.record_impressions_task", request.user.id, ids)
 
