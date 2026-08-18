@@ -21,7 +21,8 @@ class FeedView(generics.ListAPIView):
         match_filter = profile.feed_match_filter if profile else None
         queryset = FeedEvent.objects.filter(
             is_active=True, audience__in=[user.role, FeedEvent.Audience.PUBLIC]
-        ).exclude(impressions__user=self.request.user)
+        )
+        # .exclude(impressions__user=self.request.user)
 
         # Ranking based on number of matched filters
         if match_filter:

@@ -26,7 +26,7 @@ class Engagement(BaseModel):
 
     status = models.CharField(choices=EngagementStatus.choices, max_length=20, default=EngagementStatus.ACTIVE)
 
-    reviews = GenericRelation(Review, related_query_name='engagement')
+    reviews = GenericRelation(Review, related_query_name='engagement', content_type_field='source_content_type', object_id_field='source_object_id')
 
     updated_at = models.DateTimeField(auto_now=True)
 
