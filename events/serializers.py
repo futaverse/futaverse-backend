@@ -56,6 +56,7 @@ class FreeTicketSchemaSerializer(serializers.Serializer):
     required = serializers.BooleanField()
     quantity = serializers.IntegerField(min_value=1, required=False, default=0)
 
+
 class EventSerializer(serializers.ModelSerializer):
     tickets = TicketSerializer(many=True, required=False)
     platform = serializers.ChoiceField(
@@ -174,6 +175,7 @@ class TicketPurchaseSerializer(serializers.ModelSerializer):
 
         return value
 
+
 class EventParticipantSerializer(serializers.ModelSerializer):
     fullname = serializers.CharField(source="user.full_name")
     email = serializers.EmailField(source="user.email")
@@ -222,10 +224,8 @@ class ListEventSerializer(serializers.ModelSerializer):
     tickets = TicketSerializer(many=True, read_only=True)
     virtual_meeting = VirtualMeetingSerializer(read_only=True)
     starting_price = serializers.SerializerMethodField(read_only=True)
-    attendees = EventParticipantSerializer(
-        many=True, read_only=True, source="tickets.purchases"
-    )
     creator = UserInfoSummarySerializer(read_only=True)
+    attendees = serializers.SerializerMethodField()
 
     class Meta:
         model = Event
@@ -253,6 +253,14 @@ class ListEventSerializer(serializers.ModelSerializer):
     def get_starting_price(self, obj):
         lowest = obj.tickets.order_by("price").first()
         return lowest.price if lowest else 0
+
+    def get_attendees(self, obj):
+        purchases = []
+        for ticket in obj.tickets.all():
+            purchases.extend(ticket.purchases.all())
+
+        set_purchases = set(purchases)
+        return EventParticipantSerializer(set_purchases, many=True).data
 
 
 class UpdateEventModeSerializer(serializers.ModelSerializer):
