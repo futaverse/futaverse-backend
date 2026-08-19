@@ -69,7 +69,7 @@ class ListCreateInternshipView(generics.ListCreateAPIView):
     destroy=extend_schema(summary="Delete an internship by id (alumnus)"),
 )
 @extend_schema(tags=["Internships"])
-class InternshipDetailView(generics.RetrieveUpdateDestroyAPIView):
+class RetrieveUpdateDestroyInternshipView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = InternshipSerializer
     http_method_names = ["get", "patch", "delete"]
     lookup_field = "sqid"

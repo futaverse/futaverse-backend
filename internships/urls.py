@@ -9,12 +9,12 @@ from .views.applications import (
     WithdrawInternshipApplicationView,
 )
 from .views.internships import (
-    InternshipDetailView,
     ListCreateInternshipView,
     ListInternshipEngagementsView,
     MarkInternshipAcknowledgedView,
     MarkInternshipCompletedView,
     RetrieveInternshipEngagementView,
+    RetrieveUpdateDestroyInternshipView,
     ToggleInternshipActiveView,
 )
 from .views.offers import (
@@ -30,7 +30,7 @@ urlpatterns = generate_engagement_urls(
     prefix="internship",
     entity_views={
         "list_create": ListCreateInternshipView,
-        "rud": InternshipDetailView,
+        "rud": RetrieveUpdateDestroyInternshipView,
         "toggle_active": ToggleInternshipActiveView,
     },
     application_views={

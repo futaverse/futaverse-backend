@@ -2,8 +2,8 @@ from django.db import transaction
 from django_q.tasks import async_task
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import generics
-from rest_framework.response import Response
 from rest_framework.permissions import OR, IsAuthenticated
+from rest_framework.response import Response
 
 from engagements.helpers import queryset_by_role
 from engagements.mixins import (
@@ -66,7 +66,6 @@ class ListCreateMentorshipView(generics.ListCreateAPIView):
 )
 @extend_schema(
     tags=["Mentorships"],
-    summary="Retrieve (GET), update (PATCH) and delete (DELETE) a mentorship by id (alumnus)",
 )
 class RetrieveUpdateDestroyMentorshipView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MentorshipSerializer
@@ -81,6 +80,9 @@ class RetrieveUpdateDestroyMentorshipView(generics.RetrieveUpdateDestroyAPIView)
 
     def get_queryset(self):
         user = self.request.user
+
+        if self.request.method == "GET":
+            return Mentorship.objects.all()
         return Mentorship.objects.filter(alumnus=user.alumni_profile).select_related(
             "alumnus"
         )
