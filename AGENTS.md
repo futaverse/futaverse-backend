@@ -107,3 +107,4 @@ This uses the SQLite file `test_db.sqlite3` defined in `test_settings.py` at the
 
 ## Instructions
 - Never write a spectacular extend_schema to use inline response and request schemas whenever there is a need to add a manual request/response shape. Always use a serializer where possible. The serializer records the shape of the response/request.
+- Always investigate bugs concretely against real data, don't guess just because you think it might be a bug.

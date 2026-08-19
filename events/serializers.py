@@ -56,16 +56,6 @@ class FreeTicketSchemaSerializer(serializers.Serializer):
     required = serializers.BooleanField()
     quantity = serializers.IntegerField(min_value=1, required=False, default=0)
 
-
-class EventParticipantSerializer(serializers.ModelSerializer):
-    fullname = serializers.CharField(source="user.full_name")
-    email = serializers.EmailField(source="user.email")
-
-    class Meta:
-        model = TicketPurchase
-        fields = ["fullname", "email"]
-
-
 class EventSerializer(serializers.ModelSerializer):
     tickets = TicketSerializer(many=True, required=False)
     platform = serializers.ChoiceField(
@@ -183,6 +173,14 @@ class TicketPurchaseSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"ticket": "Ticket is sold out"})
 
         return value
+
+class EventParticipantSerializer(serializers.ModelSerializer):
+    fullname = serializers.CharField(source="user.full_name")
+    email = serializers.EmailField(source="user.email")
+
+    class Meta:
+        model = TicketPurchase
+        fields = ["fullname", "email"]
 
 
 class UpdateEventSerializer(serializers.ModelSerializer):

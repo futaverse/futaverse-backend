@@ -256,10 +256,12 @@ class RetrieveEventView(generics.RetrieveAPIView):
     queryset = (
         Event.objects.all()
         .prefetch_related(
+            "tickets",
+            "virtual_meeting",
             "tickets__purchases",
             "tickets__purchases__user",
         )
-        .select_related("creator", "tickets", "virtual_meeting")
+        .select_related("creator")
     )
 
     # def get_queryset(self):

@@ -17,7 +17,7 @@ class FeedView(generics.ListAPIView):
         queryset = FeedEvent.objects.filter(
             is_active=True, audience__in=[user.role, FeedEvent.Audience.PUBLIC]
         )
-        return queryset.order_by("-score", "shuffle_seed", "id")
+        return queryset.order_by("-score", "shuffle_seed")
 
     # def list(self, request, *args, **kwargs):
     #     response = super().list(request, *args, **kwargs)
