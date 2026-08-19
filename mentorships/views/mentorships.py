@@ -3,7 +3,7 @@ from django_q.tasks import async_task
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import generics
 from rest_framework.response import Response
-from rest_framework.permissions import OR
+from rest_framework.permissions import OR, IsAuthenticated
 
 from engagements.helpers import queryset_by_role
 from engagements.mixins import (
@@ -137,32 +137,22 @@ class ListMentorshipEngagementsView(generics.ListAPIView):
 
 @extend_schema(
     tags=["Mentorship Engagements"],
-    summary="Retrieve a mentorship engagement by id (alumnus and student)",
+    summary="Retrieve a mentorship engagement by id (any authenticated user)",
 )
 class RetrieveMentorshipEngagementView(generics.RetrieveAPIView):
-    permission_classes = [IsAuthenticatedAlumnus | IsAuthenticatedStudent]
+    permission_classes = [IsAuthenticated]
     serializer_class = MentorshipEngagementSerializer
     lookup_field = "sqid"
 
     def get_queryset(self):
-        return queryset_by_role(
-            self.request.user,
-            Engagement,
-            alumnus_filter=lambda: {
-                "engagement_type": Engagement.EngagementType.MENTORSHIP,
-                "alumnus": self.request.user.alumni_profile,
-            },
-            student_filter=lambda: {
-                "engagement_type": Engagement.EngagementType.MENTORSHIP,
-                "student": self.request.user.student_profile,
-            },
-            select_related=(
-                "student",
-                "alumnus",
-                "mentorship_detail__mentorship",
-                "mentorship_detail__application",
-                "mentorship_detail__offer",
-            ),
+        return Engagement.objects.filter(
+            engagement_type=Engagement.EngagementType.MENTORSHIP
+        ).select_related(
+            "student",
+            "alumnus",
+            "mentorship_detail__mentorship",
+            "mentorship_detail__application",
+            "mentorship_detail__offer",
         )
 
 

@@ -58,10 +58,11 @@ class InternshipEngagementEndpointTests(BaseAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["sqid"], self.engagement.sqid)
 
-    def test_other_alumnus_gets_404_on_engagement(self):
+    def test_any_authenticated_user_can_retrieve_engagement(self):
         headers = self._auth_header(self.other_alumnus)
         resp = self.client.get(f"/api/internships/engagements/{self.engagement.sqid}", **headers)
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["sqid"], self.engagement.sqid)
 
     def test_engagement_response_has_internship_info(self):
         headers = self._auth_header(self.alumnus)

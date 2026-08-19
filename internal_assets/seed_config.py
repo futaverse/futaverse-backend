@@ -448,9 +448,9 @@ def random_phone_number():
 
 
 def random_matric_number(grad_year, dept_code):
-    """Generate a FUTA-style matric number like FUTA/CS/20/00123."""
-    num = random.randint(1, 999)
-    return f"FUTA/{dept_code}/{str(grad_year)[-2:]}/{num:05d}"
+    """Generate a FUTA-style matric number like FUTA/CS/20/0001."""
+    num = random.randint(1, 9999)
+    return f"FUTA/{dept_code}/{str(grad_year)[-2:]}/{num:04d}"
 
 
 def weighted_choice(choices, weights):

@@ -1,11 +1,9 @@
 from django.db import transaction
 
 from engagements.models import Engagement
-
+from feed.models import FeedEvent
 from internships.models import InternshipEngagement
 from mentorships.models import MentorshipEngagement
-
-from feed.models import FeedEvent
 
 DETAIL_MODELS = {
     Engagement.EngagementType.INTERNSHIP: InternshipEngagement,
@@ -76,7 +74,9 @@ def engagement_domain(engagement):
     return DOMAINS.get(engagement.engagement_type, engagement.engagement_type)
 
 
-def create_engagement(*, engagement_type, student, alumnus, application=None, offer=None):
+def create_engagement(
+    *, engagement_type, student, alumnus, application=None, offer=None
+):
     if (application is None) == (offer is None):
         raise ValueError("Exactly one of application or offer must be provided.")
 

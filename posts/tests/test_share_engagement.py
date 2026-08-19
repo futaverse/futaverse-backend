@@ -38,7 +38,7 @@ class ShareEngagementBehaviorTests(BaseAPITestCase):
 
         self.assertTrue(mock_task.called)
         call_kwargs = mock_task.call_args.kwargs
-        self.assertEqual(call_kwargs["related_model"], "internship_engagement")
+        self.assertEqual(call_kwargs["related_model"], "post")
 
     @patch("posts.services.async_task")
     def test_share_engagement_completion_passes_correct_model_key(self, mock_task):
@@ -48,4 +48,4 @@ class ShareEngagementBehaviorTests(BaseAPITestCase):
 
         self.assertTrue(mock_task.called)
         call_kwargs = mock_task.call_args.kwargs
-        self.assertEqual(call_kwargs["related_model"], "internship_engagement")
+        self.assertEqual(call_kwargs["related_model"], "post")

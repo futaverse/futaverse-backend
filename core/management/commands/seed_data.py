@@ -206,6 +206,148 @@ class Command(BaseCommand):
                     return candidate
             return base
 
+        # --- Fixed accounts (always created first) ---
+        fixed_accounts = [
+            {
+                "email": "covenantcrackslord01@gmail.com",
+                "password": "watermelon",
+                "role": User.Role.ALUMNI,
+                "firstname": "Covenant",
+                "lastname": "Crackslord",
+                "gender": "male",
+                "dept": "Computer Science",
+                "faculty": "Engineering and Technology",
+                "state": "Lagos",
+                "grad_year": "2019",
+                "industry": "Technology",
+                "job_title": "Full Stack Developer",
+                "company": "Andela",
+                "years_exp": 7,
+            },
+            {
+                "email": "covenantcrackslord02@gmail.com",
+                "password": "watermelon",
+                "role": User.Role.STUDENT,
+                "firstname": "Covenant",
+                "lastname": "Crackslord",
+                "gender": "male",
+                "dept": "Computer Science",
+                "faculty": "Engineering and Technology",
+                "state": "Lagos",
+                "level": 400,
+                "cgpa": 4.50,
+                "skills": ["Python", "Django", "React", "JavaScript", "PostgreSQL"],
+            },
+            {
+                "email": "davidpraise100@gmail.com",
+                "password": "Rato123$",
+                "role": User.Role.ALUMNI,
+                "firstname": "David",
+                "lastname": "Praise",
+                "gender": "male",
+                "dept": "Information Technology",
+                "faculty": "Engineering and Technology",
+                "state": "Ogun",
+                "grad_year": "2020",
+                "industry": "Finance",
+                "job_title": "Backend Engineer",
+                "company": "Flutterwave",
+                "years_exp": 6,
+            },
+            {
+                "email": "oliverpraise1@gmail.com",
+                "password": "Rato123$",
+                "role": User.Role.STUDENT,
+                "firstname": "Oliver",
+                "lastname": "Praise",
+                "gender": "male",
+                "dept": "Electrical and Electronics Engineering",
+                "faculty": "Engineering and Technology",
+                "state": "Abuja",
+                "level": 300,
+                "cgpa": 4.10,
+                "skills": ["Java", "C++", "SQL", "Machine Learning", "Linux"],
+            },
+        ]
+
+        for acct in fixed_accounts:
+            used_emails.add(acct["email"])
+
+        # Create fixed alumni users + profiles
+        fixed_alumni_users = []
+        for acct in fixed_accounts:
+            if acct["role"] != User.Role.ALUMNI:
+                continue
+            user = User(
+                email=acct["email"],
+                role=User.Role.ALUMNI,
+                is_active=True,
+                is_staff=False,
+            )
+            user.set_password(acct["password"])
+            user.save()
+            AlumniProfile.objects.create(
+                user=user,
+                phone_num=random_phone_number(),
+                gender=acct["gender"],
+                firstname=acct["firstname"],
+                lastname=acct["lastname"],
+                middlename="",
+                address="12 Allen Avenue, Ikeja, Lagos",
+                state=acct["state"],
+                country="Nigeria",
+                description="Passionate tech professional with a love for building impactful products.",
+                matric_no=random_matric_number(int(acct["grad_year"]), DEPT_CODES.get(acct["dept"], "CS")),
+                department=acct["dept"],
+                faculty=acct["faculty"],
+                grad_year=acct["grad_year"],
+                current_job_title=acct["job_title"],
+                current_company=acct["company"],
+                industry=acct["industry"],
+                years_of_exp=acct["years_exp"],
+                previous_comps=[],
+                linkedin_url=f"https://www.linkedin.com/in/{acct['firstname'].lower()}-{acct['lastname'].lower()}",
+            )
+            fixed_alumni_users.append(user)
+            self.stdout.write(f"    Created fixed alumni: {acct['email']}")
+
+        # Create fixed student users + profiles
+        fixed_student_users = []
+        for acct in fixed_accounts:
+            if acct["role"] != User.Role.STUDENT:
+                continue
+            user = User(
+                email=acct["email"],
+                role=User.Role.STUDENT,
+                is_active=True,
+                is_staff=False,
+            )
+            user.set_password(acct["password"])
+            user.save()
+            StudentProfile.objects.create(
+                user=user,
+                phone_num=random_phone_number(),
+                gender=acct["gender"],
+                firstname=acct["firstname"],
+                lastname=acct["lastname"],
+                middlename="",
+                address="45 Adetokunbo Ademola Cr, Wuse, Abuja",
+                state=acct["state"],
+                country="Nigeria",
+                description="Motivated student eager to learn and grow in tech.",
+                matric_no=random_matric_number(2022, DEPT_CODES.get(acct["dept"], "CS")),
+                department=acct["dept"],
+                faculty=acct["faculty"],
+                level=acct["level"],
+                cgpa=Decimal(str(acct["cgpa"])),
+                skills=acct["skills"],
+                expected_grad_year=str(2026 + (700 - acct["level"]) // 100),
+                willingness_to_be_mentored=True,
+                linkedin_url=f"https://www.linkedin.com/in/{acct['firstname'].lower()}-{acct['lastname'].lower()}",
+            )
+            fixed_student_users.append(user)
+            self.stdout.write(f"    Created fixed student: {acct['email']}")
+
         # --- Alumni ---
         self.stdout.write("  Creating 50 alumni...")
         alumni_batch = []
@@ -1334,7 +1476,11 @@ class Command(BaseCommand):
 
     def batch_reviews_feed(self):
         from engagements.models import Engagement
+        from engagements.services import default_share_text, get_engagement_post_context
+        from events.models import VirtualMeeting
         from feed.models import FeedEvent, FeedImpression, FeedTarget
+        from feed.tasks import create_feed_event_task
+        from posts.models import Post
         from reviews.models import Review
 
         all_users = self.alumni_users + self.student_users
@@ -1426,160 +1572,119 @@ class Command(BaseCommand):
         self.stdout.write(f"    Created {len(created_reviews)} reviews")
 
         # --- Feed Events ---
+        # Use create_feed_event_task exactly like organic creation so FeedTargets
+        # are created from each entity's real .feed_targets property.
         self.stdout.write("  Creating feed events...")
-        feed_event_batch = []
 
-        # Internship feed events
+        # Pre-fetch virtual meetings for event data
+        virtual_meetings = {
+            vm.event_id: vm.platform
+            for vm in VirtualMeeting.objects.filter(
+                event_id__in=[e.id for e in self.events[:40]]
+            )
+        }
+
+        feed_event_count = 0
+
         for internship in self.internships[:80]:
-            feed_event_batch.append(
-                FeedEvent(
-                    event_type=FeedEvent.EventType.INTERNSHIP_CREATED,
-                    audience=FeedEvent.Audience.STUDENT,
-                    data={
-                        "internship_id": str(internship.sqid),
-                        "title": internship.title,
-                        "company": internship.company,
-                        "work_mode": internship.work_mode,
-                        "is_paid": internship.is_paid,
-                    },
-                    is_active=True,
-                )
+            create_feed_event_task(
+                event_type=FeedEvent.EventType.INTERNSHIP_CREATED,
+                related_object_id=internship.id,
+                related_model="internship",
+                audience=FeedEvent.Audience.STUDENT,
+                data={
+                    "title": internship.title,
+                    "alumni": internship.alumnus.full_name,
+                    "work_mode": internship.work_mode,
+                    "engagement_type": internship.engagement_type,
+                    "stipend": str(internship.stipend),
+                    "is_paid": internship.is_paid,
+                    "available_slots": internship.available_slots,
+                    "remaining_slots": internship.remaining_slots,
+                    "created_at": internship.created_at.isoformat(),
+                },
+                score=random.randint(0, 10),
             )
+            feed_event_count += 1
 
-        # Mentorship feed events
         for mentorship in self.mentorships[:60]:
-            feed_event_batch.append(
-                FeedEvent(
-                    event_type=FeedEvent.EventType.MENTORSHIP_CREATED,
-                    audience=FeedEvent.Audience.STUDENT,
-                    data={
-                        "mentorship_id": str(mentorship.sqid),
-                        "title": mentorship.title,
-                        "category": mentorship.category,
-                        "work_mode": mentorship.work_mode,
-                    },
-                    is_active=True,
-                )
+            create_feed_event_task(
+                event_type=FeedEvent.EventType.MENTORSHIP_CREATED,
+                related_object_id=mentorship.id,
+                related_model="mentorship",
+                audience=FeedEvent.Audience.PUBLIC,
+                data={
+                    "title": mentorship.title,
+                    "alumni": mentorship.alumnus.full_name,
+                    "category": mentorship.category,
+                    "available_slots": mentorship.available_slots,
+                    "remaining_slots": mentorship.remaining_slots,
+                    "created_at": mentorship.created_at.isoformat(),
+                },
+                score=random.randint(0, 10),
             )
+            feed_event_count += 1
 
-        # Event feed events
         for event in self.events[:40]:
-            feed_event_batch.append(
-                FeedEvent(
-                    event_type=FeedEvent.EventType.EVENT_CREATED,
-                    audience=FeedEvent.Audience.PUBLIC,
-                    data={
-                        "event_id": str(event.sqid),
-                        "title": event.title,
-                        "category": event.category,
-                        "mode": event.mode,
-                        "date": event.date.isoformat(),
-                    },
-                    is_active=True,
-                )
-            )
+            event_data = {
+                "title": event.title,
+                "alumni": event.creator.full_name,
+                "mode": event.mode,
+                "category": event.category,
+                "date": event.date.isoformat(),
+                "created_at": event.created_at.isoformat(),
+            }
+            vm_platform = virtual_meetings.get(event.id)
+            if vm_platform:
+                event_data["virtual_meeting"] = vm_platform
 
-        # Engagement started events
+            create_feed_event_task(
+                event_type=FeedEvent.EventType.EVENT_CREATED,
+                related_object_id=event.id,
+                related_model="event",
+                audience=FeedEvent.Audience.STUDENT,
+                data=event_data,
+                score=random.randint(0, 10),
+            )
+            feed_event_count += 1
+
         for engagement in self.engagements[:60]:
-            event_type = (
-                FeedEvent.EventType.INTERNSHIP_STARTED
-                if engagement.engagement_type == "internship_engagement"
-                else FeedEvent.EventType.MENTORSHIP_STARTED
-            )
-            feed_event_batch.append(
-                FeedEvent(
-                    event_type=event_type,
-                    audience=FeedEvent.Audience.STUDENT,
-                    data={
-                        "engagement_id": str(engagement.sqid),
-                        "student": engagement.student.user.email,
-                    },
-                    is_active=True,
+            detail = engagement.detail
+            post_context = getattr(detail, "post_context", {}) if detail else {}
+
+            if random.random() < 0.7:
+                context = get_engagement_post_context(engagement)
+                default_text = default_share_text(engagement)
+                post = Post.objects.create(
+                    author=engagement.student.user,
+                    post_type=Post.PostType.ENGAGEMENT_STARTED,
+                    content=default_text,
+                    related_object=engagement,
                 )
-            )
-
-        created_feed_events = FeedEvent.objects.bulk_create(feed_event_batch)
-        self.stdout.write(f"    Created {len(created_feed_events)} feed events")
-
-        # --- Feed Targets ---
-        self.stdout.write("  Creating feed targets...")
-        target_batch = []
-
-        for fe in created_feed_events:
-            num_targets = random.randint(2, 4)
-
-            if fe.event_type in (
-                FeedEvent.EventType.INTERNSHIP_CREATED,
-                FeedEvent.EventType.INTERNSHIP_STARTED,
-            ):
-                # Find the internship
-                internship = random.choice(self.internships)
-                for skill in internship.skills_required[:2]:
-                    target_batch.append(
-                        FeedTarget(
-                            event=fe,
-                            target_type="skill",
-                            target_value=skill,
-                        )
-                    )
-                target_batch.append(
-                    FeedTarget(
-                        event=fe,
-                        target_type="industry",
-                        target_value=internship.industry,
-                    )
+                create_feed_event_task(
+                    event_type=FeedEvent.EventType.INTERNSHIP_STARTED
+                    if engagement.engagement_type == Engagement.EngagementType.INTERNSHIP
+                    else FeedEvent.EventType.MENTORSHIP_STARTED,
+                    related_object_id=post.id,
+                    related_model="post",
+                    audience=FeedEvent.Audience.PUBLIC,
+                    data={"content": post.content, "engagement": context},
+                    score=random.randint(0, 10),
                 )
-
-            elif fe.event_type in (
-                FeedEvent.EventType.MENTORSHIP_CREATED,
-                FeedEvent.EventType.MENTORSHIP_STARTED,
-            ):
-                mentorship = random.choice(self.mentorships)
-                for area in mentorship.focus_areas[:2]:
-                    target_batch.append(
-                        FeedTarget(
-                            event=fe,
-                            target_type="skill",
-                            target_value=area,
-                        )
-                    )
-                target_batch.append(
-                    FeedTarget(
-                        event=fe,
-                        target_type="category",
-                        target_value=mentorship.category,
-                    )
+            else:
+                create_feed_event_task(
+                    event_type=FeedEvent.EventType.INTERNSHIP_STARTED
+                    if engagement.engagement_type == Engagement.EngagementType.INTERNSHIP
+                    else FeedEvent.EventType.MENTORSHIP_STARTED,
+                    related_object_id=engagement.id,
+                    related_model=engagement.engagement_type,
+                    audience=FeedEvent.Audience.PUBLIC,
+                    data={**post_context},
+                    score=random.randint(0, 10),
                 )
+            feed_event_count += 1
 
-            elif fe.event_type == FeedEvent.EventType.EVENT_CREATED:
-                event = random.choice(self.events)
-                target_batch.append(
-                    FeedTarget(
-                        event=fe,
-                        target_type="category",
-                        target_value=event.category,
-                    )
-                )
-                dept = random.choice(FUTA_DEPARTMENTS)
-                target_batch.append(
-                    FeedTarget(
-                        event=fe,
-                        target_type="department",
-                        target_value=dept[0],
-                    )
-                )
-
-        # Deduplicate (event, target_type, target_value)
-        seen_targets = set()
-        unique_targets = []
-        for t in target_batch:
-            key = (t.event_id, t.target_type, t.target_value)
-            if key not in seen_targets:
-                seen_targets.add(key)
-                unique_targets.append(t)
-
-        FeedTarget.objects.bulk_create(unique_targets)
-        self.stdout.write(f"    Created {len(unique_targets)} feed targets")
+        self.stdout.write(f"    Created {feed_event_count} feed events")
 
         # --- Feed Impressions ---
         self.stdout.write("  Creating feed impressions...")
@@ -1614,7 +1719,7 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.SUCCESS(
                 f"  Batch 8 complete: {len(created_reviews)} reviews, "
-                f"{len(created_feed_events)} feed events, {len(unique_targets)} targets, "
+                f"{feed_event_count} feed events, "
                 f"{len(unique_impressions)} impressions"
             )
         )

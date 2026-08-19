@@ -164,7 +164,7 @@ class StudentProfile(BaseModel):
     
     description = models.TextField(blank=True, null=True)
     
-    matric_no = models.CharField(max_length=15, blank=True, null=True)
+    matric_no = models.CharField(max_length=20, blank=True, null=True)
     department = models.CharField(max_length=30)
     faculty = models.CharField(max_length=60)
     level = models.IntegerField(choices=LevelChoices.choices)
@@ -249,7 +249,7 @@ class AlumniProfile(BaseModel):
     
     description = models.TextField(blank=True, null=True)
     
-    matric_no = models.CharField(max_length=15, blank=True, null=True)
+    matric_no = models.CharField(max_length=20, blank=True, null=True)
     department = models.CharField(max_length=30)
     faculty = models.CharField(max_length=20)
     grad_year = models.CharField(max_length=4)

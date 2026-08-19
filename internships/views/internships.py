@@ -2,7 +2,7 @@ from django.db import transaction
 from django_q.tasks import async_task
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import generics
-from rest_framework.permissions import OR
+from rest_framework.permissions import OR, IsAuthenticated
 
 from engagements.helpers import queryset_by_role
 from engagements.mixins import (
@@ -136,32 +136,22 @@ class ListInternshipEngagementsView(generics.ListAPIView):
 
 @extend_schema(
     tags=["Internship Engagements"],
-    summary="Retrieve an internship engagement by id (alumnus and student)",
+    summary="Retrieve an internship engagement by id (any authenticated user)",
 )
 class RetrieveInternshipEngagementView(generics.RetrieveAPIView):
-    permission_classes = [IsAuthenticatedAlumnus | IsAuthenticatedStudent]
+    permission_classes = [IsAuthenticated]
     serializer_class = InternshipEngagementSerializer
     lookup_field = "sqid"
 
     def get_queryset(self):
-        return queryset_by_role(
-            self.request.user,
-            Engagement,
-            alumnus_filter=lambda: {
-                "engagement_type": Engagement.EngagementType.INTERNSHIP,
-                "alumnus": self.request.user.alumni_profile,
-            },
-            student_filter=lambda: {
-                "engagement_type": Engagement.EngagementType.INTERNSHIP,
-                "student": self.request.user.student_profile,
-            },
-            select_related=(
-                "student",
-                "alumnus",
-                "internship_detail__internship",
-                "internship_detail__application",
-                "internship_detail__offer",
-            ),
+        return Engagement.objects.filter(
+            engagement_type=Engagement.EngagementType.INTERNSHIP
+        ).select_related(
+            "student",
+            "alumnus",
+            "internship_detail__internship",
+            "internship_detail__application",
+            "internship_detail__offer",
         )
 
 

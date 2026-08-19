@@ -17,7 +17,7 @@ def record_impressions_task(user_id, event_ids):
 
 
 def create_feed_event_task(
-    event_type, related_object_id, related_model, data, audience="public"
+    event_type, related_object_id, related_model, data, audience="public", score=0
 ):
     model = MODELS.get(related_model)
     if not model:
@@ -32,9 +32,39 @@ def create_feed_event_task(
         )
         return
 
+    ENTITY_TYPE_MAP = {
+        "internship": "internship",
+        "mentorship": "mentorship",
+        "event": "event",
+        "internship_engagement": "internship_engagement",
+        "mentorship_engagement": "mentorship_engagement",
+        "post": "engagement_post",
+    }
+
+    data = {**data}
+
+    data["type"] = ENTITY_TYPE_MAP.get(related_model)
+    data["sqid"] = related_object.sqid
+
+    if related_model == "post":
+        user = related_object.author
+        data["author"] = {
+            "sqid": user.sqid,
+            "full_name": user.full_name,
+        }
+    else:
+        if related_model == "event":
+            alumnus = related_object.creator
+        else:
+            alumnus = related_object.alumnus
+        data["alumni"] = {
+            "sqid": alumnus.sqid,
+            "full_name": alumnus.full_name,
+        }
+
     with transaction.atomic():
         event = FeedEvent.objects.create(
-            event_type=event_type, data=data, audience=audience
+            event_type=event_type, data=data, audience=audience, score=score
         )
 
         targets = getattr(related_object, "feed_targets", [])
