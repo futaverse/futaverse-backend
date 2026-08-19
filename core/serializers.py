@@ -13,6 +13,14 @@ from .models import (
 )
 
 
+class UserInfoSummarySerializer(serializers.ModelSerializer):
+    fullname = serializers.CharField(source="full_name")
+
+    class Meta:
+        model = User
+        fields = ["sqid", "fullname", "email"]
+
+
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         email = attrs.get("email")

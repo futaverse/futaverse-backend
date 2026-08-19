@@ -103,3 +103,7 @@ This uses the SQLite file `test_db.sqlite3` defined in `test_settings.py` at the
 - `requirements.txt` is committed as a normal text file (no LFS) — claims of binary tracking are wrong
 - `ENVIRONMENT` must be set to `production` on Render (render.yaml) — `development` is the local default
 - Apps with a top-level `tests.py` stub AND a `tests/` package break `manage.py test` discovery — keep exactly one
+
+
+## Instructions
+- Never write a spectacular extend_schema to use inline response and request schemas whenever there is a need to add a manual request/response shape. Always use a serializer where possible. The serializer records the shape of the response/request.

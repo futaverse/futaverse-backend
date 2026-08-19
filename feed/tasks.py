@@ -17,7 +17,13 @@ def record_impressions_task(user_id, event_ids):
 
 
 def create_feed_event_task(
-    event_type, related_object_id, related_model, data, audience="public", score=0
+    event_type,
+    related_object_id,
+    related_model,
+    data,
+    audience="public",
+    score=0,
+    shuffle_seed=None,
 ):
     model = MODELS.get(related_model)
     if not model:
@@ -64,7 +70,11 @@ def create_feed_event_task(
 
     with transaction.atomic():
         event = FeedEvent.objects.create(
-            event_type=event_type, data=data, audience=audience, score=score
+            event_type=event_type,
+            data=data,
+            audience=audience,
+            score=score,
+            shuffle_seed=shuffle_seed,  # see FeedEvent.shuffle_seed docs re: stopgap
         )
 
         targets = getattr(related_object, "feed_targets", [])

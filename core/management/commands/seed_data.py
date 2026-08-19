@@ -1591,7 +1591,7 @@ class Command(BaseCommand):
                 event_type=FeedEvent.EventType.INTERNSHIP_CREATED,
                 related_object_id=internship.id,
                 related_model="internship",
-                audience=FeedEvent.Audience.STUDENT,
+                audience=FeedEvent.Audience.PUBLIC,
                 data={
                     "title": internship.title,
                     "alumni": internship.alumnus.full_name,
@@ -1604,6 +1604,7 @@ class Command(BaseCommand):
                     "created_at": internship.created_at.isoformat(),
                 },
                 score=random.randint(0, 10),
+                shuffle_seed=random.random(),
             )
             feed_event_count += 1
 
@@ -1622,6 +1623,7 @@ class Command(BaseCommand):
                     "created_at": mentorship.created_at.isoformat(),
                 },
                 score=random.randint(0, 10),
+                shuffle_seed=random.random(),
             )
             feed_event_count += 1
 
@@ -1642,9 +1644,10 @@ class Command(BaseCommand):
                 event_type=FeedEvent.EventType.EVENT_CREATED,
                 related_object_id=event.id,
                 related_model="event",
-                audience=FeedEvent.Audience.STUDENT,
+                audience=FeedEvent.Audience.PUBLIC,
                 data=event_data,
                 score=random.randint(0, 10),
+                shuffle_seed=random.random(),
             )
             feed_event_count += 1
 
@@ -1670,6 +1673,7 @@ class Command(BaseCommand):
                     audience=FeedEvent.Audience.PUBLIC,
                     data={"content": post.content, "engagement": context},
                     score=random.randint(0, 10),
+                    shuffle_seed=random.random(),
                 )
             else:
                 create_feed_event_task(
@@ -1681,6 +1685,7 @@ class Command(BaseCommand):
                     audience=FeedEvent.Audience.PUBLIC,
                     data={**post_context},
                     score=random.randint(0, 10),
+                    shuffle_seed=random.random(),
                 )
             feed_event_count += 1
 

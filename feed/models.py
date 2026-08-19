@@ -1,3 +1,5 @@
+import random
+
 from django.db import models
 
 from core.models import User
@@ -28,12 +30,24 @@ class FeedEvent(BaseModel):
     data = models.JSONField(default=dict)
     is_active = models.BooleanField(default=True)
     score = models.IntegerField(default=0)
+    # TEMPORARY STOPGAP: shuffle_seed is a one-time random float [0,1) assigned at creation.
+    # It acts as a tiebreaker within the same score bucket to prevent event-type
+    # clustering. This is NOT dynamic randomization — the order is fixed after creation.
+    # When a proper content-diversity/ranking algorithm is implemented (e.g. ML-based
+    # relevance, engagement-weighted scoring, or category-level capping), remove this
+    # field, restore the index to ["-score", "-created_at"], and simplify the sort.
+    shuffle_seed = models.FloatField(null=True, blank=True)
 
     class Meta:
         indexes = [
             models.Index(fields=["-created_at"]),
-            models.Index(fields=["-score", "-created_at"]),
+            models.Index(fields=["-score", "shuffle_seed"]),
         ]
+
+    def save(self, *args, **kwargs):
+        if self.shuffle_seed is None:
+            self.shuffle_seed = random.random()
+        super().save(*args, **kwargs)
 
 
 class FeedTarget(models.Model):
